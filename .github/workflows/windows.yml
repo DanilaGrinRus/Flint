@@ -61,10 +61,13 @@ jobs:
     runs-on: [self-hosted, windows, flint-tor]
     timeout-minutes: 25
     env:
-      TMP: ${{ runner.temp }}
-      TEMP: ${{ runner.temp }}
+      TMP: ${{ github.workspace }}\tmp
+      TEMP: ${{ github.workspace }}\tmp
     steps:
       - uses: actions/checkout@v4
+      - name: Short temp directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force $env:TMP | Out-Null
       - name: Vendor dependencies
         shell: pwsh
         run: |
@@ -93,10 +96,13 @@ jobs:
     runs-on: [self-hosted, windows, flint-live]
     timeout-minutes: 90
     env:
-      TMP: ${{ runner.temp }}
-      TEMP: ${{ runner.temp }}
+      TMP: ${{ github.workspace }}\tmp
+      TEMP: ${{ github.workspace }}\tmp
     steps:
       - uses: actions/checkout@v4
+      - name: Short temp directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force $env:TMP | Out-Null
       - name: Vendor dependencies
         shell: pwsh
         run: |
