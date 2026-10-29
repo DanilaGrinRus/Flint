@@ -6,6 +6,12 @@
 **DEV BUILD: не аудирован, не для реальных средств. Сеть — testnet.**
 Mainnet-данные и реальные кошельки не участвуют в проверках и уборке.
 
+Публичный репозиторий — <https://github.com/DanilaGrinRus/Flint>, сайт —
+<https://danilagrinrus.github.io/Flint/> (GitHub Pages из ветки gh-pages).
+Testnet-preview опубликован как prerelease 0.1.69-cleanup-20261029:
+binary zip, corresponding source, SHA256SUMS и sbom.json; сборка unsigned.
+Публикация не меняет статус приёмки: физические D-01…D-10 остаются открытыми.
+
 ## Объём и готовность
 
 Последний принятый desktop RC имеет статус **READY_FOR_EXTERNAL_DEVICE_TESTS**.
@@ -114,3 +120,4 @@ commit/build, команда или CI run, PASS/FAIL/NOT VERIFIED, ссылка
 свидетельство и предел вывода. Большие логи, переписка и промежуточные планы
 не копируются сюда. Удаление исходного evidence требует либо сохранённого
 эквивалента, либо явной пометки, что доступна только историческая запись.
+
