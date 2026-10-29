@@ -62,8 +62,14 @@ CI job status проверен отдельно от run status; отменён�
 SBOM/hashes, source archive и его cargo check с текущим locked vendor.
 Startup smoke пройден; новой визуальной/device-приёмки не было.
 Selftest ok=true; отдельный managed-node start ограничен занятым портом 13413.
-Git baseline bb4b7f3, изменения уборки не закоммичены (снимок сохранён как
-`refs/backups/cleanup-20261029`, f8abb9d8). Итог: evidence/cleanup-20261029/RESULT.json.
+Git baseline уборки bb4b7f3; изменения уборки закоммичены (`5de99ae`), снимок
+дерева до коммита сохранён как `refs/backups/cleanup-20261029` (f8abb9d8).
+Итог: evidence/cleanup-20261029/RESULT.json.
+
+2026-10-29: после коммита corresponding source пересобран из закоммиченного дерева,
+поскольку прежний архив отставал от него по документации. Бинарники, SBOM и
+BUILD-INFO не менялись; актуальные SHA-256 — в SHA256SUMS поставки, прежний архив
+сохранён вне дерева (`C:\DHW-backups\delivery-20261029\`).
 
 Harness-модули 2026-10-29: в профиле desktop установлен только LSP-набор
 0.2.1-rc.3 и проверен реальными запросами к Rust-символам; worktree, computer use
