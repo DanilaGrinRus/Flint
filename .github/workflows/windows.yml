@@ -57,7 +57,7 @@ jobs:
   live-tor:
     # Explicit dispatch only. A skipped job is reported by GitHub as skipped;
     # a selected job with missing Tor infrastructure fails in preflight.
-    if: github.event_name == 'workflow_dispatch' && inputs.live_suite == 'tor'
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.live_suite == 'tor' }}
     runs-on: [self-hosted, windows, flint-tor]
     timeout-minutes: 25
     steps:
@@ -79,7 +79,7 @@ jobs:
     # funded wallet roots marked with .crash-test-ok, supplied via repository
     # variables/secrets on the labelled runner. Missing configuration is a
     # failed preflight, never a skipped/passing test.
-    if: github.event_name == 'workflow_dispatch' && inputs.live_suite == 'funded-testnet'
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.live_suite == 'funded-testnet' }}
     runs-on: [self-hosted, windows, flint-live]
     timeout-minutes: 90
     steps:
