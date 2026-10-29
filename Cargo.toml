@@ -58,6 +58,10 @@ base64 = "0.13"
 # Nostr transport (NIP-44/NIP-59): BIP-340 Schnorr signatures and x-only ECDH.
 secp256k1 = { version = "0.33", features = ["rand"] }
 hmac = "0.12"
+# Nostr relay: blocking WebSocket client with rustls and webpki roots.
+tungstenite = { version = "0.30", features = ["rustls-tls-webpki-roots"] }
+# rustls needs an explicit provider for the blocking WebSocket client.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 grin_core = { path = "third_party/grin-wallet/grin/core", version = "=5.5.2" }
 grin_keychain = { path = "third_party/grin-wallet/grin/keychain", version = "=5.5.2" }
 grin_util = { path = "third_party/grin-wallet/grin/util", version = "=5.5.2" }
@@ -80,6 +84,8 @@ lto = "thin"
 codegen-units = 4
 panic = "abort"
 strip = true
+
+
 
 
 

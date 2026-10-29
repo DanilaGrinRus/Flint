@@ -211,3 +211,4 @@ Nostr relay вместо HTTP gateway. Он не заменяет relay/direct �
   сборка и unit-тесты не означают доступность публичного relay.
 - Приёмка: сообщение, доставленное через Nostr, проверяется тем же Flint-envelope
   путём (подпись/дедуп/quarantine), а не «Nostr сказал ok».
+

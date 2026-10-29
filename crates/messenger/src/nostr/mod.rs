@@ -12,12 +12,14 @@ pub mod nip44;
 pub mod relay;
 pub mod transport;
 pub mod wrap;
+pub mod ws;
 
 pub use event::Event;
 pub use keys::NostrKeys;
 pub use relay::{MemoryRelay, Relay, RelayFilter};
 pub use transport::{Directory, NostrTransport};
 pub use wrap::{gift_wrap, unwrap, Rumor};
+pub use ws::WsRelay;
 
 use crate::error::{Error, Result};
 
