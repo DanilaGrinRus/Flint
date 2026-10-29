@@ -283,6 +283,7 @@ section {
   background: linear-gradient(90deg, var(--mint), var(--mint-2));
 }
 .status-card.is-soon { border-style: dashed; }
+.card.is-soon { border-style: dashed; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
@@ -421,4 +422,5 @@ footer p { margin: 6px 0; }
     font-size: 0.82rem;
   }
 }
+
 

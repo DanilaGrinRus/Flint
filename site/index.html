@@ -25,6 +25,7 @@
   </a>
   <nav aria-label="Основная навигация">
     <a href="#features">Возможности</a>
+    <a href="#messenger">Мессенджер</a>
     <a href="#compare">Сравнение</a>
     <a href="#honesty">Честность</a>
     <a href="#platforms">Платформы</a>
@@ -140,6 +141,45 @@
     </div>
   </section>
 
+  <section id="messenger">
+    <p class="section-kicker">Мессенджер</p>
+    <h2 class="section-title">Сообщения и Slatepack без лишних посредников</h2>
+    <p class="section-note">
+      Конверт идёт от отправителя к получателю через выбранный транспорт. Ни
+      успешная доставка, ни HTTP 200 не означают подтверждение перевода — его
+      доказывает только цепь.
+    </p>
+    <div class="grid grid-3">
+      <article class="card">
+        <h3>Автофинализация</h3>
+        <p>Выключена по умолчанию и включается только для сохранённых контактов.
+          Полученный S1 проходит prepare/finalize receive, S2 сопоставляется с
+          ожидающей отправкой, а не с «последней» операцией. Ручной путь сохраняет
+          проверку суммы и адреса.</p>
+        <p class="mono small">opt-in · только сохранённые контакты</p>
+      </article>
+      <article class="card">
+        <h3>Tor и direct onion</h3>
+        <p>Onion выводится из ключа slatepack, наружу публикуется только loopback
+          gateway, а не owner API. Direct deliver идёт на onion получателя через
+          SOCKS того же Tor и требует, чтобы получатель был онлайн; офлайн-доставку
+          берёт на себя relay с TTL, квотами и подписанным ACK.</p>
+        <p class="mono small">direct onion · relay до TTL · мосты через lyrebird</p>
+      </article>
+      <article class="card is-soon">
+        <h3>Nostr — план, не функция</h3>
+        <p>Рассматривается как отдельный транспорт офлайн-доставки: NIP-17/NIP-44 DM,
+          отдельные транспортные ключи и их ротация, возможные NIP-05 имена.
+          В текущей сборке Nostr нет — он появится только после реализации и
+          собственной приёмки.</p>
+        <p class="mono small">не реализовано · roadmap</p>
+      </article>
+    </div>
+    <p class="callout">
+      Доставка — это транспорт, а не подтверждение: queued и подписанный ACK
+      означают, что конверт принят, а confirmed — что kernel найден в цепи.
+    </p>
+  </section>
   <section id="compare">
     <p class="section-kicker">Сравнение</p>
     <h2 class="section-title">Flint и типичные подходы</h2>
@@ -276,6 +316,7 @@
 
 </body>
 </html>
+
 
 
 
