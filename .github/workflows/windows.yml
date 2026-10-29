@@ -60,6 +60,9 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.live_suite == 'tor' }}
     runs-on: [self-hosted, windows, flint-tor]
     timeout-minutes: 25
+    env:
+      TMP: ${{ runner.temp }}
+      TEMP: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
       - name: Vendor dependencies
@@ -89,6 +92,9 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.live_suite == 'funded-testnet' }}
     runs-on: [self-hosted, windows, flint-live]
     timeout-minutes: 90
+    env:
+      TMP: ${{ runner.temp }}
+      TEMP: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
       - name: Vendor dependencies
