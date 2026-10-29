@@ -1,0 +1,13 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.60s
+     Running tests\restore_cycle.rs (C:\DHW\mobile\GrinFlint\ffi\grin-wallet-ffi\target\debug\deps\restore_cycle-ab4244b73dab81c7.exe)
+
+running 1 test
+адрес восстановленного кошелька совпадает: true
+test restore_clean_dir_then_confirmed_transfer has been running for over 60 seconds
+скан 1: spendable=48735000000, locked=0
+send: slate_id=19352c5d-1b01-49d8-94ed-5b5ae2392bda
+подтверждено за 9 раунд(ов)
+test restore_clean_dir_then_confirmed_transfer ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 435.68s
+

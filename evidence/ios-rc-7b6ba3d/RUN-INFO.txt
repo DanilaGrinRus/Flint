@@ -1,0 +1,31 @@
+RC iOS GrinFlint — итоговый внутренний прогон
+=============================================
+Commit:  7b6ba3dde711681947b4db6c0ee8d10edff00349
+Run:     https://github.com/DanilaGrinRus/GrinFlint/actions/runs/40922768191 (success)
+Дата:    2026-10-29 UTC (2026-10-30 Asia/Bangkok)
+Xcode:   16.4 (16F6)
+
+device-archive:
+  файл:   GrinFlint.xcarchive.zip (12 051 660 байт)
+  sha256: ecc9e49a9869c9011d812d98e77248721dc8c8cb93456e2243c312b8b4fed5ea
+  внутри: Release, arm64, встроенный GrinFlintShare.appex, BUILD-INFO;
+          FFI-литерал Rust-крейта найден в бинаре (проверено и в CI, и локально)
+
+Проверки прогона:
+  - cargo check FFI: success
+  - ffi-smoke (macOS): компиляция всех тестов, roundtrip 13, ffi_memory 4 — success
+  - XCFramework для iOS: success
+  - симулятор + реальный FFI: сборка success
+  - unit-тесты: 21 тест, 0 падений
+  - XCUITest: 11 тестов, 0 падений (включая отмену незавершённого перевода)
+  - смоук -SimSmoke с реальным FFI: успешен
+  - Release archive + проверка FFI в бинаре: success
+
+Не входит в этот комплект (NOT VERIFIED):
+  - подпись Personal Team и установка на физический iPhone;
+  - сценарии D1–D7 из docs/acceptance.md;
+  - живой Floonet E2E (workflow обновлён, ручной/weekly прогон не запускался).
+
+Сопутствующее доказательство:
+  evidence/restore-cycle-20261029 — локальный PASS restore_cycle
+  (restore из seed в чистом каталоге → 48.735 tGRIN → подтверждённый перевод).
