@@ -142,7 +142,7 @@ jobs:
           FLINT_LIVE_RPC_B: ${{ vars.FLINT_LIVE_RPC_B }}
           FLINT_LIVE_RPC_PASS: ${{ secrets.FLINT_LIVE_RPC_PASS }}
           FLINT_LIVE_RPC_PASS_B: ${{ secrets.FLINT_LIVE_RPC_PASS_B }}
-          FLINT_LIVE_TIMEOUT_SECS: "300"
+          FLINT_LIVE_TIMEOUT_SECS: "600"
         run: |
           if (-not $env:FLINT_LIVE_PASS -or -not $env:FLINT_LIVE_PASS_B) {
             throw "FLINT_LIVE_PASS/FLINT_LIVE_PASS_B secrets are required"
