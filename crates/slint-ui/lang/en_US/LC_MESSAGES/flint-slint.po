@@ -1,0 +1,654 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Flint 0.1.69\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+
+msgid "testnet · статус неизвестен"
+msgstr "testnet · status unknown"
+
+msgid "нода не подключена"
+msgstr "node not connected"
+
+msgid "Обновить"
+msgstr "Refresh"
+
+msgid "Заблокировать"
+msgstr "Lock"
+
+msgid "Разблокировать"
+msgstr "Unlock"
+
+msgid "АКТИВНЫЙ КОШЕЛЁК"
+msgstr "ACTIVE WALLET"
+
+msgid "БАЛАНС"
+msgstr "BALANCE"
+
+msgid "Копировать адрес"
+msgstr "Copy address"
+
+msgid "Получить"
+msgstr "Receive"
+
+msgid "Отправить"
+msgstr "Send"
+
+msgid "Отменить скан"
+msgstr "Cancel scan"
+
+msgid "Последние операции"
+msgstr "Recent activity"
+
+msgid "вся история"
+msgstr "full history"
+
+msgid "Пока нет операций"
+msgstr "No activity yet"
+
+msgid "Кошелёк заблокирован"
+msgstr "Wallet locked"
+
+msgid "Активный кошелёк"
+msgstr "Active wallet"
+
+msgid "Создать другой seed: настройки → имя профиля → сохранить."
+msgstr "Create another seed: settings → wallet name → save."
+
+msgid "Пароль"
+msgstr "Password"
+
+msgid "Создать кошелёк"
+msgstr "Create wallet"
+
+msgid "Восстановить"
+msgstr "Restore"
+
+msgid "Профили и сеть"
+msgstr "Profiles and network"
+
+msgid "Новый кошелёк"
+msgstr "New wallet"
+
+msgid "Повторите пароль"
+msgstr "Repeat password"
+
+msgid "Минимум 12 символов; seed будет показан один раз."
+msgstr "At least 12 characters; the seed will be shown once."
+
+msgid "Отмена"
+msgstr "Cancel"
+
+msgid "Создать"
+msgstr "Create"
+
+msgid "Запишите seed-фразу. Она не будет показана снова."
+msgstr "Write down the seed phrase. It will not be shown again."
+
+msgid "Я сохранил seed"
+msgstr "I saved the seed"
+
+msgid "Восстановить кошелёк"
+msgstr "Restore wallet"
+
+msgid "Seed-фраза (12–24 слова)"
+msgstr "Seed phrase (12–24 words)"
+
+msgid "Отправить GRIN"
+msgstr "Send GRIN"
+
+msgid "testnet · сумма и адрес проверяются до подписи"
+msgstr "testnet · amount and address are checked before signing"
+
+msgid "Адрес получателя"
+msgstr "Recipient address"
+
+msgid "Сумма, GRIN"
+msgstr "Amount, GRIN"
+
+msgid "Подготовлено к отправке"
+msgstr "Prepared to send"
+
+msgid "Изменить"
+msgstr "Edit"
+
+msgid "Кому: "
+msgstr "To: "
+
+msgid "Сумма: "
+msgstr "Amount: "
+
+msgid "Slatepack для получателя"
+msgstr "Slatepack for the recipient"
+
+msgid "Копировать slatepack"
+msgstr "Copy slatepack"
+
+msgid "Ответ получателя"
+msgstr "Recipient reply"
+
+msgid "Подготовить"
+msgstr "Prepare"
+
+msgid "Закрыть"
+msgstr "Close"
+
+msgid "Завершить"
+msgstr "Finalize"
+
+msgid "Получить GRIN"
+msgstr "Receive GRIN"
+
+msgid "Новый адрес"
+msgstr "New address"
+
+msgid "Синхронизация ноды"
+msgstr "Node sync"
+
+msgid "Входящий slatepack"
+msgstr "Incoming slatepack"
+
+msgid "Принять"
+msgstr "Accept"
+
+msgid "Ответ отправителю"
+msgstr "Reply to sender"
+
+msgid "Копировать ответ"
+msgstr "Copy reply"
+
+msgid "Завершить приём"
+msgstr "Finish receiving"
+
+msgid "Настройки"
+msgstr "Settings"
+
+msgid "Сеть"
+msgstr "Network"
+
+msgid "mainnet — реальные средства; смена сети заблокирует кошелёк"
+msgstr "mainnet — real funds; switching the network locks the wallet"
+
+msgid "Имя кошелька"
+msgstr "Wallet name"
+
+msgid "Новое имя создаёт отдельный профиль: после сохранения создайте или восстановите в нём независимый seed. Латиница, цифры, - и _."
+msgstr "A new name creates a separate profile: after saving, create or restore an independent seed there. Latin letters, digits, - and _."
+
+msgid "Каталог данных ноды и кошельков"
+msgstr "Node and wallet data directory"
+
+msgid "Сейчас: "
+msgstr "Current: "
+
+msgid "Стандартный"
+msgstr "Default"
+
+msgid "Применить при перезапуске"
+msgstr "Apply on restart"
+
+msgid "Файлы не копируются автоматически. Чтобы открыть существующие кошельки и цепь, скопируйте их в новый корень при закрытом Flint; иначе после перезапуска будут созданы новые данные."
+msgstr "Files are not copied automatically. To open existing wallets and chain data, copy them into the new root while Flint is closed; otherwise new data will be created after restart."
+
+msgid "Каталог задан параметром --data или FLINT_DATA_DIR; измените параметр запуска."
+msgstr "The directory is set by --data or FLINT_DATA_DIR; change the launch parameter."
+
+msgid "Минимум подтверждений"
+msgstr "Minimum confirmations"
+
+msgid "Tor (приём и messenger-шлюз)"
+msgstr "Tor (receiving and messenger gateway)"
+
+msgid "Обновить Tor"
+msgstr "Refresh Tor"
+
+msgid "obfs4/webtunnel мосты, по одному на строку"
+msgstr "obfs4/webtunnel bridges, one per line"
+
+msgid "Сохранить мосты"
+msgstr "Save bridges"
+
+msgid "Показать лог"
+msgstr "Show log"
+
+msgid "Полный rescan: после копирования data выполните «Сканировать»."
+msgstr "Full rescan: after copying data, run “Scan”."
+
+msgid "Безопасность"
+msgstr "Security"
+
+msgid "Сохранить"
+msgstr "Save"
+
+msgid "Свопы JANUS"
+msgstr "JANUS swaps"
+
+msgid "демо-борд · не публичный протокол"
+msgstr "demo board · not a public protocol"
+
+msgid "Взять"
+msgstr "Take"
+
+msgid "Симулировать"
+msgstr "Simulate"
+
+msgid "Текущий пароль"
+msgstr "Current password"
+
+msgid "Новый пароль"
+msgstr "New password"
+
+msgid "Повторите новый пароль"
+msgstr "Repeat new password"
+
+msgid "Сменить пароль"
+msgstr "Change password"
+
+msgid "Пароль для миграции"
+msgstr "Password for migration"
+
+msgid "Защитить seed (Argon2id)"
+msgstr "Protect seed (Argon2id)"
+
+msgid "Отключить Argon2id"
+msgstr "Disable Argon2id"
+
+msgid "Починить конверт"
+msgstr "Repair envelope"
+
+msgid "Удаление кошелька необратимо."
+msgstr "Deleting the wallet is irreversible."
+
+msgid "Удалить кошелёк"
+msgstr "Delete wallet"
+
+msgid "Сообщения"
+msgstr "Messages"
+
+msgid "Кому (tgrin/grin-адрес)"
+msgstr "To (tgrin/grin address)"
+
+msgid "Текст"
+msgstr "Text"
+
+msgid "Проверить входящие"
+msgstr "Check inbox"
+
+msgid "Контакты"
+msgstr "Contacts"
+
+msgid "История"
+msgstr "History"
+
+msgid "Удалить"
+msgstr "Delete"
+
+msgid "адрес контакта"
+msgstr "contact address"
+
+msgid "имя"
+msgstr "name"
+
+msgid "пароль старой истории"
+msgstr "old history password"
+
+msgid "Восстановить старую историю"
+msgstr "Restore old history"
+
+msgid "Очередь"
+msgstr "Queue"
+
+msgid "Загружаю очередь…"
+msgstr "Loading queue…"
+
+msgid "Очередь не загружена"
+msgstr "Queue not loaded"
+
+msgid "Не считайте очередь пустой: состояние операций неизвестно."
+msgstr "Do not assume the queue is empty: operation state is unknown."
+
+msgid "Повторить загрузку"
+msgstr "Retry loading"
+
+msgid "Нечитаемые записи: "
+msgstr "Unreadable records: "
+
+msgid "Диагностика: "
+msgstr "Diagnostics: "
+
+msgid "Записи не удалены. Повтор/отмена для них недоступны."
+msgstr "Records are not deleted. Retry/cancel are unavailable for them."
+
+msgid "Экспорт ответа"
+msgstr "Export response"
+
+msgid "Копировать диагностику"
+msgstr "Copy diagnostics"
+
+msgid "Незавершённые переводы"
+msgstr "Unfinished transfers"
+
+msgid "Заблокировано"
+msgstr "Locked"
+
+msgid "Ожидают подтверждения"
+msgstr "Awaiting confirmation"
+
+msgid "Повторить"
+msgstr "Retry"
+
+msgid "Отменить"
+msgstr "Cancel"
+
+msgid "Незавершённых операций нет"
+msgstr "No unfinished operations"
+
+msgid "Язык интерфейса"
+msgstr "Interface language"
+
+msgid "Справка по восстановлению"
+msgstr "Restore help"
+
+msgid "Как восстановить кошелёк"
+msgstr "How to restore a wallet"
+
+msgid "В окне восстановления введите 12–24 слова исходной фразы и новый пароль. Seed будет проверен при первом открытии."
+msgstr "In the restore window, enter the 12–24 words of the original phrase and a new password. The seed is checked on first open."
+
+msgid "После восстановления кошелёк помечается как незавершённый: выполните полный скан цепи, чтобы увидеть прежние выходы и баланс."
+msgstr "After restoring, the wallet is marked unfinished: run a full chain scan to see previous outputs and balance."
+
+msgid "Не восстанавливайте один и тот же seed в нескольких копиях одновременно: это создаёт разные ответы и завышает локальный баланс. После таких экспериментов нужен полный rescan."
+msgstr "Do not restore the same seed in several copies at once: it creates different replies and inflates the local balance. After such experiments, run a full rescan."
+
+msgid "Пароль не хранится и не восстанавливается. Если он утерян, доступен только restore из seed-фразы в чистый каталог."
+msgstr "The password is neither stored nor recoverable. If it is lost, only restoring from the seed phrase into a clean directory helps."
+
+msgid "Закрыть справку"
+msgstr "Close help"
+
+msgid "Переключаю язык…"
+msgstr "Switching language…"
+
+msgid "Пароль нового кошелька"
+msgstr "New wallet password"
+
+msgid "Seed-фраза"
+msgstr "Seed phrase"
+
+msgid "Пароль восстановленного кошелька"
+msgstr "Restored wallet password"
+
+msgid "Сумма"
+msgstr "Amount"
+
+msgid "Мосты Tor"
+msgstr "Tor bridges"
+
+msgid "Пароль для защиты seed"
+msgstr "Seed protection password"
+
+msgid "Повторите пароль для миграции"
+msgstr "Repeat migration password"
+
+msgid "Имя кошелька для удаления"
+msgstr "Wallet name to delete"
+
+msgid "Получатель сообщения"
+msgstr "Message recipient"
+
+msgid "Текст сообщения"
+msgstr "Message text"
+
+msgid "Адрес контакта"
+msgstr "Contact address"
+
+msgid "Имя контакта"
+msgstr "Contact name"
+
+msgid "История операций"
+msgstr "Transaction history"
+
+msgid "Пароль старой истории"
+msgstr "Old history password"
+
+msgid "Профили"
+msgstr "Profiles"
+
+msgid "Активный профиль: "
+msgstr "Active profile: "
+
+msgid "Создать профиль"
+msgstr "Create profile"
+
+msgid "Каждый профиль — отдельный кошелёк и seed. Новое имя переключает на новый профиль; переименования нет. После создания откроется создание seed."
+msgstr "Each profile is a separate wallet and seed. A new name switches to a new profile; there is no rename. After creating it, the seed dialog opens."
+
+msgid "Новый профиль"
+msgstr "New profile"
+
+msgid "Другой кошелёк — это другой профиль: нажмите «Новый профиль»."
+msgstr "Another wallet is another profile: press “New profile”."
+
+msgid "Вставить"
+msgstr "Paste"
+
+msgid "Показать seed"
+msgstr "Show seed"
+
+msgid "Показать"
+msgstr "Show"
+
+msgid "Никому не показывайте фразу. После проверки закройте окно."
+msgstr "Do not show the phrase to anyone. Close the window after checking."
+
+msgid "Фраза не копируется автоматически; закройте окно после записи."
+msgstr "The phrase is not copied automatically; close the window after writing it down."
+
+msgid "Кошелёк"
+msgstr "Wallet"
+
+msgid "Адрес кошелька"
+msgstr "Wallet address"
+
+msgid "Нет операций"
+msgstr "No transactions"
+
+msgid "Получите или отправьте первый GRIN, чтобы история появилась здесь"
+msgstr "Receive or send your first GRIN and the history will appear here"
+
+msgid "Обзор кошелька"
+msgstr "Wallet overview"
+
+msgid "Кошелёк открыт"
+msgstr "Wallet unlocked"
+
+msgid "Доступный баланс"
+msgstr "Available balance"
+
+msgid "Получение средств"
+msgstr "Receive funds"
+
+msgid "Ваш адрес для получения GRIN"
+msgstr "Your address for receiving GRIN"
+
+msgid "Доступно"
+msgstr "Available"
+
+msgid "Ожидает"
+msgstr "Pending"
+
+msgid "Показать QR"
+msgstr "Show QR"
+
+msgid "Высота "
+msgstr "Height "
+
+msgid "пиров"
+msgstr "peers"
+
+msgid "Подробнее"
+msgstr "Details"
+
+msgid "Остановить"
+msgstr "Stop"
+
+msgid "Запустить"
+msgstr "Start"
+
+msgid "Здесь появятся ваши операции"
+msgstr "Your transactions will appear here"
+
+msgid "Получите первый перевод, чтобы увидеть историю."
+msgstr "Receive your first transfer to see the history."
+
+msgid "Как получить GRIN"
+msgstr "How to receive GRIN"
+
+msgid "Тестовая сеть"
+msgstr "Test network"
+
+msgid "Адрес для получения"
+msgstr "Receive address"
+
+msgid "Копировать"
+msgstr "Copy"
+
+msgid "Остановить ноду"
+msgstr "Stop node"
+
+msgid "Запустить ноду"
+msgstr "Start node"
+
+msgid "Сканировать"
+msgstr "Scan"
+
+msgid "Сканирую…"
+msgstr "Scanning…"
+
+msgid "Пауза"
+msgstr "Pause"
+
+msgid "Продолжить"
+msgstr "Resume"
+
+msgid "СЕТЬ И ИСТОРИЯ"
+msgstr "NETWORK AND HISTORY"
+
+msgid "Контактов пока нет"
+msgstr "No contacts yet"
+
+msgid "Сохраните имя и адрес для переписки."
+msgstr "Save a name and address for messaging."
+
+msgid "Заблокированные адреса"
+msgstr "Blocked addresses"
+
+msgid "Восстановить историю"
+msgstr "Restore history"
+
+msgid "Переписка"
+msgstr "Conversation"
+
+msgid "Выберите контакт или введите адрес"
+msgstr "Choose a contact or enter an address"
+
+msgid "Обновить историю"
+msgstr "Refresh history"
+
+msgid "Начните переписку"
+msgstr "Start a conversation"
+
+msgid "Выберите контакт слева или введите tgrin/grin-адрес получателя."
+msgstr "Choose a contact on the left or enter a tgrin/grin recipient address."
+
+msgid "Получатель"
+msgstr "Recipient"
+
+msgid "выполняется…"
+msgstr "in progress…"
+
+msgid "Как назвать контакт"
+msgstr "Contact name"
+
+msgid "Введите пароль старой истории, чтобы попробовать восстановить переписку."
+msgstr "Enter the old history password to try restoring the conversation."
+
+msgid "Восстановление не гарантируется."
+msgstr "Recovery is not guaranteed."
+
+msgid "Нет текста"
+msgstr "No text"
+
+msgid "нетекстовое сообщение"
+msgstr "non-text message"
+
+msgid "входящее"
+msgstr "incoming"
+
+msgid "исходящее"
+msgstr "outgoing"
+
+msgid "Добавить контакт"
+msgstr "Add contact"
+
+msgid "Заблокированных адресов нет"
+msgstr "No blocked addresses"
+
+msgid "Контакт"
+msgstr "Contact"
+
+msgid "tgrin… / grin…"
+msgstr "tgrin… / grin…"
+
+msgid "Имя"
+msgstr "Name"
+
+msgid "Адрес"
+msgstr "Address"
+
+msgid "Используйте адрес собеседника."
+msgstr "Use the other party's address."
+
+msgid "Скрыть"
+msgstr "Hide"
+
+msgid "Сообщений пока нет"
+msgstr "No messages yet"
+
+msgid "Напишите первое сообщение, чтобы начать переписку."
+msgstr "Write the first message to start the conversation."
+
+msgid "Входящие"
+msgstr "Inbox"
+
+msgid "Открыть кошелёк"
+msgstr "Open wallet"
+
+msgid "Кошелёк ещё не создан"
+msgstr "Wallet is not created yet"
+
+msgid "Профиль"
+msgstr "Profile"
+
+msgid "Открываю…"
+msgstr "Opening…"
+
+msgid "Кошелёк ещё не создан. Создайте новый или восстановите из seed-фразы."
+msgstr "Wallet is not created yet. Create a new one or restore from a seed phrase."
+
+msgid "Введите пароль выбранного кошелька."
+msgstr "Enter the password for the selected wallet."
+
+msgid "Обработать slatepack"
+msgstr "Process slatepack"
+
+msgid "Обрабатывать слейтпаки автоматически"
+msgstr "Process slatepacks automatically"
+
+msgid "Автофинализация только для slatepack от сохранённых контактов; ответ отправляется автоматически."
+msgstr "Automatic finalization only for slatepacks from saved contacts; the response is sent automatically."
+
+msgid "Экспорт запроса"
+msgstr "Export request"

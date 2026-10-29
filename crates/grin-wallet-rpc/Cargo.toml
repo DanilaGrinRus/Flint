@@ -1,0 +1,45 @@
+# Сборочная обёртка: компилирует неизменённый upstream grin-wallet из
+# закреплённого fork в общем offline lock/vendor Flint. Криптография и команды
+# кошелька здесь не дублируются.
+[package]
+name = "grin_wallet"
+version = "5.5.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+build = "../../third_party/grin-wallet/src/build/build.rs"
+
+[lib]
+name = "grin_wallet"
+path = "../../third_party/grin-wallet/src/lib.rs"
+
+[[bin]]
+name = "grin-wallet"
+path = "../../third_party/grin-wallet/src/bin/grin-wallet.rs"
+
+[dependencies]
+clap = "4"
+rpassword = "7.5.4"
+serde_yaml = "0.9"
+thiserror = "1"
+log = "0.4"
+linefeed = "0.6"
+semver = "1.0.28"
+rustyline = "9"
+lazy_static = "1"
+
+grin_wallet_api = { path = "../../third_party/grin-wallet/api", version = "5.5.1" }
+grin_wallet_impls = { path = "../../third_party/grin-wallet/impls", version = "5.5.1" }
+grin_wallet_libwallet = { path = "../../third_party/grin-wallet/libwallet", version = "5.5.1" }
+grin_wallet_controller = { path = "../../third_party/grin-wallet/controller", version = "5.5.1" }
+grin_wallet_config = { path = "../../third_party/grin-wallet/config", version = "5.5.1" }
+
+grin_core = { path = "../../third_party/grin-wallet/grin/core" }
+grin_keychain = { path = "../../third_party/grin-wallet/grin/keychain" }
+grin_util = { path = "../../third_party/grin-wallet/grin/util" }
+grin_api = { path = "../../third_party/grin-wallet/grin/api" }
+
+[build-dependencies]
+built = { version = "0.8.0", features = ["git2"] }
+
+

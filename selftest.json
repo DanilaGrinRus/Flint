@@ -1,0 +1,24 @@
+{
+  "data_dir": "C:\\DHW\\.tmp\\flint-selftest-79965361-21ae-4896-90c1-40677d8d6eb8",
+  "elapsed_ms": 3964,
+  "janus": {
+    "lock_height": 5320,
+    "offers": 3,
+    "steps": 5,
+    "swap_state": "Completed"
+  },
+  "node": {
+    "connected": true,
+    "height": 3313355,
+    "managed": {
+      "error": "узел недоступен: порт 13413 занят сервисом, который не отвечает как нода этой сети"
+    }
+  },
+  "ok": true,
+  "wallet": {
+    "address": "tgrin1jch3874mvdfpsvlgnnllcmc2j0akhv2wf4d05fjxvy9aw85scjzq6qt25r",
+    "reopened_matches": true,
+    "seed_words": 24,
+    "spendable_offline": "0"
+  }
+}

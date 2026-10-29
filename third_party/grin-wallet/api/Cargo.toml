@@ -1,0 +1,40 @@
+[package]
+name = "grin_wallet_api"
+version = "5.5.1"
+authors = ["Grin Developers <mimblewimble@lists.launchpad.net>"]
+description = "Grin Wallet API"
+license = "Apache-2.0"
+repository = "https://github.com/mimblewimble/grin-wallet"
+keywords = [ "crypto", "grin", "mimblewimble" ]
+exclude = ["**/*.grin", "**/*.grin2"]
+edition = "2021"
+
+[dependencies]
+log = "0.4"
+uuid = { version = "1.23.4", features = ["serde", "v4"] }
+serde = "1"
+rand = "0.6"
+serde_derive = "1"
+serde_json = "1"
+easy-jsonrpc-mw = "0.5.4"
+chrono = { version = "0.4.11", features = ["serde"] }
+ring = "0.17.14"
+base64 = "0.12"
+ed25519-dalek = "2"
+
+grin_wallet_libwallet = { path = "../libwallet", version = "5.5.1" }
+grin_wallet_config = { path = "../config", version = "5.5.1" }
+grin_wallet_impls = { path = "../impls", version = "5.5.1" }
+grin_wallet_util = { path = "../util", version = "5.5.1" }
+
+##### Grin Imports
+
+grin_core = { path = "../grin/core"}
+grin_keychain = { path = "../grin/keychain"}
+grin_util = { path = "../grin/util"}
+
+#####
+
+[dev-dependencies]
+serde_json = "1"
+tempfile = "3.1"

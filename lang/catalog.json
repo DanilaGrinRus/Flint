@@ -1,0 +1,2274 @@
+{
+  "static": [
+    {
+      "ctx": "",
+      "key": "testnet · статус неизвестен",
+      "en": "testnet · status unknown"
+    },
+    {
+      "ctx": "",
+      "key": "нода не подключена",
+      "en": "node not connected"
+    },
+    {
+      "ctx": "",
+      "key": "Обновить",
+      "en": "Refresh"
+    },
+    {
+      "ctx": "",
+      "key": "Заблокировать",
+      "en": "Lock"
+    },
+    {
+      "ctx": "",
+      "key": "Разблокировать",
+      "en": "Unlock"
+    },
+    {
+      "ctx": "",
+      "key": "АКТИВНЫЙ КОШЕЛЁК",
+      "en": "ACTIVE WALLET"
+    },
+    {
+      "ctx": "",
+      "key": "БАЛАНС",
+      "en": "BALANCE"
+    },
+    {
+      "ctx": "",
+      "key": "Копировать адрес",
+      "en": "Copy address"
+    },
+    {
+      "ctx": "",
+      "key": "Получить",
+      "en": "Receive"
+    },
+    {
+      "ctx": "",
+      "key": "Отправить",
+      "en": "Send"
+    },
+    {
+      "ctx": "",
+      "key": "Отменить скан",
+      "en": "Cancel scan"
+    },
+    {
+      "ctx": "",
+      "key": "Последние операции",
+      "en": "Recent activity"
+    },
+    {
+      "ctx": "",
+      "key": "вся история",
+      "en": "full history"
+    },
+    {
+      "ctx": "",
+      "key": "Пока нет операций",
+      "en": "No activity yet"
+    },
+    {
+      "ctx": "",
+      "key": "Кошелёк заблокирован",
+      "en": "Wallet locked"
+    },
+    {
+      "ctx": "",
+      "key": "Активный кошелёк",
+      "en": "Active wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Создать другой seed: настройки → имя профиля → сохранить.",
+      "en": "Create another seed: settings → wallet name → save."
+    },
+    {
+      "ctx": "",
+      "key": "Пароль",
+      "en": "Password"
+    },
+    {
+      "ctx": "",
+      "key": "Создать кошелёк",
+      "en": "Create wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Восстановить",
+      "en": "Restore"
+    },
+    {
+      "ctx": "",
+      "key": "Профили и сеть",
+      "en": "Profiles and network"
+    },
+    {
+      "ctx": "",
+      "key": "Новый кошелёк",
+      "en": "New wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Повторите пароль",
+      "en": "Repeat password"
+    },
+    {
+      "ctx": "",
+      "key": "Минимум 12 символов; seed будет показан один раз.",
+      "en": "At least 12 characters; the seed will be shown once."
+    },
+    {
+      "ctx": "",
+      "key": "Отмена",
+      "en": "Cancel"
+    },
+    {
+      "ctx": "",
+      "key": "Создать",
+      "en": "Create"
+    },
+    {
+      "ctx": "",
+      "key": "Запишите seed-фразу. Она не будет показана снова.",
+      "en": "Write down the seed phrase. It will not be shown again."
+    },
+    {
+      "ctx": "",
+      "key": "Я сохранил seed",
+      "en": "I saved the seed"
+    },
+    {
+      "ctx": "",
+      "key": "Восстановить кошелёк",
+      "en": "Restore wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Seed-фраза (12–24 слова)",
+      "en": "Seed phrase (12–24 words)"
+    },
+    {
+      "ctx": "",
+      "key": "Отправить GRIN",
+      "en": "Send GRIN"
+    },
+    {
+      "ctx": "",
+      "key": "testnet · сумма и адрес проверяются до подписи",
+      "en": "testnet · amount and address are checked before signing"
+    },
+    {
+      "ctx": "",
+      "key": "Адрес получателя",
+      "en": "Recipient address"
+    },
+    {
+      "ctx": "",
+      "key": "Сумма, GRIN",
+      "en": "Amount, GRIN"
+    },
+    {
+      "ctx": "",
+      "key": "Подготовлено к отправке",
+      "en": "Prepared to send"
+    },
+    {
+      "ctx": "",
+      "key": "Изменить",
+      "en": "Edit"
+    },
+    {
+      "ctx": "",
+      "key": "Кому: ",
+      "en": "To: "
+    },
+    {
+      "ctx": "",
+      "key": "Сумма: ",
+      "en": "Amount: "
+    },
+    {
+      "ctx": "",
+      "key": "Slatepack для получателя",
+      "en": "Slatepack for the recipient"
+    },
+    {
+      "ctx": "",
+      "key": "Копировать slatepack",
+      "en": "Copy slatepack"
+    },
+    {
+      "ctx": "",
+      "key": "Ответ получателя",
+      "en": "Recipient reply"
+    },
+    {
+      "ctx": "",
+      "key": "Подготовить",
+      "en": "Prepare"
+    },
+    {
+      "ctx": "",
+      "key": "Закрыть",
+      "en": "Close"
+    },
+    {
+      "ctx": "",
+      "key": "Завершить",
+      "en": "Finalize"
+    },
+    {
+      "ctx": "",
+      "key": "Получить GRIN",
+      "en": "Receive GRIN"
+    },
+    {
+      "ctx": "",
+      "key": "Новый адрес",
+      "en": "New address"
+    },
+    {
+      "ctx": "",
+      "key": "Синхронизация ноды",
+      "en": "Node sync"
+    },
+    {
+      "ctx": "",
+      "key": "Входящий slatepack",
+      "en": "Incoming slatepack"
+    },
+    {
+      "ctx": "",
+      "key": "Принять",
+      "en": "Accept"
+    },
+    {
+      "ctx": "",
+      "key": "Ответ отправителю",
+      "en": "Reply to sender"
+    },
+    {
+      "ctx": "",
+      "key": "Копировать ответ",
+      "en": "Copy reply"
+    },
+    {
+      "ctx": "",
+      "key": "Завершить приём",
+      "en": "Finish receiving"
+    },
+    {
+      "ctx": "",
+      "key": "Настройки",
+      "en": "Settings"
+    },
+    {
+      "ctx": "",
+      "key": "Сеть",
+      "en": "Network"
+    },
+    {
+      "ctx": "",
+      "key": "mainnet — реальные средства; смена сети заблокирует кошелёк",
+      "en": "mainnet — real funds; switching the network locks the wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Имя кошелька",
+      "en": "Wallet name"
+    },
+    {
+      "ctx": "",
+      "key": "Новое имя создаёт отдельный профиль: после сохранения создайте или восстановите в нём независимый seed. Латиница, цифры, - и _.",
+      "en": "A new name creates a separate profile: after saving, create or restore an independent seed there. Latin letters, digits, - and _."
+    },
+    {
+      "ctx": "",
+      "key": "Каталог данных ноды и кошельков",
+      "en": "Node and wallet data directory"
+    },
+    {
+      "ctx": "",
+      "key": "Сейчас: ",
+      "en": "Current: "
+    },
+    {
+      "ctx": "",
+      "key": "Стандартный",
+      "en": "Default"
+    },
+    {
+      "ctx": "",
+      "key": "Применить при перезапуске",
+      "en": "Apply on restart"
+    },
+    {
+      "ctx": "",
+      "key": "Файлы не копируются автоматически. Чтобы открыть существующие кошельки и цепь, скопируйте их в новый корень при закрытом Flint; иначе после перезапуска будут созданы новые данные.",
+      "en": "Files are not copied automatically. To open existing wallets and chain data, copy them into the new root while Flint is closed; otherwise new data will be created after restart."
+    },
+    {
+      "ctx": "",
+      "key": "Каталог задан параметром --data или FLINT_DATA_DIR; измените параметр запуска.",
+      "en": "The directory is set by --data or FLINT_DATA_DIR; change the launch parameter."
+    },
+    {
+      "ctx": "",
+      "key": "Минимум подтверждений",
+      "en": "Minimum confirmations"
+    },
+    {
+      "ctx": "",
+      "key": "Tor (приём и messenger-шлюз)",
+      "en": "Tor (receiving and messenger gateway)"
+    },
+    {
+      "ctx": "",
+      "key": "Обновить Tor",
+      "en": "Refresh Tor"
+    },
+    {
+      "ctx": "",
+      "key": "obfs4/webtunnel мосты, по одному на строку",
+      "en": "obfs4/webtunnel bridges, one per line"
+    },
+    {
+      "ctx": "",
+      "key": "Сохранить мосты",
+      "en": "Save bridges"
+    },
+    {
+      "ctx": "",
+      "key": "Показать лог",
+      "en": "Show log"
+    },
+    {
+      "ctx": "",
+      "key": "Полный rescan: после копирования data выполните «Сканировать».",
+      "en": "Full rescan: after copying data, run “Scan”."
+    },
+    {
+      "ctx": "",
+      "key": "Безопасность",
+      "en": "Security"
+    },
+    {
+      "ctx": "",
+      "key": "Сохранить",
+      "en": "Save"
+    },
+    {
+      "ctx": "",
+      "key": "Свопы JANUS",
+      "en": "JANUS swaps"
+    },
+    {
+      "ctx": "",
+      "key": "демо-борд · не публичный протокол",
+      "en": "demo board · not a public protocol"
+    },
+    {
+      "ctx": "",
+      "key": "Взять",
+      "en": "Take"
+    },
+    {
+      "ctx": "",
+      "key": "Симулировать",
+      "en": "Simulate"
+    },
+    {
+      "ctx": "",
+      "key": "Текущий пароль",
+      "en": "Current password"
+    },
+    {
+      "ctx": "",
+      "key": "Новый пароль",
+      "en": "New password"
+    },
+    {
+      "ctx": "",
+      "key": "Повторите новый пароль",
+      "en": "Repeat new password"
+    },
+    {
+      "ctx": "",
+      "key": "Сменить пароль",
+      "en": "Change password"
+    },
+    {
+      "ctx": "",
+      "key": "Пароль для миграции",
+      "en": "Password for migration"
+    },
+    {
+      "ctx": "",
+      "key": "Защитить seed (Argon2id)",
+      "en": "Protect seed (Argon2id)"
+    },
+    {
+      "ctx": "",
+      "key": "Отключить Argon2id",
+      "en": "Disable Argon2id"
+    },
+    {
+      "ctx": "",
+      "key": "Починить конверт",
+      "en": "Repair envelope"
+    },
+    {
+      "ctx": "",
+      "key": "Удаление кошелька необратимо.",
+      "en": "Deleting the wallet is irreversible."
+    },
+    {
+      "ctx": "",
+      "key": "Удалить кошелёк",
+      "en": "Delete wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Сообщения",
+      "en": "Messages"
+    },
+    {
+      "ctx": "",
+      "key": "Кому (tgrin/grin-адрес)",
+      "en": "To (tgrin/grin address)"
+    },
+    {
+      "ctx": "",
+      "key": "Текст",
+      "en": "Text"
+    },
+    {
+      "ctx": "",
+      "key": "Проверить входящие",
+      "en": "Check inbox"
+    },
+    {
+      "ctx": "",
+      "key": "Контакты",
+      "en": "Contacts"
+    },
+    {
+      "ctx": "",
+      "key": "История",
+      "en": "History"
+    },
+    {
+      "ctx": "",
+      "key": "Удалить",
+      "en": "Delete"
+    },
+    {
+      "ctx": "",
+      "key": "адрес контакта",
+      "en": "contact address"
+    },
+    {
+      "ctx": "",
+      "key": "имя",
+      "en": "name"
+    },
+    {
+      "ctx": "",
+      "key": "пароль старой истории",
+      "en": "old history password"
+    },
+    {
+      "ctx": "",
+      "key": "Восстановить старую историю",
+      "en": "Restore old history"
+    },
+    {
+      "ctx": "",
+      "key": "Очередь",
+      "en": "Queue"
+    },
+    {
+      "ctx": "",
+      "key": "Загружаю очередь…",
+      "en": "Loading queue…"
+    },
+    {
+      "ctx": "",
+      "key": "Очередь не загружена",
+      "en": "Queue not loaded"
+    },
+    {
+      "ctx": "",
+      "key": "Не считайте очередь пустой: состояние операций неизвестно.",
+      "en": "Do not assume the queue is empty: operation state is unknown."
+    },
+    {
+      "ctx": "",
+      "key": "Повторить загрузку",
+      "en": "Retry loading"
+    },
+    {
+      "ctx": "",
+      "key": "Нечитаемые записи: ",
+      "en": "Unreadable records: "
+    },
+    {
+      "ctx": "",
+      "key": "Диагностика: ",
+      "en": "Diagnostics: "
+    },
+    {
+      "ctx": "",
+      "key": "Записи не удалены. Повтор/отмена для них недоступны.",
+      "en": "Records are not deleted. Retry/cancel are unavailable for them."
+    },
+    {
+      "ctx": "",
+      "key": "Экспорт ответа",
+      "en": "Export response"
+    },
+    {
+      "ctx": "",
+      "key": "Копировать диагностику",
+      "en": "Copy diagnostics"
+    },
+    {
+      "ctx": "",
+      "key": "Незавершённые переводы",
+      "en": "Unfinished transfers"
+    },
+    {
+      "ctx": "",
+      "key": "Заблокировано",
+      "en": "Locked"
+    },
+    {
+      "ctx": "",
+      "key": "Ожидают подтверждения",
+      "en": "Awaiting confirmation"
+    },
+    {
+      "ctx": "",
+      "key": "Повторить",
+      "en": "Retry"
+    },
+    {
+      "ctx": "",
+      "key": "Отменить",
+      "en": "Cancel"
+    },
+    {
+      "ctx": "",
+      "key": "Незавершённых операций нет",
+      "en": "No unfinished operations"
+    },
+    {
+      "ctx": "",
+      "key": "Язык интерфейса",
+      "en": "Interface language"
+    },
+    {
+      "ctx": "",
+      "key": "Справка по восстановлению",
+      "en": "Restore help"
+    },
+    {
+      "ctx": "",
+      "key": "Как восстановить кошелёк",
+      "en": "How to restore a wallet"
+    },
+    {
+      "ctx": "",
+      "key": "В окне восстановления введите 12–24 слова исходной фразы и новый пароль. Seed будет проверен при первом открытии.",
+      "en": "In the restore window, enter the 12–24 words of the original phrase and a new password. The seed is checked on first open."
+    },
+    {
+      "ctx": "",
+      "key": "После восстановления кошелёк помечается как незавершённый: выполните полный скан цепи, чтобы увидеть прежние выходы и баланс.",
+      "en": "After restoring, the wallet is marked unfinished: run a full chain scan to see previous outputs and balance."
+    },
+    {
+      "ctx": "",
+      "key": "Не восстанавливайте один и тот же seed в нескольких копиях одновременно: это создаёт разные ответы и завышает локальный баланс. После таких экспериментов нужен полный rescan.",
+      "en": "Do not restore the same seed in several copies at once: it creates different replies and inflates the local balance. After such experiments, run a full rescan."
+    },
+    {
+      "ctx": "",
+      "key": "Пароль не хранится и не восстанавливается. Если он утерян, доступен только restore из seed-фразы в чистый каталог.",
+      "en": "The password is neither stored nor recoverable. If it is lost, only restoring from the seed phrase into a clean directory helps."
+    },
+    {
+      "ctx": "",
+      "key": "Закрыть справку",
+      "en": "Close help"
+    },
+    {
+      "ctx": "",
+      "key": "Переключаю язык…",
+      "en": "Switching language…"
+    },
+    {
+      "ctx": "",
+      "key": "Пароль нового кошелька",
+      "en": "New wallet password"
+    },
+    {
+      "ctx": "",
+      "key": "Seed-фраза",
+      "en": "Seed phrase"
+    },
+    {
+      "ctx": "",
+      "key": "Пароль восстановленного кошелька",
+      "en": "Restored wallet password"
+    },
+    {
+      "ctx": "",
+      "key": "Сумма",
+      "en": "Amount"
+    },
+    {
+      "ctx": "",
+      "key": "Мосты Tor",
+      "en": "Tor bridges"
+    },
+    {
+      "ctx": "",
+      "key": "Пароль для защиты seed",
+      "en": "Seed protection password"
+    },
+    {
+      "ctx": "",
+      "key": "Повторите пароль для миграции",
+      "en": "Repeat migration password"
+    },
+    {
+      "ctx": "",
+      "key": "Имя кошелька для удаления",
+      "en": "Wallet name to delete"
+    },
+    {
+      "ctx": "",
+      "key": "Получатель сообщения",
+      "en": "Message recipient"
+    },
+    {
+      "ctx": "",
+      "key": "Текст сообщения",
+      "en": "Message text"
+    },
+    {
+      "ctx": "",
+      "key": "Адрес контакта",
+      "en": "Contact address"
+    },
+    {
+      "ctx": "",
+      "key": "Имя контакта",
+      "en": "Contact name"
+    },
+    {
+      "ctx": "",
+      "key": "История операций",
+      "en": "Transaction history"
+    },
+    {
+      "ctx": "",
+      "key": "Пароль старой истории",
+      "en": "Old history password"
+    },
+    {
+      "ctx": "",
+      "key": "Профили",
+      "en": "Profiles"
+    },
+    {
+      "ctx": "",
+      "key": "Активный профиль: ",
+      "en": "Active profile: "
+    },
+    {
+      "ctx": "",
+      "key": "Создать профиль",
+      "en": "Create profile"
+    },
+    {
+      "ctx": "",
+      "key": "Каждый профиль — отдельный кошелёк и seed. Новое имя переключает на новый профиль; переименования нет. После создания откроется создание seed.",
+      "en": "Each profile is a separate wallet and seed. A new name switches to a new profile; there is no rename. After creating it, the seed dialog opens."
+    },
+    {
+      "ctx": "",
+      "key": "Новый профиль",
+      "en": "New profile"
+    },
+    {
+      "ctx": "",
+      "key": "Другой кошелёк — это другой профиль: нажмите «Новый профиль».",
+      "en": "Another wallet is another profile: press “New profile”."
+    },
+    {
+      "ctx": "",
+      "key": "Вставить",
+      "en": "Paste"
+    },
+    {
+      "ctx": "",
+      "key": "Показать seed",
+      "en": "Show seed"
+    },
+    {
+      "ctx": "",
+      "key": "Показать",
+      "en": "Show"
+    },
+    {
+      "ctx": "",
+      "key": "Никому не показывайте фразу. После проверки закройте окно.",
+      "en": "Do not show the phrase to anyone. Close the window after checking."
+    },
+    {
+      "ctx": "",
+      "key": "Фраза не копируется автоматически; закройте окно после записи.",
+      "en": "The phrase is not copied automatically; close the window after writing it down."
+    },
+    {
+      "ctx": "",
+      "key": "Кошелёк",
+      "en": "Wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Адрес кошелька",
+      "en": "Wallet address"
+    },
+    {
+      "ctx": "",
+      "key": "Нет операций",
+      "en": "No transactions"
+    },
+    {
+      "ctx": "",
+      "key": "Получите или отправьте первый GRIN, чтобы история появилась здесь",
+      "en": "Receive or send your first GRIN and the history will appear here"
+    },
+    {
+      "ctx": "",
+      "key": "Обзор кошелька",
+      "en": "Wallet overview"
+    },
+    {
+      "ctx": "",
+      "key": "Кошелёк открыт",
+      "en": "Wallet unlocked"
+    },
+    {
+      "ctx": "",
+      "key": "Доступный баланс",
+      "en": "Available balance"
+    },
+    {
+      "ctx": "",
+      "key": "Получение средств",
+      "en": "Receive funds"
+    },
+    {
+      "ctx": "",
+      "key": "Ваш адрес для получения GRIN",
+      "en": "Your address for receiving GRIN"
+    },
+    {
+      "ctx": "",
+      "key": "Доступно",
+      "en": "Available"
+    },
+    {
+      "ctx": "",
+      "key": "Ожидает",
+      "en": "Pending"
+    },
+    {
+      "ctx": "",
+      "key": "Показать QR",
+      "en": "Show QR"
+    },
+    {
+      "ctx": "",
+      "key": "Высота ",
+      "en": "Height "
+    },
+    {
+      "ctx": "",
+      "key": "пиров",
+      "en": "peers"
+    },
+    {
+      "ctx": "",
+      "key": "Подробнее",
+      "en": "Details"
+    },
+    {
+      "ctx": "",
+      "key": "Остановить",
+      "en": "Stop"
+    },
+    {
+      "ctx": "",
+      "key": "Запустить",
+      "en": "Start"
+    },
+    {
+      "ctx": "",
+      "key": "Здесь появятся ваши операции",
+      "en": "Your transactions will appear here"
+    },
+    {
+      "ctx": "",
+      "key": "Получите первый перевод, чтобы увидеть историю.",
+      "en": "Receive your first transfer to see the history."
+    },
+    {
+      "ctx": "",
+      "key": "Как получить GRIN",
+      "en": "How to receive GRIN"
+    },
+    {
+      "ctx": "",
+      "key": "Тестовая сеть",
+      "en": "Test network"
+    },
+    {
+      "ctx": "",
+      "key": "Адрес для получения",
+      "en": "Receive address"
+    },
+    {
+      "ctx": "",
+      "key": "Копировать",
+      "en": "Copy"
+    },
+    {
+      "ctx": "",
+      "key": "Остановить ноду",
+      "en": "Stop node"
+    },
+    {
+      "ctx": "",
+      "key": "Запустить ноду",
+      "en": "Start node"
+    },
+    {
+      "ctx": "",
+      "key": "Сканировать",
+      "en": "Scan"
+    },
+    {
+      "ctx": "",
+      "key": "Сканирую…",
+      "en": "Scanning…"
+    },
+    {
+      "ctx": "",
+      "key": "Пауза",
+      "en": "Pause"
+    },
+    {
+      "ctx": "",
+      "key": "Продолжить",
+      "en": "Resume"
+    },
+    {
+      "ctx": "",
+      "key": "СЕТЬ И ИСТОРИЯ",
+      "en": "NETWORK AND HISTORY"
+    },
+    {
+      "ctx": "",
+      "key": "Контактов пока нет",
+      "en": "No contacts yet"
+    },
+    {
+      "ctx": "",
+      "key": "Сохраните имя и адрес для переписки.",
+      "en": "Save a name and address for messaging."
+    },
+    {
+      "ctx": "",
+      "key": "Заблокированные адреса",
+      "en": "Blocked addresses"
+    },
+    {
+      "ctx": "",
+      "key": "Восстановить историю",
+      "en": "Restore history"
+    },
+    {
+      "ctx": "",
+      "key": "Переписка",
+      "en": "Conversation"
+    },
+    {
+      "ctx": "",
+      "key": "Выберите контакт или введите адрес",
+      "en": "Choose a contact or enter an address"
+    },
+    {
+      "ctx": "",
+      "key": "Обновить историю",
+      "en": "Refresh history"
+    },
+    {
+      "ctx": "",
+      "key": "Начните переписку",
+      "en": "Start a conversation"
+    },
+    {
+      "ctx": "",
+      "key": "Выберите контакт слева или введите tgrin/grin-адрес получателя.",
+      "en": "Choose a contact on the left or enter a tgrin/grin recipient address."
+    },
+    {
+      "ctx": "",
+      "key": "Получатель",
+      "en": "Recipient"
+    },
+    {
+      "ctx": "",
+      "key": "выполняется…",
+      "en": "in progress…"
+    },
+    {
+      "ctx": "",
+      "key": "Как назвать контакт",
+      "en": "Contact name"
+    },
+    {
+      "ctx": "",
+      "key": "Введите пароль старой истории, чтобы попробовать восстановить переписку.",
+      "en": "Enter the old history password to try restoring the conversation."
+    },
+    {
+      "ctx": "",
+      "key": "Восстановление не гарантируется.",
+      "en": "Recovery is not guaranteed."
+    },
+    {
+      "ctx": "",
+      "key": "Нет текста",
+      "en": "No text"
+    },
+    {
+      "ctx": "",
+      "key": "нетекстовое сообщение",
+      "en": "non-text message"
+    },
+    {
+      "ctx": "",
+      "key": "входящее",
+      "en": "incoming"
+    },
+    {
+      "ctx": "",
+      "key": "исходящее",
+      "en": "outgoing"
+    },
+    {
+      "ctx": "",
+      "key": "Добавить контакт",
+      "en": "Add contact"
+    },
+    {
+      "ctx": "",
+      "key": "Заблокированных адресов нет",
+      "en": "No blocked addresses"
+    },
+    {
+      "ctx": "",
+      "key": "Контакт",
+      "en": "Contact"
+    },
+    {
+      "ctx": "",
+      "key": "tgrin… / grin…",
+      "en": "tgrin… / grin…"
+    },
+    {
+      "ctx": "",
+      "key": "Имя",
+      "en": "Name"
+    },
+    {
+      "ctx": "",
+      "key": "Адрес",
+      "en": "Address"
+    },
+    {
+      "ctx": "",
+      "key": "Используйте адрес собеседника.",
+      "en": "Use the other party's address."
+    },
+    {
+      "ctx": "",
+      "key": "Скрыть",
+      "en": "Hide"
+    },
+    {
+      "ctx": "",
+      "key": "Сообщений пока нет",
+      "en": "No messages yet"
+    },
+    {
+      "ctx": "",
+      "key": "Напишите первое сообщение, чтобы начать переписку.",
+      "en": "Write the first message to start the conversation."
+    },
+    {
+      "ctx": "",
+      "key": "Входящие",
+      "en": "Inbox"
+    },
+    {
+      "ctx": "",
+      "key": "Открыть кошелёк",
+      "en": "Open wallet"
+    },
+    {
+      "ctx": "",
+      "key": "Кошелёк ещё не создан",
+      "en": "Wallet is not created yet"
+    },
+    {
+      "ctx": "",
+      "key": "Профиль",
+      "en": "Profile"
+    },
+    {
+      "ctx": "",
+      "key": "Открываю…",
+      "en": "Opening…"
+    },
+    {
+      "ctx": "",
+      "key": "Кошелёк ещё не создан. Создайте новый или восстановите из seed-фразы.",
+      "en": "Wallet is not created yet. Create a new one or restore from a seed phrase."
+    },
+    {
+      "ctx": "",
+      "key": "Введите пароль выбранного кошелька.",
+      "en": "Enter the password for the selected wallet."
+    },
+    {
+      "ctx": "",
+      "key": "Обработать slatepack",
+      "en": "Process slatepack"
+    },
+    {
+      "ctx": "",
+      "key": "Обрабатывать слейтпаки автоматически",
+      "en": "Process slatepacks automatically"
+    },
+    {
+      "ctx": "",
+      "key": "Автофинализация только для slatepack от сохранённых контактов; ответ отправляется автоматически.",
+      "en": "Automatic finalization only for slatepacks from saved contacts; the response is sent automatically."
+    },
+    {
+      "ctx": "",
+      "key": "Экспорт запроса",
+      "en": "Export request"
+    }
+  ],
+  "dynamic": [
+    {
+      "key": "кошелёк открыт",
+      "en": "wallet unlocked"
+    },
+    {
+      "key": "заблокирован",
+      "en": "locked"
+    },
+    {
+      "key": "кошелёк не создан",
+      "en": "wallet not created"
+    },
+    {
+      "key": "нода запускается",
+      "en": "node starting"
+    },
+    {
+      "key": "качает заголовки",
+      "en": "syncing headers"
+    },
+    {
+      "key": "качает блоки",
+      "en": "syncing blocks"
+    },
+    {
+      "key": "готова",
+      "en": "ready"
+    },
+    {
+      "key": "статус неизвестен",
+      "en": "status unknown"
+    },
+    {
+      "key": "нода не запущена",
+      "en": "node is not running"
+    },
+    {
+      "key": "нода не подключена",
+      "en": "node not connected"
+    },
+    {
+      "key": "скан идёт",
+      "en": "scan running"
+    },
+    {
+      "key": "скан завершён",
+      "en": "scan completed"
+    },
+    {
+      "key": "скан не завершён",
+      "en": "scan did not complete"
+    },
+    {
+      "key": "Tor включён{}; relay: {}",
+      "en": "Tor enabled{}; relay: {}"
+    },
+    {
+      "key": "Tor включён; relay: {}",
+      "en": "Tor enabled; relay: {}"
+    },
+    {
+      "key": "заблокированы: {}",
+      "en": "blocked: {}"
+    },
+    {
+      "key": "заблокированных адресов нет",
+      "en": "no blocked addresses"
+    },
+    {
+      "key": "сообщение",
+      "en": "message"
+    },
+    {
+      "key": "мосты: {} · строк: {}",
+      "en": "bridges: {} · lines: {}"
+    },
+    {
+      "key": "настроены",
+      "en": "configured"
+    },
+    {
+      "key": "не заданы",
+      "en": "not set"
+    },
+    {
+      "key": "клиент найден",
+      "en": "client found"
+    },
+    {
+      "key": "клиент не найден",
+      "en": "client not found"
+    },
+    {
+      "key": "буфер обмена",
+      "en": "clipboard"
+    },
+    {
+      "key": "буфер обмена: {e}",
+      "en": "clipboard: {e}"
+    },
+    {
+      "key": " (bootstrap идёт)",
+      "en": " (bootstrap in progress)"
+    },
+    {
+      "key": "введите сумму",
+      "en": "enter an amount"
+    },
+    {
+      "key": "сумма пустая",
+      "en": "amount is empty"
+    },
+    {
+      "key": "не больше 9 знаков после точки",
+      "en": "at most 9 decimal places"
+    },
+    {
+      "key": "сумма должна быть числом",
+      "en": "amount must be a number"
+    },
+    {
+      "key": "слишком большая сумма",
+      "en": "amount is too large"
+    },
+    {
+      "key": "Получено",
+      "en": "Received"
+    },
+    {
+      "key": "Отправлено",
+      "en": "Sent"
+    },
+    {
+      "key": "{} {} за 1 {}",
+      "en": "{} {} for 1 {}"
+    },
+    {
+      "key": "seed не найден",
+      "en": "seed not found"
+    },
+    {
+      "key": "войдите, чтобы увидеть баланс",
+      "en": "unlock to see the balance"
+    },
+    {
+      "key": "баланс не проверен нодой (кеш)",
+      "en": "balance is not verified by the node (cache)"
+    },
+    {
+      "key": "баланс проверен",
+      "en": "balance verified"
+    },
+    {
+      "key": "баланс недоступен",
+      "en": "balance unavailable"
+    },
+    {
+      "key": "переключаю кошелёк…",
+      "en": "switching wallet…"
+    },
+    {
+      "key": "проверяю пароль…",
+      "en": "checking password…"
+    },
+    {
+      "key": "ошибка",
+      "en": "error"
+    },
+    {
+      "key": "скан запущен…",
+      "en": "starting scan…"
+    },
+    {
+      "key": "скан: {done} / {total}",
+      "en": "scan: {done} / {total}"
+    },
+    {
+      "key": "скан завершён: блок {height}",
+      "en": "scan completed: block {height}"
+    },
+    {
+      "key": "скан: {e}",
+      "en": "scan: {e}"
+    },
+    {
+      "key": "отмена скана…",
+      "en": "cancelling scan…"
+    },
+    {
+      "key": "скан: {error}",
+      "en": "scan: {error}"
+    },
+    {
+      "key": "возобновление скана…",
+      "en": "resuming scan…"
+    },
+    {
+      "key": "пауза после текущего батча…",
+      "en": "pausing after the current batch…"
+    },
+    {
+      "key": "скан продолжен",
+      "en": "scan resumed"
+    },
+    {
+      "key": "скан приостановлен после батча",
+      "en": "scan paused after the batch"
+    },
+    {
+      "key": "{} нано",
+      "en": "{} nano"
+    },
+    {
+      "key": "Slatepack готов · комиссия {} нано",
+      "en": "Slatepack ready · fee {} nano"
+    },
+    {
+      "key": "Отправлено: {tx}",
+      "en": "Sent: {tx}"
+    },
+    {
+      "key": "Ответ готов · {} нано",
+      "en": "Reply ready · {} nano"
+    },
+    {
+      "key": "Приём завершён",
+      "en": "Receiving finished"
+    },
+    {
+      "key": "останавливаю ноду…",
+      "en": "stopping the node…"
+    },
+    {
+      "key": "запускаю ноду…",
+      "en": "starting the node…"
+    },
+    {
+      "key": "процесс ноды запущен",
+      "en": "node process started"
+    },
+    {
+      "key": "нода остановлена",
+      "en": "node stopped"
+    },
+    {
+      "key": "запускаю Tor…",
+      "en": "starting Tor…"
+    },
+    {
+      "key": "сохраняю мосты…",
+      "en": "saving bridges…"
+    },
+    {
+      "key": "лог ещё не создан: {path}",
+      "en": "log is not created yet: {path}"
+    },
+    {
+      "key": "Настройки сохранены",
+      "en": "Settings saved"
+    },
+    {
+      "key": "загружаю борд…",
+      "en": "loading the board…"
+    },
+    {
+      "key": "{} · {} офферов · stamps {}",
+      "en": "{} · {} offers · stamps {}"
+    },
+    {
+      "key": "борд: {e}",
+      "en": "board: {e}"
+    },
+    {
+      "key": "беру оффер…",
+      "en": "taking the offer…"
+    },
+    {
+      "key": "взят {} · {}",
+      "en": "taken {} · {}"
+    },
+    {
+      "key": "оффер: {e}",
+      "en": "offer: {e}"
+    },
+    {
+      "key": "симулирую своп…",
+      "en": "simulating the swap…"
+    },
+    {
+      "key": "симуляция: {} · {}",
+      "en": "simulation: {} · {}"
+    },
+    {
+      "key": "симуляция: {e}",
+      "en": "simulation: {e}"
+    },
+    {
+      "key": "адрес скопирован",
+      "en": "address copied"
+    },
+    {
+      "key": "slatepack скопирован",
+      "en": "slatepack copied"
+    },
+    {
+      "key": "ответ скопирован",
+      "en": "reply copied"
+    },
+    {
+      "key": "пароли не совпадают",
+      "en": "passwords do not match"
+    },
+    {
+      "key": "новые пароли не совпадают",
+      "en": "new passwords do not match"
+    },
+    {
+      "key": "пароль изменён",
+      "en": "password changed"
+    },
+    {
+      "key": "кошелёк перемещён в корзину",
+      "en": "wallet moved to the recycle bin"
+    },
+    {
+      "key": "прямой onion",
+      "en": "direct onion"
+    },
+    {
+      "key": "ключ истории открыт",
+      "en": "history key opened"
+    },
+    {
+      "key": "ключ истории закрыт",
+      "en": "history key closed"
+    },
+    {
+      "key": " · история: {e}",
+      "en": " · history: {e}"
+    },
+    {
+      "key": "отправлено: {}",
+      "en": "sent: {}"
+    },
+    {
+      "key": "новых: {} · blocked: {} · failed: {}",
+      "en": "new: {} · blocked: {} · failed: {}"
+    },
+    {
+      "key": "входящее",
+      "en": "incoming"
+    },
+    {
+      "key": "исходящее",
+      "en": "outgoing"
+    },
+    {
+      "key": "нетекстовое сообщение",
+      "en": "non-text message"
+    },
+    {
+      "key": "история пустая",
+      "en": "history is empty"
+    },
+    {
+      "key": "контакт сохранён",
+      "en": "contact saved"
+    },
+    {
+      "key": "контакт удалён",
+      "en": "contact deleted"
+    },
+    {
+      "key": "адрес заблокирован",
+      "en": "address blocked"
+    },
+    {
+      "key": "адрес разблокирован",
+      "en": "address unblocked"
+    },
+    {
+      "key": "старая история восстановлена",
+      "en": "old history restored"
+    },
+    {
+      "key": "кошелёк заблокирован",
+      "en": "wallet locked"
+    },
+    {
+      "key": "нет такого slate: {0}",
+      "en": "no such slate: {0}"
+    },
+    {
+      "key": "неверные параметры: {0}",
+      "en": "invalid parameters: {0}"
+    },
+    {
+      "key": "узел недоступен: {0}",
+      "en": "node unreachable: {0}"
+    },
+    {
+      "key": "ошибка кошелька: {0}",
+      "en": "wallet error: {0}"
+    },
+    {
+      "key": "скан отменён пользователем",
+      "en": "scan cancelled by user"
+    },
+    {
+      "key": "ошибка ввода-вывода: {0}",
+      "en": "I/O error: {0}"
+    },
+    {
+      "key": "ошибка формата: {0}",
+      "en": "format error: {0}"
+    },
+    {
+      "key": "ReceiveRecoveryIntegrity: запрос не совпадает",
+      "en": "ReceiveRecoveryIntegrity: request does not match"
+    },
+    {
+      "key": "бинарь ноды grin не найден: положите grin.exe в resources/node или укажите путь в настройках",
+      "en": "node binary grin not found: put grin.exe into resources/node or set the path in settings"
+    },
+    {
+      "key": "порт {} занят сервисом, который не отвечает как нода этой сети",
+      "en": "port {} is occupied by a service that does not answer as a node on this network"
+    },
+    {
+      "key": "нода не будет запущена: конфиг не указывает на секрет API или слушает не loopback",
+      "en": "node will not start: the config does not point at the API secret or listens on a non-loopback address"
+    },
+    {
+      "key": "не удалось запустить ноду: {e}",
+      "en": "failed to start the node: {e}"
+    },
+    {
+      "key": "не удалось занять порт {} для прокси ноды: {e}",
+      "en": "could not bind port {} for the node proxy: {e}"
+    },
+    {
+      "key": "конфиг ноды без api_http_addr — некуда перевести внутренний порт",
+      "en": "node config has no api_http_addr — nowhere to map the internal port"
+    },
+    {
+      "key": "нода завершилась с {status}. Лог:\\n{tail}",
+      "en": "node exited with {status}. Log:\\n{tail}"
+    },
+    {
+      "key": "нода не открыла RPC-порт за 40 секунд — смотрите node.log",
+      "en": "node did not open the RPC port within 40 seconds — see node.log"
+    },
+    {
+      "key": "grin server config вернул {}: {}",
+      "en": "grin server config returned {}: {}"
+    },
+    {
+      "key": "конфиг ноды без api_http_addr — некуда вписать секрет API",
+      "en": "node config has no api_http_addr — nowhere to write the API secret"
+    },
+    {
+      "key": "конфиг ноды без перевода строки после api_http_addr",
+      "en": "node config has no newline after api_http_addr"
+    },
+    {
+      "key": "rng: не удалось сгенерировать секрет API",
+      "en": "rng: could not generate the API secret"
+    },
+    {
+      "key": "кошелёк занят",
+      "en": "wallet busy"
+    },
+    {
+      "key": "создание кошелька",
+      "en": "wallet creation"
+    },
+    {
+      "key": "открытие кошелька",
+      "en": "wallet opening"
+    },
+    {
+      "key": "кошелёк сканирует цепь — открытие станет доступно после окончания",
+      "en": "wallet is scanning the chain — opening will be available when it finishes"
+    },
+    {
+      "key": "кошелёк не найден",
+      "en": "wallet not found"
+    },
+    {
+      "key": "занят сканированием",
+      "en": "busy scanning"
+    },
+    {
+      "key": "rpc journal: импортировано старых записей: {imported}",
+      "en": "rpc journal: imported old records: {imported}"
+    },
+    {
+      "key": "rpc journal: старый каталог не импортирован: {error}",
+      "en": "rpc journal: old directory not imported: {error}"
+    },
+    {
+      "key": "блокировка кошелька",
+      "en": "wallet lock"
+    },
+    {
+      "key": "баланс",
+      "en": "balance"
+    },
+    {
+      "key": "адрес",
+      "en": "address"
+    },
+    {
+      "key": "смена адреса",
+      "en": "address rotation"
+    },
+    {
+      "key": "история",
+      "en": "history"
+    },
+    {
+      "key": "список",
+      "en": "list"
+    },
+    {
+      "key": "нода не готова: {} (высота {}) — отправка и скан заблокированы",
+      "en": "node not ready: {} (height {}) — sending and scanning are blocked"
+    },
+    {
+      "key": "отправка",
+      "en": "sending"
+    },
+    {
+      "key": "финализация отправки",
+      "en": "finalizing send"
+    },
+    {
+      "key": "приём",
+      "en": "receiving"
+    },
+    {
+      "key": "финализация приёма",
+      "en": "finalizing receive"
+    },
+    {
+      "key": "операция не входит в загруженную читаемую очередь; действие запрещено",
+      "en": "operation is not in the loaded readable queue; action forbidden"
+    },
+    {
+      "key": "действие запрещено в состоянии {}",
+      "en": "action forbidden in state {}"
+    },
+    {
+      "key": "публикация",
+      "en": "publishing"
+    },
+    {
+      "key": "отмена транзакции",
+      "en": "transaction cancellation"
+    },
+    {
+      "key": "онлайн-отправка",
+      "en": "online send"
+    },
+    {
+      "key": "онлайн-отправка доступна с бэкендом grin-wallet",
+      "en": "online send is available with the grin-wallet backend"
+    },
+    {
+      "key": "локальная отправка",
+      "en": "local send"
+    },
+    {
+      "key": "локальный режим доступен с бэкендом grin-wallet",
+      "en": "local mode is available with the grin-wallet backend"
+    },
+    {
+      "key": "Tor-листенер доступен с бэкендом grin-wallet",
+      "en": "Tor listener is available with the grin-wallet backend"
+    },
+    {
+      "key": "node_url: поддерживаются только http:// (loopback) и https://",
+      "en": "node_url: only http:// (loopback) and https:// are supported"
+    },
+    {
+      "key": "node_url: удалённый HTTP-нод запрещён — используйте HTTPS или туннель",
+      "en": "node_url: remote HTTP node is forbidden — use HTTPS or a tunnel"
+    },
+    {
+      "key": "{error}; используются настройки по умолчанию",
+      "en": "{error}; defaults are used"
+    },
+    {
+      "key": "кошелёк уже создан",
+      "en": "wallet already exists"
+    },
+    {
+      "key": "адрес нового кошелька не совпадает с конвертом",
+      "en": "new wallet address does not match the envelope"
+    },
+    {
+      "key": "фраза должна содержать не меньше 12 слов",
+      "en": "phrase must contain at least 12 words"
+    },
+    {
+      "key": "каталог кошелька не пуст: восстановление разрешено только в чистый каталог",
+      "en": "wallet directory is not empty: restore is allowed only into a clean directory"
+    },
+    {
+      "key": "фраза не является мнемоникой Grin",
+      "en": "phrase is not a Grin mnemonic"
+    },
+    {
+      "key": "адрес восстановленного кошелька не совпадает с конвертом",
+      "en": "restored wallet address does not match the envelope"
+    },
+    {
+      "key": "неполное восстановление нельзя завершить частичным сканом: запустите полный скан",
+      "en": "incomplete restore cannot be finished with a partial scan: run a full scan"
+    },
+    {
+      "key": "скан запрещён: {}. Дождитесь полной синхронизации ноды",
+      "en": "scan forbidden: {}. Wait for full node synchronization"
+    },
+    {
+      "key": "нода не сообщила tip для скана — повторите позже",
+      "en": "node did not report a tip for the scan — retry later"
+    },
+    {
+      "key": "скан не покрывает ни одного блока: выберите высоту ниже tip",
+      "en": "scan covers no blocks: choose a height below the tip"
+    },
+    {
+      "key": "для миграции нужен legacy wallet.seed",
+      "en": "legacy wallet.seed is required for migration"
+    },
+    {
+      "key": "конверт seed не открылся (повреждён или это другой кошелёк): {e}",
+      "en": "seed envelope did not open (corrupted or a different wallet): {e}"
+    },
+    {
+      "key": "не удалось открыть кошелёк (неверный пароль?): {e}",
+      "en": "could not open the wallet (wrong password?): {e}"
+    },
+    {
+      "key": "скан уже идёт",
+      "en": "scan already running"
+    },
+    {
+      "key": "скан не идёт",
+      "en": "scan is not running"
+    },
+    {
+      "key": "исчерпан предел индексов адреса ({MAX_ADDRESS_INDEX})",
+      "en": "address index limit exhausted ({MAX_ADDRESS_INDEX})"
+    },
+    {
+      "key": "загружаю историю…",
+      "en": "loading history…"
+    },
+    {
+      "key": "операций: {count}",
+      "en": "operations: {count}"
+    },
+    {
+      "key": "повтор отправлен: {tx}",
+      "en": "retry sent: {tx}"
+    },
+    {
+      "key": "повтор: {e}",
+      "en": "retry: {e}"
+    },
+    {
+      "key": "операция отменена или разблокирована",
+      "en": "operation cancelled or unlocked"
+    },
+    {
+      "key": "отмена: {e}",
+      "en": "cancel: {e}"
+    },
+    {
+      "key": "новый адрес #{index}",
+      "en": "new address #{index}"
+    },
+    {
+      "key": "конверт отложен: {path}",
+      "en": "envelope deferred: {path}"
+    },
+    {
+      "key": "seed защищён: {outcome}",
+      "en": "seed protected: {outcome}"
+    },
+    {
+      "key": "Tor: {e}",
+      "en": "Tor: {e}"
+    },
+    {
+      "key": "seed: {e}",
+      "en": "seed: {e}"
+    },
+    {
+      "key": "gateway: пустой запрос",
+      "en": "gateway: empty request"
+    },
+    {
+      "key": "gateway: запрос слишком большой",
+      "en": "gateway: request too large"
+    },
+    {
+      "key": "gateway: тело слишком большое",
+      "en": "gateway: body too large"
+    },
+    {
+      "key": "tor.exe не найден: положите Tor expert bundle в resources/tor",
+      "en": "tor.exe not found: put the Tor expert bundle into resources/tor"
+    },
+    {
+      "key": "gateway не ответил на health-check",
+      "en": "gateway did not answer the health check"
+    },
+    {
+      "key": "не удалось запустить tor: {e}",
+      "en": "could not start tor: {e}"
+    },
+    {
+      "key": "tor не опубликовал сервис за 150 секунд",
+      "en": "tor did not publish the service within 150 seconds"
+    },
+    {
+      "key": "{}: не удалось прочитать выбор каталога данных: {error}",
+      "en": "{}: could not read the data directory selection: {error}"
+    },
+    {
+      "key": "{}: выбор каталога данных повреждён: {error}; исправьте или удалите этот файл, пока приложение закрыто",
+      "en": "{}: data directory selection is corrupted: {error}; fix or delete this file while the application is closed"
+    },
+    {
+      "key": "{}: неподдерживаемая версия выбора каталога данных {}",
+      "en": "{}: unsupported data directory selection version {}"
+    },
+    {
+      "key": "{}: каталог данных должен быть непустым абсолютным путём",
+      "en": "{}: data directory must be a non-empty absolute path"
+    },
+    {
+      "key": "каталог данных должен быть абсолютным путём, например D:\\\\Flint-data",
+      "en": "data directory must be an absolute path, for example D:\\\\Flint-data"
+    },
+    {
+      "key": "{} не является каталогом",
+      "en": "{} is not a directory"
+    },
+    {
+      "key": "не удалось создать каталог {}: {error}",
+      "en": "could not create directory {}: {error}"
+    },
+    {
+      "key": "не удалось сериализовать выбор каталога данных: {error}",
+      "en": "could not serialize the data directory selection: {error}"
+    },
+    {
+      "key": "не удалось сохранить {}: {error}",
+      "en": "could not save {}: {error}"
+    },
+    {
+      "key": "скан прерван: приложение было перезапущено",
+      "en": "scan interrupted: the application was restarted"
+    },
+    {
+      "key": "файл состояния профиля повреждён — баланс считается неизвестным",
+      "en": "profile state file is corrupted — the balance is treated as unknown"
+    },
+    {
+      "key": "settings.json: не удалось прочитать: {e}",
+      "en": "settings.json: could not read: {e}"
+    },
+    {
+      "key": "не удалось ограничить ACL settings.json/backup; проверьте права вручную",
+      "en": "could not restrict the ACL of settings.json/backup; check permissions manually"
+    },
+    {
+      "key": "у файла нет каталога",
+      "en": "the file has no parent directory"
+    },
+    {
+      "key": "у пути нет имени файла",
+      "en": "the path has no file name"
+    },
+    {
+      "key": "не удалось выделить уникальное имя временного файла",
+      "en": "could not allocate a unique temporary file name"
+    },
+    {
+      "key": "janus занят",
+      "en": "janus is busy"
+    },
+    {
+      "key": "неизвестный язык интерфейса: {language}",
+      "en": "unknown interface language: {language}"
+    },
+    {
+      "key": "каталог данных: {e}",
+      "en": "data directory: {e}"
+    },
+    {
+      "key": "изменение каталога данных",
+      "en": "changing the data directory"
+    },
+    {
+      "key": "неизвестная сеть: допустимы testnet и mainnet",
+      "en": "unknown network: testnet and mainnet are allowed"
+    },
+    {
+      "key": "нода занята",
+      "en": "node is busy"
+    },
+    {
+      "key": "изменение настроек",
+      "en": "changing settings"
+    },
+    {
+      "key": "смена сети через settings_set запрещена: используйте network_switch, чтобы не оставить RPC-кошелёк на старой сети",
+      "en": "switching the network via settings_set is forbidden: use network_switch so the RPC wallet does not stay on the old network"
+    },
+    {
+      "key": "нода недоступна: не найден grin.exe",
+      "en": "node unavailable: grin.exe not found"
+    },
+    {
+      "key": "не удалось получить свободное место на диске",
+      "en": "could not get free disk space"
+    },
+    {
+      "key": "свободное место на диске доступно только на Windows",
+      "en": "free disk space is available only on Windows"
+    },
+    {
+      "key": "45 мин",
+      "en": "45 min"
+    },
+    {
+      "key": "Grin не нашёл подписанную транзакцию — восстановить публикацию нельзя",
+      "en": "Grin did not find the signed transaction — publishing cannot be restored"
+    },
+    {
+      "key": "finalizing: результат finalize_tx неизвестен; автоматическая публикация запрещена",
+      "en": "finalizing: finalize_tx result is unknown; automatic publishing is forbidden"
+    },
+    {
+      "key": "pending: не удалось прочитать запись: {e}",
+      "en": "pending: could not read a record: {e}"
+    },
+    {
+      "key": "pending: не удалось прочитать каталог {}: {e}",
+      "en": "pending: could not read directory {}: {e}"
+    },
+    {
+      "key": "receive_tx не выполнен ({text}); запись сохранена как receive_intent, повтор допустим",
+      "en": "receive_tx did not finish ({text}); the record is kept as receive_intent, retry is allowed"
+    },
+    {
+      "key": "slate не содержит суммы",
+      "en": "slate has no amount"
+    },
+    {
+      "key": "вставьте slatepack",
+      "en": "paste a slatepack"
+    },
+    {
+      "key": "входящая сделка уже записана, но сохранённый ответ недоступен или повреждён ({text}); повторный receive запрещён",
+      "en": "incoming transaction is already recorded, but the saved reply is unavailable or corrupted ({text}); receiving again is forbidden"
+    },
+    {
+      "key": "входящая сделка уже принята, но ответ был потерян; повторный receive запрещён",
+      "en": "incoming transaction was already accepted, but the reply was lost; receiving again is forbidden"
+    },
+    {
+      "key": "входящий slate нельзя отменить: отправитель мог уже опубликовать транзакцию",
+      "en": "an incoming slate cannot be cancelled: the sender may have already published the transaction"
+    },
+    {
+      "key": "для удаления введите имя кошелька: {name}",
+      "en": "to delete, enter the wallet name: {name}"
+    },
+    {
+      "key": "ещё раз",
+      "en": "again"
+    },
+    {
+      "key": "заблокирована",
+      "en": "blocked"
+    },
+    {
+      "key": "запись receive уже существует в состоянии {other:?}",
+      "en": "receive record already exists in state {other:?}"
+    },
+    {
+      "key": "запись уже завершена и лежит в архиве",
+      "en": "the record is already finished and archived"
+    },
+    {
+      "key": "имя кошелька: только латиница, цифры, - и _, до 32 символов",
+      "en": "wallet name: Latin letters, digits, - and _ only, up to 32 characters"
+    },
+    {
+      "key": "не удалось заблокировать входы: {lock_err}",
+      "en": "could not lock inputs: {lock_err}"
+    },
+    {
+      "key": "не удалось разобрать slatepack: {e}",
+      "en": "could not parse the slatepack: {e}"
+    },
+    {
+      "key": "не удалось разобрать ответ: {e}",
+      "en": "could not parse the reply: {e}"
+    },
+    {
+      "key": "не удалось убрать кошелёк: {e}",
+      "en": "could not remove the wallet: {e}"
+    },
+    {
+      "key": "некорректный идентификатор slate",
+      "en": "invalid slate identifier"
+    },
+    {
+      "key": "некорректный идентификатор slate: ожидается UUID",
+      "en": "invalid slate identifier: UUID expected"
+    },
+    {
+      "key": "нельзя доказать, что сохранённая сделка подписана; запись оставлена для ручного восстановления",
+      "en": "cannot prove the saved transaction is signed; the record is kept for manual recovery"
+    },
+    {
+      "key": "нет такого slate: {slate_id}",
+      "en": "no such slate: {slate_id}"
+    },
+    {
+      "key": "нет узла",
+      "en": "no node"
+    },
+    {
+      "key": "нода недоступна",
+      "en": "node unavailable"
+    },
+    {
+      "key": "операция финализируется: отмена запрещена, доступна только повторная публикация",
+      "en": "operation is finalizing: cancellation is forbidden, only retry publishing is available"
+    },
+    {
+      "key": "ответный slate относится к другой транзакции",
+      "en": "the reply slate belongs to a different transaction"
+    },
+    {
+      "key": "ошибка кошелька: нет узла",
+      "en": "wallet error: no node"
+    },
+    {
+      "key": "пароль короче 12 символов",
+      "en": "password is shorter than 12 characters"
+    },
+    {
+      "key": "пароль содержит простое слово (password/qwerty/123456) — выберите другой",
+      "en": "password contains a weak word (password/qwerty/123456) — choose another"
+    },
+    {
+      "key": "полный",
+      "en": "full"
+    },
+    {
+      "key": "публиковать нечего: транзакция в состоянии {other:?}",
+      "en": "nothing to publish: transaction is in state {other:?}"
+    },
+    {
+      "key": "результат finalize_tx неизвестен; повторная подпись и автоматическая публикация запрещены, запись оставлена для ручного восстановления",
+      "en": "finalize_tx result is unknown; re-signing and automatic publishing are forbidden, the record is kept for manual recovery"
+    },
+    {
+      "key": "скан запрещён",
+      "en": "scan forbidden"
+    },
+    {
+      "key": "состояние операции не определено: отмена запрещена",
+      "en": "operation state is unknown: cancellation is forbidden"
+    },
+    {
+      "key": "сумма в цепи не совпадает с записью: ожидалось {} нано",
+      "en": "on-chain amount does not match the record: expected {} nano"
+    },
+    {
+      "key": "сумма должна быть больше нуля",
+      "en": "amount must be greater than zero"
+    },
+    {
+      "key": "транзакция уже отправлена в сеть",
+      "en": "transaction was already sent to the network"
+    },
+    {
+      "key": "у pending нет имени",
+      "en": "pending record has no name"
+    },
+    {
+      "key": "у pending нет каталога",
+      "en": "pending record has no directory"
+    },
+    {
+      "key": "укажите адрес получателя",
+      "en": "specify the recipient address"
+    },
+    {
+      "key": "финализация запрещена в состоянии {:?}; требуется ручное восстановление",
+      "en": "finalization is forbidden in state {:?}; manual recovery is required"
+    },
+    {
+      "key": "это входящий slate",
+      "en": "this is an incoming slate"
+    },
+    {
+      "key": "это не входящий slate",
+      "en": "this is not an incoming slate"
+    },
+    {
+      "key": "это не исходящий slate",
+      "en": "this is not an outgoing slate"
+    },
+    {
+      "key": "не удалось открыть диалог выбора каталога: {error}",
+      "en": "could not open the folder picker: {error}"
+    },
+    {
+      "key": "диалог выбора каталога завершился с ошибкой: {}",
+      "en": "folder picker failed: {}"
+    },
+    {
+      "key": "диалог выбора каталога вернул путь не в UTF-8",
+      "en": "folder picker returned a non-UTF-8 path"
+    },
+    {
+      "key": "на этой платформе введите абсолютный путь вручную",
+      "en": "on this platform, enter an absolute path manually"
+    },
+    {
+      "key": "повтор запрещён: операция не в состоянии finalizing/finalized_not_posted",
+      "en": "retry is forbidden: operation is not in finalizing/finalized_not_posted"
+    },
+    {
+      "key": "отмена запрещена: операция уже подписана или не находится в locked",
+      "en": "cancellation is forbidden: the operation is already signed or not in locked"
+    },
+    {
+      "key": "Argon2id отключён; wallet.seed восстановлен",
+      "en": "Argon2id disabled; wallet.seed restored"
+    },
+    {
+      "key": "введите имя профиля",
+      "en": "enter a profile name"
+    },
+    {
+      "key": "этот профиль уже активен",
+      "en": "this profile is already active"
+    },
+    {
+      "key": "Введите имя нового профиля и нажмите «Создать профиль».",
+      "en": "Enter a new profile name and press “Create profile”."
+    },
+    {
+      "key": "Профиль открыт; введите пароль.",
+      "en": "Profile opened; enter the password."
+    },
+    {
+      "key": "введите пароль",
+      "en": "enter the password"
+    },
+    {
+      "key": "кошелёк заблокирован после 5 минут бездействия",
+      "en": "wallet locked after 5 minutes of inactivity"
+    },
+    {
+      "key": "статус ноды неизвестен",
+      "en": "node status unknown"
+    },
+    {
+      "key": "нода готова",
+      "en": "node ready"
+    },
+    {
+      "key": "нода: процесс запускается, RPC ещё не отвечает — сумма может быть неактуальной",
+      "en": "node: process is starting, RPC is not answering yet — the balance may be stale"
+    },
+    {
+      "key": "нода: качает заголовки, RPC ещё не отвечает — сумма может быть неактуальной",
+      "en": "node: syncing headers, RPC is not answering yet — the balance may be stale"
+    },
+    {
+      "key": "нода: качает блоки, RPC ещё не отвечает — сумма может быть неактуальной",
+      "en": "node: syncing blocks, RPC is not answering yet — the balance may be stale"
+    },
+    {
+      "key": "нода не подключена — сумма может быть неактуальной",
+      "en": "node is not connected — the balance may be stale"
+    },
+    {
+      "key": "tor.exe не найден — положите Tor expert bundle в resources/tor",
+      "en": "tor.exe not found — put the Tor expert bundle into resources/tor"
+    },
+    {
+      "key": "Tor выключен; включите для прямого приёма и messenger",
+      "en": "Tor is off; enable it for direct receiving and messenger"
+    },
+    {
+      "key": "не удалось получить очередь за 12 с; состояние неизвестно",
+      "en": "could not load the queue in 12 s; state is unknown"
+    },
+    {
+      "key": "баланс неизвестен до полного скана",
+      "en": "balance is unknown until a full scan"
+    },
+    {
+      "key": "дождитесь завершения текущей операции перед сменой кошелька",
+      "en": "wait for the current operation before switching the wallet"
+    },
+    {
+      "key": "кошелёк переключён, но статус не прочитан; обновите окно",
+      "en": "wallet switched, but the status was not read; refresh the window"
+    },
+    {
+      "key": "мало места на диске: свободно {:.1} ГиБ — синхронизация может остановиться",
+      "en": "low disk space: {:.1} GiB free — synchronization may stop"
+    },
+    {
+      "key": "нода синхронизирует заголовки/блоки — возможен большой сетевой трафик",
+      "en": "node is syncing headers/blocks — expect heavy network traffic"
+    },
+    {
+      "key": "каталог задан через --data или FLINT_DATA_DIR; измените параметр запуска",
+      "en": "directory is set by --data or FLINT_DATA_DIR; change the launch parameter"
+    },
+    {
+      "key": "дождитесь завершения текущей операции перед сменой каталога",
+      "en": "wait for the current operation before changing the directory"
+    },
+    {
+      "key": "Каталог сохранён. Закройте и снова запустите Flint; файлы не копировались.",
+      "en": "Directory saved. Close and restart Flint; files were not copied."
+    },
+    {
+      "key": "минимум подтверждений должен быть числом",
+      "en": "minimum confirmations must be a number"
+    },
+    {
+      "key": "кошелёк восстановлен; разблокируйте паролем",
+      "en": "wallet restored; unlock it with the password"
+    },
+    {
+      "key": "пароль изменён, но ключ истории не перевязан: {error}",
+      "en": "password changed, but the history key was not rewrapped: {error}"
+    },
+    {
+      "key": "пароль изменён, ключ истории перевязан",
+      "en": "password changed, history key rewrapped"
+    },
+    {
+      "key": "Полный rescan изменил баланс: было {} GRIN, стало {} GRIN. Проверьте историю и комиссии; это мог быть устаревший кэш.",
+      "en": "A full rescan changed the balance: was {} GRIN, now {} GRIN. Check history and fees; this may have been a stale cache."
+    },
+    {
+      "key": "{} на {} nano не завершена {age_min} мин; проверьте очередь сделок",
+      "en": "{} for {} nano unfinished for {age_min} min; check the transaction queue"
+    },
+    {
+      "key": "{} на {} nano: {reason}",
+      "en": "{} for {} nano: {reason}"
+    },
+    {
+      "key": "подпись начата, публикация не завершена; нажмите «Опубликовать»",
+      "en": "signing started, publishing did not finish; press “Publish”"
+    },
+    {
+      "key": "сделка подписана, но не опубликована; повторите публикацию",
+      "en": "transaction signed but not published; retry publishing"
+    },
+    {
+      "key": "требует ручного восстановления; не начинайте новую сделку",
+      "en": "needs manual recovery; do not start a new transaction"
+    },
+    {
+      "key": "ответ мог быть потерян; повторный приём запрещён, проверьте журнал",
+      "en": "the reply may be lost; do not receive again, check the journal"
+    }
+  ]
+}

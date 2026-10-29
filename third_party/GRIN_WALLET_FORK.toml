@@ -1,0 +1,11 @@
+# F-04: проверяемый источник embedded и управляемого RPC grin-wallet.
+upstream = "https://github.com/mimblewimble/grin-wallet"
+base_version = "5.5.1"
+base_commit = "f097811ee953fc81be4e70435d6ef845b6b2e8c9"
+commit = "11046cd197f8296e6cd9313502a9f2cbce6e262a"
+grin_upstream = "https://github.com/mimblewimble/grin"
+grin_commit = "dbaff34f7751ee23316fbbfe5806b47c546776ca"
+source_manifest = "grin-wallet-sources.sha256"
+patch = "grin-wallet-flint.patch"
+capability = "receive_response_recovery"
+capability_version = 1

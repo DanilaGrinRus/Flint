@@ -1,0 +1,27 @@
+[package]
+name = "flint-runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "UI-independent wallet session shared by the Slint shell"
+
+[dependencies]
+flint-core = { path = "../core" }
+flint-janus = { path = "../janus" }
+flint-messenger = { path = "../messenger" }
+base64 = { workspace = true }
+chacha20poly1305 = { workspace = true }
+getrandom = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+zeroize = { workspace = true }
+
+[dev-dependencies]
+grin_core = { workspace = true }
+grin_keychain = { workspace = true }
+
+[[bin]]
+name = "flint-selftest"
+path = "src/bin/flint-selftest.rs"

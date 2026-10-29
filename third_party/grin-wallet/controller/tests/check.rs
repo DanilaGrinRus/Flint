@@ -1,0 +1,1012 @@
+// Copyright 2021 The Grin Developers
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//! tests differing accounts in the same wallet
+#[macro_use]
+extern crate log;
+extern crate grin_wallet_controller as wallet;
+extern crate grin_wallet_impls as impls;
+
+use grin_core as core;
+use grin_util as util;
+
+use self::core::consensus;
+use self::core::global;
+use grin_wallet_libwallet as libwallet;
+use impls::test_framework::{self, LocalWalletClient};
+use impls::{PathToSlate, SlatePutter as _};
+use libwallet::{InitTxArgs, NodeClient};
+use std::cmp;
+use std::sync::atomic::Ordering;
+use std::thread;
+use std::time::Duration;
+use util::ZeroingString;
+
+#[macro_use]
+mod common;
+use common::{clean_output_dir, create_wallet_proxy, setup};
+
+macro_rules! send_to_dest {
+	($a:expr, $m: expr, $b:expr, $c:expr, $d:expr) => {
+		test_framework::send_to_dest($a, $m, $b, $c, $d, false)
+	};
+}
+
+macro_rules! wallet_info {
+	($a:expr, $m:expr) => {
+		test_framework::wallet_info($a, $m)
+	};
+}
+
+/// Various tests on checking functionality
+fn scan_impl(test_dir: &'static str) -> Result<(), libwallet::Error> {
+	// Create a new proxy to simulate server and wallet responses
+	let mut wallet_proxy = create_wallet_proxy(test_dir);
+	let chain = wallet_proxy.chain.clone();
+	let stopper = wallet_proxy.running.clone();
+
+	// Create a new wallet test client, and set its queues to communicate with the
+	// proxy
+	create_wallet_and_add!(
+		client1,
+		wallet1,
+		mask1_i,
+		test_dir,
+		"wallet1",
+		None,
+		&mut wallet_proxy,
+		false,
+		api1
+	);
+	let mask1 = (&mask1_i).as_ref();
+	create_wallet_and_add!(
+		client2,
+		wallet2,
+		mask2_i,
+		test_dir,
+		"wallet2",
+		None,
+		&mut wallet_proxy,
+		false,
+		api2
+	);
+	let mask2 = (&mask2_i).as_ref();
+
+	// Set the wallet proxy listener running
+	thread::spawn(move || {
+		if let Err(e) = wallet_proxy.run() {
+			error!("Wallet Proxy error: {}", e);
+		}
+	});
+
+	// few values to keep things shorter
+	let reward = consensus::REWARD;
+	let cm = global::coinbase_maturity(); // assume all testing precedes soft fork height
+
+	// add some accounts
+	{
+		api1.create_account_path(mask1, "named_account_1")?;
+		api1.create_account_path(mask1, "account_2")?;
+		api1.create_account_path(mask1, "account_3")?;
+		api1.set_active_account(mask1, "named_account_1")?;
+	}
+
+	// add account to wallet 2
+	{
+		api2.create_account_path(mask2, "account_1")?;
+		api2.set_active_account(mask2, "account_1")?;
+	}
+
+	// Do some mining
+	let bh = 20u64;
+	let _ =
+		test_framework::award_blocks_to_wallet(&chain, wallet1.clone(), mask1, bh as usize, false);
+
+	// Sanity check contents
+	{
+		let (wallet1_refreshed, wallet1_info) = api1.retrieve_summary_info(mask1, true, 1)?;
+		assert!(wallet1_refreshed);
+		assert_eq!(wallet1_info.last_confirmed_height, bh);
+		assert_eq!(wallet1_info.total, bh * reward);
+		assert_eq!(wallet1_info.amount_currently_spendable, (bh - cm) * reward);
+		// check tx log as well
+		let (_, txs) = api1.retrieve_txs(mask1, true, None, None, None)?;
+		let (c, _) = libwallet::TxLogEntry::sum_confirmed(&txs);
+		assert_eq!(wallet1_info.total, c);
+		assert_eq!(txs.len(), bh as usize);
+	}
+
+	// Accidentally delete some outputs
+	let w1_outputs_commits = api1.retrieve_outputs(mask1, false, true, None)?.1;
+	let w1_outputs: Vec<libwallet::OutputData> =
+		w1_outputs_commits.into_iter().map(|m| m.output).collect();
+	{
+		wallet_inst!(wallet1, w);
+		{
+			let mut batch = w.batch(mask1)?;
+			batch.delete(&w1_outputs[4].key_id, &None)?;
+			batch.delete(&w1_outputs[10].key_id, &None)?;
+			let mut accidental_spent = w1_outputs[13].clone();
+			accidental_spent.status = libwallet::OutputStatus::Spent;
+			batch.save(accidental_spent)?;
+			batch.commit()?;
+		}
+	}
+
+	// check we have a problem now
+	let (_, wallet1_info) = api1.retrieve_summary_info(mask1, true, 1)?;
+	let (_, txs) = api1.retrieve_txs(mask1, true, None, None, None)?;
+	let (c, _) = libwallet::TxLogEntry::sum_confirmed(&txs);
+	assert_ne!(wallet1_info.total, c);
+
+	// this should restore our missing outputs
+	api1.scan(mask1, None, true)?;
+
+	// check our outputs match again
+	{
+		let (wallet1_refreshed, wallet1_info) = api1.retrieve_summary_info(mask1, true, 1)?;
+		assert!(wallet1_refreshed);
+		assert_eq!(wallet1_info.total, bh * reward);
+		// And check account names haven't been splatted
+		let accounts = api1.accounts(mask1)?;
+		assert_eq!(accounts.len(), 4);
+		assert!(api1.set_active_account(mask1, "account_1").is_err());
+		assert!(api1.set_active_account(mask1, "named_account_1").is_ok());
+	}
+	// perform a transaction, but don't let it finish
+	{
+		// send to send
+		let args = InitTxArgs {
+			src_acct_name: None,
+			amount: reward * 2,
+			minimum_confirmations: cm,
+			max_outputs: 500,
+			num_change_outputs: 1,
+			selection_strategy_is_use_all: true,
+			..Default::default()
+		};
+		let slate = api1.init_send_tx(mask1, args)?;
+		// output tx file
+		let send_file = format!("{}/part_tx_1.tx", test_dir);
+		PathToSlate(send_file.into()).put_tx(&slate, false)?;
+		api1.tx_lock_outputs(mask1, &slate)?;
+	}
+
+	// check we're all locked
+	let (wallet1_refreshed, wallet1_info) = api1.retrieve_summary_info(mask1, true, 1)?;
+	assert!(wallet1_refreshed);
+	assert_eq!(wallet1_info.amount_currently_spendable, 0);
+	// unlock/restore
+	api1.scan(mask1, None, true)?;
+
+	// check spendable amount again
+	let (_, wallet1_info) = api1.retrieve_summary_info(mask1, true, 1)?;
+	assert_eq!(wallet1_info.amount_currently_spendable, (bh - cm) * reward);
+
+	// let logging finish
+	stopper.store(false, Ordering::Relaxed);
+	thread::sleep(Duration::from_millis(200));
+	Ok(())
+}
+
+fn two_wallets_one_seed_impl(test_dir: &'static str) -> Result<(), libwallet::Error> {
+	let seed_phrase = "affair pistol cancel crush garment candy ancient flag work \
+	                   market crush dry stand focus mutual weapon offer ceiling rival turn team spring \
+	                   where swift";
+	let seed_phrase = Some(ZeroingString::from(seed_phrase));
+
+	// Create a new proxy to simulate server and wallet responses
+	let mut wallet_proxy = create_wallet_proxy(test_dir);
+	let chain = wallet_proxy.chain.clone();
+	let stopper = wallet_proxy.running.clone();
+
+	// Create a new wallet test client, and set its queues to communicate with the
+	// proxy
+	create_wallet_and_add!(
+		m_client,
+		miner,
+		miner_mask_i,
+		test_dir,
+		"miner",
+		None,
+		&mut wallet_proxy,
+		false,
+		_m_api
+	);
+	let miner_mask = (&miner_mask_i).as_ref();
+
+	// non-mining recipient wallets
+	create_wallet_and_add!(
+		client1,
+		wallet1,
+		mask1_i,
+		test_dir,
+		"wallet1",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api1
+	);
+	let mask1 = (&mask1_i).as_ref();
+	create_wallet_and_add!(
+		client2,
+		wallet2,
+		mask2_i,
+		test_dir,
+		"wallet2",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		_api2
+	);
+	let mask2 = (&mask2_i).as_ref();
+	// we'll restore into here
+	create_wallet_and_add!(
+		client3,
+		wallet3,
+		mask3_i,
+		test_dir,
+		"wallet3",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api3
+	);
+	let mask3 = (&mask3_i).as_ref();
+	// also restore into here
+	create_wallet_and_add!(
+		client4,
+		wallet4,
+		mask4_i,
+		test_dir,
+		"wallet4",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api4
+	);
+	let mask4 = (&mask4_i).as_ref();
+	// Simulate a recover from seed without restore into here
+	create_wallet_and_add!(
+		client5,
+		wallet5,
+		mask5_i,
+		test_dir,
+		"wallet5",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api5
+	);
+	//simulate a recover from seed without restore into here
+	let mask5 = (&mask5_i).as_ref();
+	create_wallet_and_add!(
+		client6,
+		wallet6,
+		mask6_i,
+		test_dir,
+		"wallet6",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api6
+	);
+	let mask6 = (&mask6_i).as_ref();
+
+	create_wallet_and_add!(
+		client7,
+		wallet7,
+		mask7_i,
+		test_dir,
+		"wallet7",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api7
+	);
+	let mask7 = (&mask7_i).as_ref();
+	create_wallet_and_add!(
+		client8,
+		wallet8,
+		mask8_i,
+		test_dir,
+		"wallet8",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api8
+	);
+	let mask8 = (&mask8_i).as_ref();
+	create_wallet_and_add!(
+		client9,
+		wallet9,
+		mask9_i,
+		test_dir,
+		"wallet9",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api9
+	);
+	let mask9 = (&mask9_i).as_ref();
+	create_wallet_and_add!(
+		client10,
+		wallet10,
+		mask10_i,
+		test_dir,
+		"wallet10",
+		seed_phrase,
+		&mut wallet_proxy,
+		false,
+		api10
+	);
+	let mask10 = (&mask10_i).as_ref();
+
+	// Set the wallet proxy listener running
+	thread::spawn(move || {
+		if let Err(e) = wallet_proxy.run() {
+			error!("Wallet Proxy error: {}", e);
+		}
+	});
+
+	// few values to keep things shorter
+	let _reward = core::consensus::REWARD;
+	let cm = global::coinbase_maturity() as usize; // assume all testing precedes soft fork height
+
+	// Do some mining
+	let mut bh = 20u64;
+	let base_amount = consensus::GRIN_BASE;
+	let _ = test_framework::award_blocks_to_wallet(
+		&chain,
+		miner.clone(),
+		miner_mask,
+		bh as usize,
+		false,
+	);
+
+	// send some funds to wallets 1
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet1",
+		base_amount * 1
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet1",
+		base_amount * 2
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet1",
+		base_amount * 3
+	)?;
+	bh += 3;
+
+	// 0) Check repair when all is okay should leave wallet contents alone
+	api1.scan(mask1, None, true)?;
+	let info = wallet_info!(wallet1.clone(), mask1)?;
+	assert_eq!(info.amount_currently_spendable, base_amount * 6);
+	assert_eq!(info.total, base_amount * 6);
+
+	// send some funds to wallet 2
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet2",
+		base_amount * 4
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet2",
+		base_amount * 5
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet2",
+		base_amount * 6
+	)?;
+	bh += 3;
+
+	let _ = test_framework::award_blocks_to_wallet(&chain, miner.clone(), miner_mask, cm, false);
+	bh += cm as u64;
+
+	// confirm balances
+	// since info is now performing a partial scan, these should confirm
+	// as containing all outputs
+	let info = wallet_info!(wallet1.clone(), mask1)?;
+	assert_eq!(info.amount_currently_spendable, base_amount * 21);
+	assert_eq!(info.total, base_amount * 21);
+
+	let info = wallet_info!(wallet2.clone(), mask2)?;
+	assert_eq!(info.amount_currently_spendable, base_amount * 21);
+	assert_eq!(info.total, base_amount * 21);
+
+	// Now there should be outputs on the chain using the same
+	// seed + BIP32 path.
+
+	// 1) a full restore should recover all of them:
+	api3.scan(mask3, None, false)?;
+
+	let info = wallet_info!(wallet3.clone(), mask3)?;
+	let outputs = api3.retrieve_outputs(mask3, true, false, None)?.1;
+	assert_eq!(outputs.len(), 6);
+	assert_eq!(info.amount_currently_spendable, base_amount * 21);
+	assert_eq!(info.total, base_amount * 21);
+
+	// 2) scan should recover them into a single wallet
+	api1.scan(mask1, None, true)?;
+
+	let info = wallet_info!(wallet1.clone(), mask1)?;
+	let outputs = api1.retrieve_outputs(mask1, true, false, None)?.1;
+	assert_eq!(outputs.len(), 6);
+	assert_eq!(info.amount_currently_spendable, base_amount * 21);
+
+	// 3) If I recover from seed and start using the wallet without restoring,
+	// scan should restore the older outputs
+	// update, again, since scan is run automatically, balances on both
+	// wallets should turn out the same
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet4",
+		base_amount * 7
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet4",
+		base_amount * 8
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet4",
+		base_amount * 9
+	)?;
+	bh += 3;
+
+	let _ = test_framework::award_blocks_to_wallet(&chain, miner.clone(), miner_mask, cm, false);
+	bh += cm as u64;
+
+	let info = wallet_info!(wallet4.clone(), mask4)?;
+	let outputs = api4.retrieve_outputs(mask4, true, false, None)?.1;
+	assert_eq!(outputs.len(), 9);
+	assert_eq!(info.amount_currently_spendable, base_amount * 45);
+
+	api5.scan(mask5, None, false)?;
+
+	let info = wallet_info!(wallet5.clone(), mask5)?;
+	let outputs = api5.retrieve_outputs(mask5, true, false, None)?.1;
+	assert_eq!(outputs.len(), 9);
+	assert_eq!(info.amount_currently_spendable, base_amount * (45));
+
+	// 4) If I recover from seed and start using the wallet without restoring,
+	// scan should restore the older outputs
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet6",
+		base_amount * 10
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet6",
+		base_amount * 11
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet6",
+		base_amount * 12
+	)?;
+	bh += 3;
+
+	let _ = test_framework::award_blocks_to_wallet(&chain, miner.clone(), miner_mask, cm, false);
+	bh += cm as u64;
+
+	let info = wallet_info!(wallet6.clone(), mask6)?;
+	let outputs = api6.retrieve_outputs(mask6, true, false, None)?.1;
+	assert_eq!(outputs.len(), 12);
+	assert_eq!(info.amount_currently_spendable, base_amount * 78);
+
+	api6.scan(mask6, None, true)?;
+
+	let info = wallet_info!(wallet6.clone(), mask6)?;
+	let outputs = api6.retrieve_outputs(mask6, true, false, None)?.1;
+	assert_eq!(outputs.len(), 12);
+	assert_eq!(info.amount_currently_spendable, base_amount * (78));
+
+	// 5) Start using same seed with a different account, amounts should
+	// be distinct and restore should return funds from other account
+
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet7",
+		base_amount * 13
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet7",
+		base_amount * 14
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet7",
+		base_amount * 15
+	)?;
+	bh += 3;
+
+	// mix it up a bit
+	api7.create_account_path(mask7, "account_1")?;
+	api7.set_active_account(mask7, "account_1")?;
+
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet7",
+		base_amount * 1
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet7",
+		base_amount * 2
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet7",
+		base_amount * 3
+	)?;
+	bh += 3;
+
+	// check balances
+	let _ = test_framework::award_blocks_to_wallet(&chain, miner.clone(), miner_mask, cm, false);
+	bh += cm as u64;
+
+	let info = wallet_info!(wallet7.clone(), mask7)?;
+	let outputs = api7.retrieve_outputs(mask7, true, false, None)?.1;
+	assert_eq!(outputs.len(), 3);
+	assert_eq!(info.amount_currently_spendable, base_amount * 6);
+	api7.set_active_account(mask7, "default")?;
+	let info = wallet_info!(wallet7.clone(), mask7)?;
+	let outputs = api7.retrieve_outputs(mask7, true, false, None)?.1;
+	assert_eq!(outputs.len(), 15);
+	assert_eq!(info.amount_currently_spendable, base_amount * 120);
+
+	api8.scan(mask8, None, false)?;
+	let info = wallet_info!(wallet8.clone(), mask8)?;
+	let outputs = api8.retrieve_outputs(mask8, true, false, None)?.1;
+	assert_eq!(outputs.len(), 15);
+	assert_eq!(info.amount_currently_spendable, base_amount * 120);
+	api8.set_active_account(mask8, "account_1")?;
+	let info = wallet_info!(wallet8.clone(), mask8)?;
+	let outputs = api8.retrieve_outputs(mask8, true, false, None)?.1;
+	assert_eq!(outputs.len(), 3);
+	assert_eq!(info.amount_currently_spendable, base_amount * 6);
+
+	// 6) Start using same seed with a different account, now overwriting
+	// ids on account 2 as well, scan should get all outputs created
+	// to now into 2 accounts
+
+	api9.create_account_path(mask9, "account_1")?;
+	api9.set_active_account(mask9, "account_1")?;
+
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet9",
+		base_amount * 4
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet9",
+		base_amount * 5
+	)?;
+	send_to_dest!(
+		miner.clone(),
+		miner_mask,
+		m_client.clone(),
+		"wallet9",
+		base_amount * 6
+	)?;
+	bh += 3;
+	let _bh = bh;
+
+	let info = wallet_info!(wallet9.clone(), mask9)?;
+	let outputs = api9.retrieve_outputs(mask9, true, false, None)?.1;
+	assert_eq!(outputs.len(), 6);
+	assert_eq!(info.amount_currently_spendable, base_amount * 21);
+	api9.scan(mask9, None, true)?;
+	let info = wallet_info!(wallet9.clone(), mask9)?;
+	let outputs = api9.retrieve_outputs(mask9, true, false, None)?.1;
+	assert_eq!(outputs.len(), 6);
+	assert_eq!(info.amount_currently_spendable, base_amount * 21);
+
+	api9.set_active_account(mask9, "default")?;
+	let info = wallet_info!(wallet9.clone(), mask9)?;
+	let outputs = api9.retrieve_outputs(mask9, true, false, None)?.1;
+	assert_eq!(outputs.len(), 15);
+	assert_eq!(info.amount_currently_spendable, base_amount * 120);
+
+	let _ = test_framework::award_blocks_to_wallet(&chain, miner.clone(), miner_mask, cm, false);
+
+	// 7) Ensure scan creates missing accounts
+	api10.scan(mask10, None, true)?;
+	api10.set_active_account(mask10, "account_1")?;
+	let info = wallet_info!(wallet10.clone(), mask10)?;
+	let outputs = api10.retrieve_outputs(mask10, true, false, None)?.1;
+	assert_eq!(outputs.len(), 6);
+	assert_eq!(info.amount_currently_spendable, base_amount * 21);
+
+	api10.set_active_account(mask10, "default")?;
+	let info = wallet_info!(wallet10.clone(), mask10)?;
+	let outputs = api10.retrieve_outputs(mask10, true, false, None)?.1;
+	assert_eq!(outputs.len(), 15);
+	assert_eq!(info.amount_currently_spendable, base_amount * 120);
+
+	// let logging finish
+	stopper.store(false, Ordering::Relaxed);
+	thread::sleep(Duration::from_millis(200));
+	Ok(())
+}
+
+// Testing output scanning functionality, easier here as the testing framework
+// is all here
+fn output_scanning_impl(test_dir: &'static str) -> Result<(), libwallet::Error> {
+	let mut wallet_proxy = create_wallet_proxy(test_dir);
+	let chain = wallet_proxy.chain.clone();
+	let stopper = wallet_proxy.running.clone();
+	// Create a new wallet test client, and set its queues to communicate with the
+	// proxy
+	create_wallet_and_add!(
+		client1,
+		wallet1,
+		mask1_i,
+		test_dir,
+		"wallet1",
+		None,
+		&mut wallet_proxy,
+		false,
+		_api1
+	);
+	let mask1 = (&mask1_i).as_ref();
+	thread::spawn(move || {
+		if let Err(e) = wallet_proxy.run() {
+			error!("Wallet Proxy error: {}", e);
+		}
+	});
+
+	// Do some mining
+	let bh = 20u64;
+	let _ =
+		test_framework::award_blocks_to_wallet(&chain, wallet1.clone(), mask1, bh as usize, false);
+
+	// Now some chain scanning
+	{
+		// Entire range should be correct
+		let ranges = client1.height_range_to_pmmr_indices(1, None)?;
+		assert_eq!(ranges, (1, 38));
+		let outputs = client1.get_outputs_by_pmmr_index(ranges.0, Some(ranges.1), 1000)?;
+		assert_eq!(outputs.2.len(), 20);
+
+		// Basic range should be correct
+		let ranges = client1.height_range_to_pmmr_indices(1, Some(14))?;
+		assert_eq!(ranges, (1, 25));
+		let outputs = client1.get_outputs_by_pmmr_index(ranges.0, Some(ranges.1), 1000)?;
+		println!(
+			"Last Index: {}, Max: {}, Outputs.len: {}",
+			outputs.0,
+			outputs.1,
+			outputs.2.len()
+		);
+		assert_eq!(outputs.2.len(), 14);
+
+		// mid-range
+		let ranges = client1.height_range_to_pmmr_indices(5, Some(14))?;
+		assert_eq!(ranges, (8, 25));
+		let outputs = client1.get_outputs_by_pmmr_index(ranges.0, Some(ranges.1), 1000)?;
+		println!(
+			"Last Index: {}, Max: {}, Outputs.len: {}",
+			outputs.0,
+			outputs.1,
+			outputs.2.len()
+		);
+		for o in outputs.2.clone() {
+			println!("height: {}, mmr_index: {}", o.3, o.4);
+		}
+		assert_eq!(outputs.2.len(), 10);
+
+		// end
+		let ranges = client1.height_range_to_pmmr_indices(5, None)?;
+		assert_eq!(ranges, (8, 38));
+		let outputs = client1.get_outputs_by_pmmr_index(ranges.0, Some(ranges.1), 1000)?;
+		println!(
+			"Last Index: {}, Max: {}, Outputs.len: {}",
+			outputs.0,
+			outputs.1,
+			outputs.2.len()
+		);
+		for o in outputs.2.clone() {
+			println!("height: {}, mmr_index: {}", o.3, o.4);
+		}
+		assert_eq!(outputs.2.len(), 16);
+	}
+
+	// let logging finish
+	stopper.store(false, Ordering::Relaxed);
+	thread::sleep(Duration::from_millis(200));
+	Ok(())
+}
+
+fn multi_batch_scan_impl(test_dir: &'static str) -> Result<(), libwallet::Error> {
+	let mut wallet_proxy = create_wallet_proxy(test_dir);
+	let chain = wallet_proxy.chain.clone();
+	let stopper = wallet_proxy.running.clone();
+
+	create_wallet_and_add!(
+		client1,
+		wallet1,
+		mask1_i,
+		test_dir,
+		"wallet1",
+		None,
+		&mut wallet_proxy,
+		false,
+		api1
+	);
+	let mask1 = (&mask1_i).as_ref();
+
+	thread::spawn(move || {
+		if let Err(e) = wallet_proxy.run() {
+			error!("Wallet Proxy error: {}", e);
+		}
+	});
+
+	let reward = consensus::REWARD;
+	let bh = 12u64;
+	let _ =
+		test_framework::award_blocks_to_wallet(&chain, wallet1.clone(), mask1, bh as usize, false);
+
+	let (_, info) = api1.retrieve_summary_info(mask1, true, 1)?;
+	assert_eq!(info.last_confirmed_height, bh);
+	assert_eq!(info.total, bh * reward);
+	let output_commits = api1.retrieve_outputs(mask1, false, true, None)?.1;
+
+	{
+		wallet_inst!(wallet1, w);
+		let mut batch = w.batch(mask1)?;
+		batch.delete(&output_commits[8].output.key_id, &None)?;
+		batch.commit()?;
+	}
+
+	let tip = {
+		wallet_inst!(wallet1, w);
+		w.w2n_client().get_chain_tip()?
+	};
+
+	let start_height = 1;
+	let batch_size = 5;
+	let mut total_pmmr_range = None;
+	let mut batches = 0;
+	let status_send_channel = None;
+	for h in (start_height..tip.0).step_by((batch_size + 1) as usize) {
+		let batch_end_height = cmp::min(tip.0, h + batch_size);
+		let (mut info, range) = libwallet::scan(
+			wallet1.clone(),
+			mask1,
+			false,
+			h,
+			batch_end_height,
+			start_height,
+			tip.0,
+			total_pmmr_range,
+			&status_send_channel,
+		)?;
+		info.hash = if batch_end_height == tip.0 {
+			tip.1.clone()
+		} else {
+			"".to_owned()
+		};
+		total_pmmr_range = Some(range);
+		batches += 1;
+
+		wallet_inst!(wallet1, w);
+		let mut batch = w.batch(mask1)?;
+		batch.save_last_scanned_block(info)?;
+		batch.commit()?;
+	}
+	assert!(batches > 1);
+
+	let (_, restored_outputs) = api1.retrieve_outputs(mask1, false, true, None)?;
+	let (_, info) = api1.retrieve_summary_info(mask1, false, 1)?;
+	assert_eq!(info.total, bh * reward);
+	assert_eq!(restored_outputs.len(), bh as usize);
+
+	stopper.store(false, Ordering::Relaxed);
+	thread::sleep(Duration::from_millis(200));
+	Ok(())
+}
+
+fn restore_corrupted_outputs_across_batches_impl(
+	test_dir: &'static str,
+) -> Result<(), libwallet::Error> {
+	let mut wallet_proxy = create_wallet_proxy(test_dir);
+	let chain = wallet_proxy.chain.clone();
+	let stopper = wallet_proxy.running.clone();
+
+	create_wallet_and_add!(
+		client1,
+		wallet1,
+		mask1_i,
+		test_dir,
+		"wallet1",
+		None,
+		&mut wallet_proxy,
+		false,
+		api1
+	);
+	let mask1 = (&mask1_i).as_ref();
+
+	thread::spawn(move || {
+		if let Err(e) = wallet_proxy.run() {
+			error!("Wallet Proxy error: {}", e);
+		}
+	});
+
+	let reward = consensus::REWARD;
+	let bh = 12u64;
+	let _ =
+		test_framework::award_blocks_to_wallet(&chain, wallet1.clone(), mask1, bh as usize, false);
+
+	let (_, info) = api1.retrieve_summary_info(mask1, true, 1)?;
+	assert_eq!(info.total, bh * reward);
+	let output_commits = api1.retrieve_outputs(mask1, false, true, None)?.1;
+
+	{
+		wallet_inst!(wallet1, w);
+		let mut batch = w.batch(mask1)?;
+		batch.delete(&output_commits[2].output.key_id, &None)?;
+		batch.delete(&output_commits[8].output.key_id, &None)?;
+		batch.commit()?;
+	}
+
+	let tip = {
+		wallet_inst!(wallet1, w);
+		w.w2n_client().get_chain_tip()?
+	};
+	let status_send_channel = None;
+	let (info, _) = libwallet::scan(
+		wallet1.clone(),
+		mask1,
+		false,
+		1,
+		6,
+		1,
+		tip.0,
+		None,
+		&status_send_channel,
+	)?;
+	{
+		wallet_inst!(wallet1, w);
+		{
+			let mut batch = w.batch(mask1)?;
+			batch.save_last_scanned_block(info)?;
+			batch.commit()?;
+		}
+		let last_scanned = w.last_scanned_block()?;
+		assert_eq!(last_scanned.height, 6);
+		assert_eq!(last_scanned.hash, "");
+	}
+
+	let (_, outputs_after_first_batch) = api1.retrieve_outputs(mask1, false, false, None)?;
+	assert_eq!(outputs_after_first_batch.len(), (bh - 1) as usize);
+
+	let (_, info) = api1.retrieve_summary_info(mask1, true, 1)?;
+	let (_, restored_outputs) = api1.retrieve_outputs(mask1, false, true, None)?;
+	let unique_keys = restored_outputs
+		.iter()
+		.map(|o| o.output.key_id.clone())
+		.collect::<std::collections::HashSet<_>>();
+
+	assert_eq!(info.total, bh * reward);
+	assert_eq!(restored_outputs.len(), bh as usize);
+	assert_eq!(unique_keys.len(), bh as usize);
+	assert!(restored_outputs
+		.iter()
+		.all(|o| o.output.status == libwallet::OutputStatus::Unspent));
+
+	stopper.store(false, Ordering::Relaxed);
+	thread::sleep(Duration::from_millis(200));
+	Ok(())
+}
+
+#[test]
+fn scan() {
+	let test_dir = "test_output/scan";
+	setup(test_dir);
+	if let Err(e) = scan_impl(test_dir) {
+		panic!("Libwallet Error: {}", e);
+	}
+	clean_output_dir(test_dir);
+}
+
+#[test]
+fn two_wallets_one_seed() {
+	let test_dir = "test_output/two_wallets_one_seed";
+	setup(test_dir);
+	if let Err(e) = two_wallets_one_seed_impl(test_dir) {
+		panic!("Libwallet Error: {}", e);
+	}
+	clean_output_dir(test_dir);
+}
+
+#[test]
+fn output_scanning() {
+	let test_dir = "test_output/output_scanning";
+	setup(test_dir);
+	if let Err(e) = output_scanning_impl(test_dir) {
+		panic!("Libwallet Error: {}", e);
+	}
+	clean_output_dir(test_dir);
+}
+
+#[test]
+fn multi_batch_scan() {
+	let test_dir = "test_output/multi_batch_scan";
+	setup(test_dir);
+	if let Err(e) = multi_batch_scan_impl(test_dir) {
+		panic!("Libwallet Error: {}", e);
+	}
+	clean_output_dir(test_dir);
+}
+
+#[test]
+fn restore_corrupted_outputs_across_batches() {
+	let test_dir = "test_output/restore_corrupted_outputs_across_batches";
+	setup(test_dir);
+	if let Err(e) = restore_corrupted_outputs_across_batches_impl(test_dir) {
+		panic!("Libwallet Error: {}", e);
+	}
+	clean_output_dir(test_dir);
+}

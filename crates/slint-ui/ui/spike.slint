@@ -1,0 +1,2992 @@
+import { Button, CheckBox, ComboBox, LineEdit, ListView, ScrollView, TextEdit } from "std-widgets.slint";
+import { Theme } from "theme.slint";
+import { NavButton } from "nav-button.slint";
+
+export struct ActivityRow {
+    title: string,
+    amount: string,
+    when: string,
+}
+
+export struct SwapRow {
+    id: string,
+    pair: string,
+    rate: string,
+    bounds: string,
+    stamps: string,
+}
+
+export struct MessageRow {
+    direction: string,
+    text: string,
+    when: string,
+    incoming: bool,
+    slatepack: bool,
+}
+
+export struct ContactRow {
+    address: string,
+    short-address: string,
+    name: string,
+}
+
+export struct PendingRow {
+    id: string,
+    amount: string,
+    state: string,
+    next-action: string,
+    error: string,
+    can-retry: bool,
+    can-cancel: bool,
+    can-export: bool,
+    can-export-request: bool,
+}
+
+component ActionButton inherits Rectangle {
+    in property <string> label;
+    in property <string> icon: "";
+    in property <string> kind: "secondary";
+    in property <bool> enabled: true;
+    in property <length> button-height: 42px;
+    callback clicked();
+
+    height: root.button-height;
+    min-width: 96px;
+    horizontal-stretch: 0;
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { root.clicked(); }
+    border-radius: Theme.radius-control;
+    background: !root.enabled ? Theme.surface-2
+        : root.kind == "primary" ? (touch.has-hover ? Theme.accent-dim : Theme.accent)
+        : (touch.has-hover ? Theme.surface-2 : transparent);
+    border-width: root.kind == "secondary" ? 1px : 0px;
+    border-color: Theme.border;
+    opacity: root.enabled ? 1.0 : 0.35;
+
+    HorizontalLayout {
+        x: 14px;
+        width: parent.width - 28px;
+        height: parent.height;
+        spacing: 8px;
+        alignment: center;
+        if root.icon != "": Text {
+            text: root.icon;
+            color: root.kind == "primary" ? Theme.bg
+                : root.kind == "ghost" ? Theme.muted-2 : Theme.accent;
+            font-size: 15px;
+            vertical-alignment: center;
+        }
+        Text {
+            text: root.label;
+            color: root.kind == "primary" ? Theme.bg
+                : root.kind == "ghost" ? Theme.muted-2 : Theme.accent;
+            font-size: 13px;
+            vertical-alignment: center;
+        }
+    }
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => { root.clicked(); }
+    }
+}
+
+component ProfileChip inherits Rectangle {
+    in property <string> profile;
+    in property <bool> selected: false;
+    callback clicked();
+
+    height: 30px;
+    min-width: 48px;
+    horizontal-stretch: 1;
+    border-radius: 8px;
+    background: root.selected ? Theme.accent-soft : Theme.surface-2;
+    border-width: 1px;
+    border-color: root.selected ? Theme.accent-line : Theme.border;
+    Text {
+        text: root.profile;
+        color: root.selected ? Theme.text : Theme.muted-2;
+        font-size: 10px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+component ProfileTile inherits Rectangle {
+    in property <string> profile;
+    in property <bool> selected: false;
+    in property <length> tile-width: 68px;
+    callback clicked();
+
+    width: root.tile-width;
+    height: 82px;
+    border-radius: 16px;
+    background: root.selected ? Theme.accent-soft : Theme.surface-2;
+    border-width: 1px;
+    border-color: root.selected ? Theme.accent-line : Theme.border;
+
+    Rectangle {
+        x: (root.width - 34px) / 2;
+        y: 8px;
+        width: 34px;
+        height: 34px;
+        border-radius: 17px;
+        background: root.selected ? Theme.accent : Theme.surface;
+        Rectangle {
+            x: 12px;
+            y: 7px;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background: root.selected ? Theme.bg : Theme.accent;
+        }
+        Rectangle {
+            x: 8px;
+            y: 20px;
+            width: 18px;
+            height: 9px;
+            border-radius: 5px;
+            background: root.selected ? Theme.bg : Theme.accent;
+        }
+    }
+    Text {
+        x: 4px;
+        y: 48px;
+        width: root.width - 8px;
+        text: root.profile;
+        color: root.selected ? Theme.text : Theme.muted-2;
+        font-size: 10px;
+        horizontal-alignment: center;
+    }
+    TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component AppWindow inherits Window {
+    title: "Flint — Slint 0.1.69";
+    icon: @image-url("assets/flint-mark-48.png");
+    min-width: 900px;
+    min-height: 760px;
+    background: Theme.bg;
+
+    in property <[ActivityRow]> activity: [];
+    in property <[ActivityRow]> history: [];
+    in property <[PendingRow]> pending: [];
+    in-out property <bool> pending-loading: false;
+    in-out property <string> pending-error: "";
+    in-out property <string> pending-diagnostics: "";
+    in-out property <[string]> pending-unreadable: [];
+    in property <[SwapRow]> swap-offers: [];
+    in property <[string]> wallet-profiles: [];
+    in property <[string]> recent-profiles: [];
+    in-out property <string> active-wallet: "default";
+    in-out property <int> wallet-generation: 0;
+    in-out property <bool> wallet-switch-busy: false;
+    in-out property <string> wallet-switch-error: "";
+    in-out property <image> address-qr;
+    in-out property <string> status-text: @tr("testnet · статус неизвестен");
+    in-out property <string> address-text: "—";
+    in-out property <string> address-short: "—";
+    in-out property <bool> show-qr: false;
+    in-out property <string> qr-address: "";
+    in-out property <string> balance-text: "0.000000000 GRIN";
+    in-out property <string> balance-available: "0.000000000";
+    in-out property <string> balance-awaiting: "0.000000000";
+    in-out property <string> balance-locked: "0.000000000";
+    in-out property <bool> balance-pending-visible: false;
+    in-out property <string> balance-state: "";
+    in-out property <string> balance-warning: "";
+    in-out property <string> disk-warning: "";
+    in-out property <string> traffic-warning: "";
+    in-out property <string> pending-alert: "";
+    in-out property <string> node-text: @tr("нода не подключена");
+    in-out property <string> node-phase-label: @tr("нода не подключена");
+    in-out property <string> node-height: "0";
+    in-out property <string> node-version: "";
+    in-out property <string> node-peers: "0";
+    in-out property <bool> node-details: false;
+    in-out property <bool> show-profile-menu: false;
+    in-out property <bool> node-ready: false;
+    in-out property <bool> node-starting: false;
+    in-out property <string> scan-state: "";
+    in-out property <bool> send-enabled: false;
+    in-out property <string> password: "";
+    in-out property <string> password-before-paste: "";
+    in-out property <bool> password-pasted: false;
+    in-out property <string> unlock-error: "";
+    in-out property <string> unlock-note: "";
+    in-out property <bool> unlock-busy: false;
+    in-out property <bool> initialized: false;
+    in-out property <bool> unlocked: false;
+    in-out property <string> network-label: "TESTNET";
+    in-out property <bool> show-lock-profile-menu: false;
+    in-out property <bool> show-create: false;
+    in-out property <bool> show-restore: false;
+    in-out property <bool> show-restore-help: false;
+    in-out property <string> ui-language: "ru";
+    in-out property <string> ui-language-note: "";
+    in-out property <string> create-password: "";
+    in-out property <string> create-password2: "";
+    in-out property <string> create-error: "";
+    in-out property <bool> create-busy: false;
+    in-out property <string> create-mnemonic: "";
+    in-out property <string> create-address: "";
+    in-out property <string> restore-mnemonic: "";
+    in-out property <string> restore-mnemonic-before-paste: "";
+    in-out property <bool> restore-mnemonic-pasted: false;
+    in-out property <string> restore-password: "";
+    in-out property <string> restore-password2: "";
+    in-out property <string> restore-error: "";
+    in-out property <bool> restore-busy: false;
+    in-out property <bool> scanning: false;
+    in-out property <string> scan-note: "";
+    in-out property <float> scan-progress: 0;
+    in-out property <bool> scan-running: false;
+    in-out property <bool> scan-paused: false;
+    in-out property <bool> scan-pausable: false;
+    in-out property <string> clipboard-note: "";
+    in-out property <bool> node-running: false;
+    in-out property <bool> node-busy: false;
+    in-out property <string> node-note: "";
+    in-out property <string> active-page: "wallet";
+    in-out property <bool> show-messages: false;
+    in-out property <bool> auto-process-slatepacks: false;
+    in-out property <string> messenger-address: "";
+    in-out property <string> messenger-address-short: "";
+    in-out property <bool> messenger-address-expanded: false;
+    in-out property <bool> show-add-contact: false;
+    in-out property <bool> show-recover-history: false;
+    in-out property <string> messenger-selected-address: "";
+    in-out property <string> messenger-selected-name: "";
+    in-out property <[MessageRow]> messenger-messages: [];
+    in-out property <[string]> messenger-blocked-addresses: [];
+    in-out property <string> messenger-status: "";
+    in-out property <string> messenger-peer: "";
+    in-out property <string> messenger-text: "";
+    in-out property <string> messenger-note: "";
+    in-out property <string> messenger-error: "";
+    in-out property <string> messenger-inbox: "";
+    in-out property <string> messenger-history: "";
+    in-out property <string> messenger-blocked: "";
+    in-out property <[ContactRow]> messenger-contacts: [];
+    in-out property <string> messenger-contact-address: "";
+    in-out property <string> messenger-contact-name: "";
+    in-out property <string> messenger-recovery-password: "";
+    in-out property <bool> messenger-busy: false;
+    in-out property <bool> show-send: false;
+    in-out property <bool> show-receive: false;
+    in-out property <bool> show-settings: false;
+    in-out property <bool> show-security: false;
+    in-out property <string> sec-old: "";
+    in-out property <string> sec-new: "";
+    in-out property <string> sec-new2: "";
+    in-out property <string> sec-delete: "";
+    in-out property <bool> show-seed: false;
+    in-out property <string> seed-reveal-password: "";
+    in-out property <string> seed-revealed: "";
+    in-out property <string> seed-reveal-error: "";
+    in-out property <bool> seed-reveal-busy: false;
+    in-out property <string> sec-note: "";
+    in-out property <string> sec-error: "";
+    in-out property <string> sec-seed-status: "";
+    in-out property <string> sec-seed-password: "";
+    in-out property <string> sec-seed-confirm: "";
+    in-out property <bool> sec-remove-backups: false;
+    in-out property <bool> sec-busy: false;
+    in-out property <bool> show-swaps: false;
+    in-out property <bool> show-history: false;
+    in-out property <string> history-note: "";
+    in-out property <string> swap-note: "";
+    in-out property <string> last-swap-id: "";
+    in-out property <bool> swap-busy: false;
+    in-out property <string> send-note: "";
+    in-out property <string> send-to: "";
+    in-out property <string> send-amount: "";
+    in-out property <string> send-slatepack: "";
+    in-out property <string> send-slate-id: "";
+    in-out property <bool> send-prepared: false;
+    in-out property <string> send-prepared-to: "";
+    in-out property <string> send-prepared-amount: "";
+    in-out property <string> send-prepared-fee: "";
+    in-out property <string> send-response: "";
+    in-out property <string> send-error: "";
+    in-out property <bool> send-busy: false;
+    in-out property <string> receive-incoming: "";
+    in-out property <string> receive-slatepack: "";
+    in-out property <string> receive-slate-id: "";
+    in-out property <string> receive-error: "";
+    in-out property <string> receive-note: "";
+    in-out property <bool> receive-busy: false;
+    in-out property <string> settings-network: "testnet";
+    in-out property <string> settings-profile: "default";
+    in-out property <bool> profile-create-busy: false;
+    in-out property <string> profile-create-error: "";
+    in-out property <string> profile-create-note: "";
+    in-out property <string> settings-node-url: "";
+    in-out property <string> settings-relay: "";
+    in-out property <string> settings-min-conf: "10";
+    in-out property <string> settings-active-data-dir: "";
+    in-out property <string> settings-data-dir: "";
+    in-out property <string> settings-default-data-dir: "";
+    in-out property <bool> settings-data-dir-forced: false;
+    in-out property <bool> settings-data-dir-busy: false;
+    in-out property <string> settings-note: "";
+    in-out property <string> settings-warning: "";
+    in-out property <string> settings-error: "";
+    in-out property <bool> tor-available: false;
+    in-out property <bool> tor-running: false;
+    in-out property <bool> tor-busy: false;
+    in-out property <string> tor-onion: "";
+    in-out property <string> tor-note: "";
+    in-out property <string> tor-bridges-text: "";
+    in-out property <string> tor-bridge-status: "";
+    in-out property <string> tor-log-text: "";
+    callback wallet-switch-clicked(string);
+    callback ui-language-changed(string);
+    callback language-save-requested(string);
+    callback paste-text() -> string;
+    callback unlock-clicked(string);
+    callback create-clicked(string, string);
+    callback restore-clicked(string, string, string);
+    callback refresh-clicked();
+    callback lock-clicked();
+    callback scan-clicked();
+    callback scan-pause-clicked();
+    callback scan-cancel-clicked();
+    callback rotate-address-clicked();
+    callback copy-address-clicked();
+    callback copy-send-clicked(string);
+    callback copy-receive-clicked(string);
+    callback node-toggle-clicked();
+    callback swaps-open-clicked();
+    callback history-open-clicked();
+    callback messenger-open-clicked();
+    callback auto-process-toggled(bool);
+    callback messenger-send-clicked(string, string);
+    callback messenger-inbox-clicked();
+    callback messenger-contact-save-clicked(string, string);
+    callback messenger-contact-delete-clicked(string);
+    callback messenger-history-clicked(string);
+    callback messenger-block-clicked(string, bool);
+    callback messenger-recover-clicked(string);
+    callback messenger-close-clicked();
+    callback retry-pending-clicked(string);
+    callback cancel-pending-clicked(string);
+    callback export-pending-clicked(string);
+    callback export-pending-request-clicked(string);
+    callback pending-reload-clicked();
+    callback diagnostics-export-clicked();
+    callback swap-take-clicked(string);
+    callback swap-simulate-clicked(string);
+    callback settings-open-clicked();
+    callback profile-new-clicked();
+    callback profile-create-clicked(string);
+    callback security-open-clicked();
+    callback change-password-clicked(string, string, string);
+    callback delete-wallet-clicked(string);
+    callback seed-disable-clicked(string);
+    callback seed-repair-clicked(string);
+    callback seed-reveal-open-clicked();
+    callback seed-reveal-clicked(string);
+    callback seed-migrate-clicked(string, string, bool);
+    callback settings-save-clicked(string, string, string, string, string);
+    callback settings-data-dir-browse-clicked();
+    callback settings-data-dir-save-clicked(string);
+    callback tor-start-clicked();
+    callback tor-stop-clicked();
+    callback tor-refresh-clicked();
+    callback tor-bridges-save-clicked(string);
+    callback tor-log-clicked();
+    callback send-prepare-clicked(string, string);
+    callback send-finalize-clicked(string, string);
+    callback receive-prepare-clicked(string);
+    callback receive-finalize-clicked(string);
+
+    // Editing destination/amount invalidates the prepared slate: finalize must
+    // never look like it applies to fields that changed after prepare.
+    function invalidate-prepared() {
+        root.send-prepared = false;
+        root.send-slate-id = "";
+        root.send-slatepack = "";
+        root.send-prepared-to = "";
+        root.send-prepared-amount = "";
+        root.send-prepared-fee = "";
+        root.send-note = "";
+    }
+
+    VerticalLayout {
+        visible: root.unlocked && !root.show-send && !root.show-receive && !root.show-settings && !root.show-swaps && !root.show-security && !root.show-history && !root.show-messages;
+        padding: 24px;
+        spacing: 16px;
+
+        HorizontalLayout {
+            height: 68px;
+            spacing: 14px;
+            VerticalLayout {
+                spacing: 2px;
+                Text { text: @tr("Обзор кошелька"); color: Theme.text; font-size: 28px; font-weight: 700; }
+                Text { text: root.active-wallet; color: Theme.muted; font-size: 13px; }
+            }
+            Rectangle { horizontal-stretch: 1; }
+            Rectangle {
+                height: 38px;
+                width: 96px;
+                border-radius: 19px;
+                background: Theme.testnet-bg;
+                border-width: 1px;
+                border-color: Theme.accent;
+                Text {
+                    text: root.network-label;
+                    color: Theme.accent;
+                    font-size: 10px;
+                    letter-spacing: 1px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+            Text { text: "◉"; color: Theme.ok; font-size: 13px; height: 38px; vertical-alignment: center; }
+            Text { text: @tr("Кошелёк открыт"); color: Theme.muted-2; font-size: 13px; height: 38px; vertical-alignment: center; }
+            ActionButton {
+                label: @tr("Заблокировать");
+                kind: "secondary";
+                button-height: 38px;
+                width: 132px;
+                clicked => { root.lock-clicked(); }
+            }
+            ActionButton {
+                label: @tr("Обновить");
+                kind: "secondary";
+                button-height: 38px;
+                width: 104px;
+                clicked => { root.refresh-clicked(); }
+            }
+        }
+        // Body
+        HorizontalLayout {
+            spacing: 16px;
+            vertical-stretch: 1;
+
+            // Sidebar
+            Rectangle {
+                width: root.width < 1100px ? 210px : 250px;
+                background: Theme.surface;
+                border-radius: Theme.radius-card;
+                border-width: 1px;
+                border-color: Theme.border;
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 8px;
+                    HorizontalLayout {
+                        height: 52px;
+                        spacing: 10px;
+                        Image {
+                            source: @image-url("assets/flint-mark-48.png");
+                            width: 40px;
+                            height: 40px;
+                        }
+                        VerticalLayout {
+                            spacing: 1px;
+                            Text { text: "Flint"; color: Theme.text; font-size: 20px; font-weight: 700; }
+                            Text { text: "GRIN / MIMBLEWIMBLE"; color: Theme.muted; font-size: 9px; letter-spacing: 1px; }
+                        }
+                    }
+                    Rectangle { height: 1px; background: Theme.border; }
+                    Text { text: @tr("АКТИВНЫЙ КОШЕЛЁК"); color: Theme.muted; font-size: 11px; letter-spacing: 1px; }
+                    Rectangle {
+                        height: 58px;
+                        border-radius: 12px;
+                        background: Theme.surface-2;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        HorizontalLayout {
+                            padding: 8px;
+                            spacing: 8px;
+                            Rectangle {
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 18px;
+                                background: Theme.surface;
+                                border-width: 1px;
+                                border-color: Theme.accent-line;
+                                Image {
+                                    source: @image-url("assets/flint-mark-32.png");
+                                    width: 26px;
+                                    height: 26px;
+                                }
+                            }
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                spacing: 1px;
+                                Text { text: root.active-wallet; color: Theme.text; font-size: 14px; font-weight: 600; }
+                                Text { text: @tr("Активный кошелёк"); color: Theme.muted; font-size: 10px; }
+                            }
+                            Text { text: root.show-profile-menu ? "^" : "v"; color: Theme.muted; font-size: 16px; vertical-alignment: center; }
+                        }
+                        TouchArea {
+                            clicked => { root.show-profile-menu = !root.show-profile-menu; }
+                        }
+                    }
+                    if root.show-profile-menu: VerticalLayout {
+                        spacing: 4px;
+                        for profile in root.wallet-profiles: Rectangle {
+                            height: 32px;
+                            border-radius: 8px;
+                            background: profile == root.active-wallet ? Theme.accent-soft : Theme.surface;
+                            Text {
+                                text: profile;
+                                color: profile == root.active-wallet ? Theme.text : Theme.muted-2;
+                                font-size: 12px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                            TouchArea {
+                                clicked => {
+                                    root.show-profile-menu = false;
+                                    root.wallet-switch-clicked(profile);
+                                }
+                            }
+                        }
+                        Rectangle { height: 1px; background: Theme.border; }
+                        Button {
+                            text: @tr("Новый профиль");
+                            clicked => {
+                                root.show-profile-menu = false;
+                                root.profile-new-clicked();
+                            }
+                        }
+                    }
+                    Rectangle { height: 8px; }
+                    NavButton {
+                        icon: "◈";
+                        label: @tr("Кошелёк");
+                        active: root.active-page == "wallet";
+                        clicked => { root.active-page = "wallet"; }
+                    }
+                    NavButton {
+                        icon: "≡";
+                        label: @tr("История");
+                        clicked => { root.history-open-clicked(); }
+                    }
+                    Rectangle { height: 1px; background: Theme.border; }
+                    NavButton {
+                        icon: "⇄";
+                        label: @tr("Свопы JANUS");
+                        clicked => { root.swaps-open-clicked(); }
+                    }
+                    NavButton {
+                        icon: "✉";
+                        label: @tr("Сообщения");
+                        clicked => { root.messenger-open-clicked(); }
+                    }
+                    Rectangle { height: 1px; background: Theme.border; }
+                    NavButton {
+                        icon: "⚙";
+                        label: @tr("Настройки");
+                        clicked => { root.settings-open-clicked(); }
+                    }
+                    Rectangle { vertical-stretch: 1; }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text { text: "0.1.69"; color: Theme.muted; font-size: 11px; }
+                        Rectangle {
+                            height: 22px;
+                            border-radius: 11px;
+                            background: Theme.warning-bg;
+                            border-width: 1px;
+                            border-color: Theme.warning;
+                            Text {
+                                text: "testnet";
+                                color: Theme.warning;
+                                font-size: 10px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Content
+            ScrollView {
+                horizontal-stretch: 1;
+                vertical-stretch: 1;
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 16px;
+
+                    HorizontalLayout {
+                        spacing: 16px;
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                            background: Theme.surface;
+                            border-radius: Theme.radius-card;
+                            border-width: 1px;
+                            border-color: Theme.border;
+                            VerticalLayout {
+                                padding: 24px;
+                                spacing: 12px;
+                                Text { text: @tr("Доступный баланс"); color: Theme.muted; font-size: 14px; }
+                                HorizontalLayout {
+                                    spacing: 10px;
+                                    Text {
+                                        text: root.balance-available;
+                                        color: Theme.text;
+                                        font-size: root.width < 1100px ? 32px : 44px;
+                                        font-weight: 700;
+                                        horizontal-stretch: 0;
+                                    }
+                                    Text {
+                                        text: "GRIN";
+                                        color: Theme.muted;
+                                        font-size: 20px;
+                                        vertical-alignment: bottom;
+                                    }
+                                    Rectangle { horizontal-stretch: 1; }
+                                }
+                                HorizontalLayout {
+                                    spacing: 6px;
+                                    Rectangle {
+                                        width: 7px;
+                                        height: 7px;
+                                        border-radius: 4px;
+                                        background: root.node-ready ? Theme.ok : Theme.warning;
+                                    }
+                                    Text { text: root.balance-state; color: Theme.muted; font-size: 13px; }
+                                }
+                                Rectangle { height: 1px; background: Theme.border; }
+                                if root.balance-pending-visible: HorizontalLayout {
+                                    spacing: 24px;
+                                    VerticalLayout {
+                                        spacing: 2px;
+                                        Text { text: @tr("Доступно"); color: Theme.muted; font-size: 12px; }
+                                        Text { text: root.balance-available + " GRIN"; color: Theme.text; font-size: 16px; }
+                                    }
+                                    VerticalLayout {
+                                        spacing: 2px;
+                                        Text { text: @tr("Ожидает"); color: Theme.muted; font-size: 12px; }
+                                        Text { text: root.balance-awaiting + " GRIN"; color: Theme.text; font-size: 16px; }
+                                    }
+                                    VerticalLayout {
+                                        spacing: 2px;
+                                        Text { text: @tr("Заблокировано"); color: Theme.muted; font-size: 12px; }
+                                        Text { text: root.balance-locked + " GRIN"; color: Theme.text; font-size: 16px; }
+                                    }
+                                }
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    ActionButton {
+                                        label: @tr("Получить");
+                                        icon: "↓";
+                                        kind: "primary";
+                                        button-height: 44px;
+                                        width: root.width < 1100px ? 116px : 180px;
+                                        clicked => { root.show-receive = true; }
+                                    }
+                                    ActionButton {
+                                        label: @tr("Отправить");
+                                        icon: "↑";
+                                        kind: "secondary";
+                                        button-height: 44px;
+                                        width: root.width < 1100px ? 116px : 180px;
+                                        enabled: root.send-enabled;
+                                        clicked => { root.show-send = true; }
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: root.width < 1100px ? 240px : 330px;
+                            background: Theme.surface;
+                            border-radius: Theme.radius-card;
+                            border-width: 1px;
+                            border-color: Theme.border;
+                            VerticalLayout {
+                                padding: 20px;
+                                spacing: 12px;
+                                Text { text: @tr("Получение средств"); color: Theme.text; font-size: 18px; font-weight: 700; }
+                                Text {
+                                    text: @tr("Ваш адрес для получения GRIN");
+                                    color: Theme.muted;
+                                    font-size: 13px;
+                                    wrap: word-wrap;
+                                }
+                                Rectangle {
+                                    background: Theme.surface-2;
+                                    border-radius: 10px;
+                                    border-width: 1px;
+                                    border-color: Theme.border;
+                                    HorizontalLayout {
+                                        padding: 12px;
+                                        spacing: 8px;
+                                        Text {
+                                            text: root.address-short;
+                                            color: Theme.text;
+                                            font-family: "Cascadia Mono";
+                                            font-size: 13px;
+                                            vertical-alignment: center;
+                                            horizontal-stretch: 1;
+                                        }
+                                    }
+                                }
+                                ActionButton {
+                                    label: @tr("Копировать адрес");
+                                    kind: "secondary";
+                                    horizontal-stretch: 1;
+                                    clicked => { root.copy-address-clicked(); }
+                                }
+                                ActionButton {
+                                    label: @tr("Показать QR");
+                                    kind: "secondary";
+                                    horizontal-stretch: 1;
+                                    clicked => { root.show-qr = true; }
+                                }
+                                Text { text: root.clipboard-note; color: Theme.accent; font-size: 11px; }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        background: Theme.surface;
+                        border-radius: Theme.radius-card;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 10px;
+                            HorizontalLayout {
+                                spacing: 12px;
+                                Rectangle {
+                                    width: 42px;
+                                    height: 42px;
+                                    border-radius: 12px;
+                                    background: Theme.surface-2;
+                                    Text {
+                                        text: root.node-ready ? "●" : "◌";
+                                        color: root.node-ready ? Theme.ok
+                                            : root.node-starting ? Theme.warning : Theme.muted;
+                                        font-size: 16px;
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                    }
+                                }
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    spacing: 2px;
+                                    Text { text: root.node-phase-label; color: Theme.text; font-size: 16px; font-weight: 600; }
+                                    Text {
+                                        text: @tr("Высота ") + root.node-height + " · " + root.node-peers + " " + @tr("пиров");
+                                        color: Theme.muted;
+                                        font-size: 12px;
+                                    }
+                                }
+                                ActionButton {
+                                    label: root.node-running ? @tr("Остановить ноду") : @tr("Запустить ноду");
+                                    icon: root.node-running ? "■" : "▸";
+                                    kind: "secondary";
+                                    width: 166px;
+                                    enabled: !root.node-busy;
+                                    clicked => { root.node-toggle-clicked(); }
+                                }
+                                ActionButton {
+                                    label: @tr("Подробнее");
+                                    kind: "ghost";
+                                    width: 112px;
+                                    clicked => { root.node-details = !root.node-details; }
+                                }
+                            }
+                            if root.scan-running: Rectangle {
+                                height: 4px;
+                                background: Theme.border;
+                                border-radius: 2px;
+                                clip: true;
+                                Rectangle {
+                                    width: parent.width * root.scan-progress;
+                                    height: parent.height;
+                                    background: Theme.accent;
+                                    border-radius: 2px;
+                                    animate width { duration: 300ms; easing: ease-out; }
+                                }
+                            }
+                            if root.node-details: VerticalLayout {
+                                spacing: 8px;
+                                Text { text: root.node-text; color: Theme.muted; font-size: 12px; wrap: word-wrap; }
+                                Button {
+                                    text: @tr("Копировать диагностику");
+                                    clicked => { root.diagnostics-export-clicked(); }
+                                }
+                                Text { text: root.scan-state; color: Theme.muted; font-size: 12px; }
+                                Text { text: root.scan-note; color: Theme.warning; font-size: 12px; wrap: word-wrap; }
+                            }
+                            HorizontalLayout {
+                                alignment: start;
+                                spacing: 8px;
+                                ActionButton {
+                                    label: root.scanning ? "Сканирую…" : "Сканировать";
+                                    kind: "ghost";
+                                    enabled: !root.scanning;
+                                    clicked => { root.scan-clicked(); }
+                                }
+                                if root.scanning && (root.scan-pausable || root.scan-paused): Button {
+                                    text: root.scan-paused ? "Продолжить" : "Пауза";
+                                    clicked => { root.scan-pause-clicked(); }
+                                }
+                                if root.scanning: Button {
+                                    text: @tr("Отменить скан");
+                                    clicked => { root.scan-cancel-clicked(); }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        vertical-stretch: 1;
+                        background: Theme.surface;
+                        border-radius: Theme.radius-card;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        VerticalLayout {
+                            padding: 24px;
+                            spacing: 16px;
+                            HorizontalLayout {
+                                Text { text: @tr("Последние операции"); color: Theme.text; font-size: 18px; font-weight: 600; }
+                                Rectangle { horizontal-stretch: 1; }
+                                Text {
+                                    text: @tr("вся история") + " →";
+                                    color: Theme.accent;
+                                    font-size: 13px;
+                                }
+                            }
+                            if root.activity.length == 0: VerticalLayout {
+                                spacing: 10px;
+                                alignment: center;
+                                Text { text: "✉"; color: Theme.muted; font-size: 44px; horizontal-alignment: center; }
+                                Text { text: @tr("Здесь появятся ваши операции"); color: Theme.text; font-size: 18px; horizontal-alignment: center; }
+                                Text {
+                                    text: @tr("Получите первый перевод, чтобы увидеть историю.");
+                                    color: Theme.muted;
+                                    font-size: 13px;
+                                    horizontal-alignment: center;
+                                    wrap: word-wrap;
+                                }
+                                ActionButton {
+                                    label: @tr("Как получить GRIN");
+                                    icon: "→";
+                                    kind: "ghost";
+                                    clicked => { root.show-receive = true; }
+                                }
+                                Rectangle { height: 1px; background: Theme.border; }
+                                HorizontalLayout {
+                                    spacing: 6px;
+                                    alignment: center;
+                                    Text { text: "ⓘ"; color: Theme.muted; font-size: 12px; }
+                                    Text { text: @tr("Тестовая сеть"); color: Theme.muted; font-size: 11px; }
+                                }
+                            }
+                            ListView {
+                                visible: root.activity.length > 0;
+                                accessible-label: @tr("Последние операции");
+                                for row in root.activity: Rectangle {
+                                    height: 48px;
+                                    border-radius: Theme.radius-control;
+                                    background: Theme.surface-2;
+                                    HorizontalLayout {
+                                        padding: 10px;
+                                        spacing: 10px;
+                                        Text { text: row.title; color: Theme.text; font-size: 14px; vertical-alignment: center; }
+                                        Rectangle { horizontal-stretch: 1; }
+                                        Text { text: row.amount; color: Theme.accent; font-size: 14px; vertical-alignment: center; }
+                                        Text { text: row.when; color: Theme.muted; font-size: 12px; vertical-alignment: center; }
+                                    }
+                                }
+                            }
+                            Rectangle { height: 1px; background: Theme.border; }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Text { text: "ⓘ"; color: Theme.muted; font-size: 12px; }
+                                Text { text: @tr("Тестовая сеть"); color: Theme.muted; font-size: 11px; }
+                            }
+                        }
+                    }
+            }
+        }
+    }
+    }
+
+    if root.show-qr: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.scrim;
+
+        Rectangle {
+            x: (parent.width - 360px) / 2;
+            y: (parent.height - 460px) / 2;
+            width: 360px;
+            height: 460px;
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 20px;
+                spacing: 12px;
+                Text { text: @tr("Адрес для получения"); color: Theme.text; font-size: 18px; font-weight: 700; }
+                Image {
+                    source: root.address-qr;
+                    width: 280px;
+                    height: 280px;
+                }
+                Text {
+                    text: root.address-short;
+                    color: Theme.muted-2;
+                    font-family: "Cascadia Mono";
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                }
+                ActionButton {
+                    label: @tr("Закрыть");
+                    kind: "secondary";
+                    clicked => { root.show-qr = false; }
+                }
+            }
+        }
+    }
+
+    // Lock screen. Phase 1 reads the real WalletService status.
+    if !root.unlocked: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+
+        ScrollView {
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+
+            VerticalLayout {
+                padding: 24px;
+                alignment: center;
+                HorizontalLayout {
+                    alignment: center;
+                    card := Rectangle {
+                    width: Math.min(510px, root.width - 48px);
+                    height: body.preferred-height;
+                    background: Theme.surface;
+                    border-radius: Theme.radius-card;
+                    border-width: 1px;
+                    border-color: Theme.border;
+
+                    body := VerticalLayout {
+                        padding: 24px;
+                        spacing: 12px;
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            Image {
+                                source: @image-url("assets/flint-mark-48.png");
+                                width: 40px;
+                                height: 40px;
+                            }
+                            VerticalLayout {
+                                spacing: 1px;
+                                Text { text: "Flint"; color: Theme.text; font-size: 20px; font-weight: 700; }
+                                Text { text: "GRIN / MIMBLEWIMBLE"; color: Theme.muted; font-size: 9px; letter-spacing: 1px; }
+                            }
+                            Rectangle { horizontal-stretch: 1; }
+                            Rectangle {
+                                height: 24px;
+                                width: 84px;
+                                border-radius: 12px;
+                                background: Theme.testnet-bg;
+                                border-width: 1px;
+                                border-color: Theme.accent;
+                                Text {
+                                    text: root.network-label;
+                                    color: Theme.accent;
+                                    font-size: 9px;
+                                    letter-spacing: 1px;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+
+                        Text { text: @tr("Открыть кошелёк"); color: Theme.text; font-size: 24px; font-weight: 700; }
+                        HorizontalLayout {
+                            spacing: 7px;
+                            if root.initialized: Rectangle {
+                                width: 16px;
+                                height: 16px;
+                                Rectangle {
+                                    x: 4px;
+                                    y: 7px;
+                                    width: 8px;
+                                    height: 7px;
+                                    border-radius: 2px;
+                                    background: Theme.muted-2;
+                                }
+                                Rectangle {
+                                    x: 5px;
+                                    y: 2px;
+                                    width: 6px;
+                                    height: 8px;
+                                    border-radius: 3px;
+                                    border-width: 1.5px;
+                                    border-color: Theme.muted-2;
+                                    background: transparent;
+                                }
+                            }
+                            Text {
+                                text: root.initialized ? @tr("Кошелёк заблокирован") : @tr("Кошелёк ещё не создан");
+                                color: Theme.muted-2;
+                                font-size: 13px;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        Text { text: @tr("Кошелёк"); color: Theme.muted; font-size: 11px; }
+                        Rectangle {
+                            height: 54px;
+                            border-radius: 10px;
+                            background: Theme.surface-2;
+                            border-width: 1px;
+                            border-color: Theme.border;
+                            accessible-role: button;
+                            accessible-label: root.active-wallet;
+                            accessible-action-default => {
+                                root.show-lock-profile-menu = !root.show-lock-profile-menu;
+                            }
+                            HorizontalLayout {
+                                padding: 8px;
+                                spacing: 8px;
+                                Rectangle {
+                                    width: 34px;
+                                    height: 34px;
+                                    border-radius: 17px;
+                                    background: Theme.surface;
+                                    border-width: 1px;
+                                    border-color: Theme.accent-line;
+                                    Image {
+                                        source: @image-url("assets/flint-mark-32.png");
+                                        width: 24px;
+                                        height: 24px;
+                                    }
+                                }
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    spacing: 1px;
+                                    Text {
+                                        text: root.active-wallet;
+                                        color: Theme.text;
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                        overflow: elide;
+                                    }
+                                    Text { text: @tr("Активный кошелёк"); color: Theme.muted; font-size: 10px; }
+                                }
+                                Text {
+                                    text: root.show-lock-profile-menu ? "^" : "v";
+                                    color: Theme.muted;
+                                    font-size: 16px;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            TouchArea {
+                                enabled: !root.wallet-switch-busy && !root.unlock-busy;
+                                clicked => { root.show-lock-profile-menu = !root.show-lock-profile-menu; }
+                            }
+                        }
+                        if root.show-lock-profile-menu: VerticalLayout {
+                            spacing: 4px;
+                            for profile in root.wallet-profiles: Rectangle {
+                                height: 34px;
+                                border-radius: 8px;
+                                background: profile == root.active-wallet ? Theme.accent-soft : Theme.surface-2;
+                                border-width: profile == root.active-wallet ? 1px : 0px;
+                                border-color: Theme.accent-line;
+                                accessible-role: button;
+                                accessible-label: profile;
+                                accessible-action-default => {
+                                    root.show-lock-profile-menu = false;
+                                    root.wallet-switch-clicked(profile);
+                                }
+                                Text {
+                                    text: profile;
+                                    color: profile == root.active-wallet ? Theme.text : Theme.muted-2;
+                                    font-size: 12px;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                    overflow: elide;
+                                }
+                                TouchArea {
+                                    enabled: !root.wallet-switch-busy && !root.unlock-busy;
+                                    clicked => {
+                                        root.show-lock-profile-menu = false;
+                                        root.wallet-switch-clicked(profile);
+                                    }
+                                }
+                            }
+                        }
+
+                        if root.initialized: VerticalLayout {
+                            spacing: 6px;
+                            Text { text: @tr("Пароль"); color: Theme.muted-2; font-size: 13px; }
+                            Text { text: @tr("Введите пароль выбранного кошелька."); color: Theme.muted; font-size: 11px; }
+                            HorizontalLayout {
+                                spacing: 8px;
+                                password-field := LineEdit {
+                                    text <=> root.password;
+                                    enabled: !root.unlock-busy;
+                                    init => { self.focus(); }
+                                    input-type: InputType.password;
+                                    accessible-label: @tr("Пароль");
+                                    placeholder-text: @tr("Пароль");
+                                    edited(text) => { root.unlock-error = ""; }
+                                    key-pressed(event) => {
+                                        if !event.modifiers.control {
+                                            root.password-pasted = false;
+                                        }
+                                        if event.modifiers.control && (event.text == "v" || event.text == "V"
+                                            || event.text == "м" || event.text == "М") {
+                                            root.password-before-paste = root.password;
+                                            root.password-pasted = true;
+                                            root.password = root.paste-text();
+                                            root.unlock-error = "";
+                                            return accept;
+                                        }
+
+                                        if event.modifiers.control && (event.text == "z" || event.text == "Z"
+                                            || event.text == "я" || event.text == "Я") {
+                                            if root.password-pasted {
+                                                root.password = root.password-before-paste;
+                                                root.password-pasted = false;
+                                                return accept;
+                                            }
+                                            return reject;
+                                        }
+                                        if event.modifiers.control && (event.text == "a" || event.text == "A"
+                                            || event.text == "ф" || event.text == "Ф") {
+                                            self.select-all();
+                                            return accept;
+                                        }
+                                        return reject;
+                                    }
+                                    accepted => {
+                                        if !root.unlock-busy {
+                                            root.unlock-clicked(root.password);
+                                        }
+                                    }
+                                }
+                                ActionButton {
+                                    label: @tr("Вставить");
+                                    kind: "secondary";
+                                    button-height: 42px;
+                                    width: 94px;
+                                    enabled: !root.unlock-busy;
+                                    clicked => {
+                                        root.password-before-paste = root.password;
+                                        root.password-pasted = true;
+                                        root.password = root.paste-text();
+                                        root.unlock-error = "";
+                                    }
+                                }
+                            }
+                            Text {
+                                text: root.unlock-error != "" ? root.unlock-error : root.wallet-switch-error;
+                                color: Theme.danger;
+                                font-size: 12px;
+                                wrap: word-wrap;
+                                min-height: 18px;
+                            }
+                            if root.unlock-note != "": Text {
+                                text: root.unlock-note;
+                                color: Theme.warning;
+                                font-size: 12px;
+                                wrap: word-wrap;
+                            }
+                            ActionButton {
+                                label: root.unlock-busy ? @tr("Открываю…") : @tr("Разблокировать");
+                                kind: "primary";
+                                button-height: 44px;
+                                horizontal-stretch: 1;
+                                enabled: root.initialized && !root.unlock-busy;
+                                clicked => { root.unlock-clicked(root.password); }
+                            }
+                        }
+
+                        if !root.initialized: VerticalLayout {
+                            spacing: 8px;
+                            Text { text: @tr("Кошелёк ещё не создан. Создайте новый или восстановите из seed-фразы."); color: Theme.muted-2; font-size: 13px; wrap: word-wrap; }
+                            ActionButton {
+                                label: @tr("Создать кошелёк");
+                                kind: "primary";
+                                button-height: 44px;
+                                horizontal-stretch: 1;
+                                clicked => { root.show-create = true; }
+                            }
+                            ActionButton {
+                                label: @tr("Восстановить");
+                                kind: "secondary";
+                                button-height: 42px;
+                                horizontal-stretch: 1;
+                                clicked => { root.show-restore = true; }
+                            }
+                        }
+
+                        Rectangle { height: 1px; background: Theme.border; }
+                        HorizontalLayout {
+                            spacing: 8px;
+                            ActionButton {
+                                label: @tr("Профили и сеть");
+                                kind: "ghost";
+                                button-height: 36px;
+                                enabled: !root.wallet-switch-busy && !root.unlock-busy;
+                                clicked => { root.settings-open-clicked(); }
+                            }
+                            ActionButton {
+                                label: @tr("Новый профиль");
+                                kind: "ghost";
+                                button-height: 36px;
+                                enabled: !root.wallet-switch-busy && !root.unlock-busy;
+                                clicked => { root.profile-new-clicked(); }
+                            }
+                        }
+                        Text {
+                            text: @tr("Тестовая сеть") + " · 0.1.69";
+                            color: Theme.muted;
+                            font-size: 10px;
+                            horizontal-alignment: center;
+                        }
+                    }
+                    }
+                }
+            }
+        }
+    }
+
+    // Create wallet. The mnemonic is shown once, never logged.
+    if root.show-create: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 560px) / 2;
+            y: (parent.height - (root.create-mnemonic == "" ? 430px : 650px)) / 2;
+            width: Math.min(560px, parent.width - 32px);
+            height: root.create-mnemonic == "" ? 430px : 650px;
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 24px;
+                spacing: 10px;
+                alignment: start;
+                Text { text: @tr("Новый кошелёк"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                if root.create-mnemonic == "": VerticalLayout {
+                    spacing: 8px;
+                    alignment: start;
+                    Text { text: @tr("Пароль"); color: Theme.muted-2; font-size: 13px; }
+                    LineEdit {
+                        width: 360px;
+                        text <=> root.create-password;
+                        input-type: InputType.password;
+                        accessible-label: @tr("Пароль нового кошелька");
+                    }
+                    Text { text: @tr("Повторите пароль"); color: Theme.muted-2; font-size: 13px; }
+                    LineEdit {
+                        width: 360px;
+                        text <=> root.create-password2;
+                        input-type: InputType.password;
+                        accessible-label: @tr("Повторите пароль");
+                        accepted => {
+                            if !root.create-busy {
+                                root.create-clicked(root.create-password, root.create-password2);
+                            }
+                        }
+                    }
+                    Text { text: @tr("Минимум 12 символов; seed будет показан один раз."); color: Theme.muted; font-size: 12px; wrap: word-wrap; }
+                    Text { text: root.create-error; color: Theme.danger; font-size: 13px; }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Button {
+                            text: @tr("Отмена");
+                            clicked => {
+                                root.show-create = false;
+                                root.create-password = "";
+                                root.create-password2 = "";
+                            }
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                        Button {
+                            text: @tr("Создать");
+                            enabled: !root.create-busy;
+                            clicked => { root.create-clicked(root.create-password, root.create-password2); }
+                        }
+                    }
+                }
+                if root.create-mnemonic != "": VerticalLayout {
+                    spacing: 8px;
+                    Text { text: @tr("Запишите seed-фразу. Она не будет показана снова."); color: Theme.warning; font-size: 13px; wrap: word-wrap; }
+                    Text { text: root.create-mnemonic; color: Theme.text; font-family: "Cascadia Mono"; font-size: 14px; wrap: word-wrap; }
+                    Text { text: root.create-address; color: Theme.accent; font-size: 12px; font-family: "Cascadia Mono"; }
+                    Text { text: root.create-error; color: Theme.danger; font-size: 13px; }
+                    Rectangle { vertical-stretch: 1; }
+                    Button {
+                        text: @tr("Я сохранил seed");
+                        clicked => {
+                            root.create-mnemonic = "";
+                            root.create-password = "";
+                            root.create-password2 = "";
+                            root.show-create = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Restore wallet from a seed phrase.
+    if root.show-restore: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 560px) / 2;
+            y: (parent.height - Math.min(740px, parent.height - 32px)) / 2;
+            width: Math.min(560px, parent.width - 32px);
+            height: Math.min(740px, parent.height - 32px);
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 24px;
+                spacing: 10px;
+                Text { text: @tr("Восстановить кошелёк"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text { text: @tr("Seed-фраза (12–24 слова)"); color: Theme.muted-2; font-size: 13px; }
+                TextEdit {
+                    text <=> root.restore-mnemonic;
+                    height: 110px;
+                    accessible-label: @tr("Seed-фраза");
+                    key-pressed(event) => {
+                        if !event.modifiers.control {
+                            root.restore-mnemonic-pasted = false;
+                        }
+                        if event.modifiers.control && (event.text == "v" || event.text == "V"
+                            || event.text == "м" || event.text == "М") {
+                            root.restore-mnemonic-before-paste = root.restore-mnemonic;
+                            root.restore-mnemonic-pasted = true;
+                            root.restore-mnemonic = root.paste-text();
+                            return accept;
+                        }
+
+                        if event.modifiers.control && (event.text == "z" || event.text == "Z"
+                            || event.text == "я" || event.text == "Я") {
+                            if root.restore-mnemonic-pasted {
+                                root.restore-mnemonic = root.restore-mnemonic-before-paste;
+                                root.restore-mnemonic-pasted = false;
+                                return accept;
+                            }
+                            return reject;
+                        }
+                        if event.modifiers.control && (event.text == "a" || event.text == "A"
+                            || event.text == "ф" || event.text == "Ф") {
+                            self.select-all();
+                            return accept;
+                        }
+                        return reject;
+                    }
+                }
+                Text { text: @tr("Пароль"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.restore-password;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Пароль восстановленного кошелька");
+                }
+                Text { text: @tr("Повторите пароль"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.restore-password2;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Повторите пароль");
+                    accepted => {
+                        if !root.restore-busy {
+                            root.restore-clicked(root.restore-mnemonic, root.restore-password, root.restore-password2);
+                        }
+                    }
+                }
+                Text { text: root.restore-error; color: Theme.danger; font-size: 13px; }
+                Rectangle { vertical-stretch: 1; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: @tr("Справка по восстановлению");
+                        clicked => { root.show-restore-help = true; }
+                    }
+                    Button {
+                        text: @tr("Отмена");
+                        clicked => {
+                            root.show-restore = false;
+                            root.restore-mnemonic = "";
+                            root.restore-password = "";
+                            root.restore-password2 = "";
+                        }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    Button {
+                        text: @tr("Восстановить");
+                        enabled: !root.restore-busy;
+                        clicked => { root.restore-clicked(root.restore-mnemonic, root.restore-password, root.restore-password2); }
+                    }
+                }
+            }
+        }
+    }
+
+    // Restore help stays a separate overlay so the seed form is not obscured.
+    if root.show-restore-help: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 600px) / 2;
+            y: (parent.height - 560px) / 2;
+            width: Math.min(600px, parent.width - 32px);
+            height: Math.min(560px, parent.height - 32px);
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 20px;
+                spacing: 10px;
+                Text { text: @tr("Как восстановить кошелёк"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                ScrollView {
+                    vertical-stretch: 1;
+                    VerticalLayout {
+                        spacing: 8px;
+                        Text {
+                            text: @tr("В окне восстановления введите 12–24 слова исходной фразы и новый пароль. Seed будет проверен при первом открытии.");
+                            color: Theme.muted;
+                            font-size: 13px;
+                            wrap: word-wrap;
+                        }
+                        Text {
+                            text: @tr("После восстановления кошелёк помечается как незавершённый: выполните полный скан цепи, чтобы увидеть прежние выходы и баланс.");
+                            color: Theme.muted;
+                            font-size: 13px;
+                            wrap: word-wrap;
+                        }
+                        Text {
+                            text: @tr("Не восстанавливайте один и тот же seed в нескольких копиях одновременно: это создаёт разные ответы и завышает локальный баланс. После таких экспериментов нужен полный rescan.");
+                            color: Theme.warning;
+                            font-size: 13px;
+                            wrap: word-wrap;
+                        }
+                        Text {
+                            text: @tr("Пароль не хранится и не восстанавливается. Если он утерян, доступен только restore из seed-фразы в чистый каталог.");
+                            color: Theme.muted;
+                            font-size: 13px;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+                Button {
+                    text: @tr("Закрыть справку");
+                    clicked => { root.show-restore-help = false; }
+                }
+            }
+        }
+    }
+
+    // Send: prepare, show slatepack, finalize with the response.
+    if root.show-send: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 560px) / 2;
+            y: (parent.height - 600px) / 2;
+            width: Math.min(560px, parent.width - 32px);
+            height: 650px;
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 24px;
+                spacing: 10px;
+                Text { text: @tr("Отправить GRIN"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text { text: @tr("testnet · сумма и адрес проверяются до подписи"); color: Theme.muted; font-size: 13px; }
+                Text { text: @tr("Адрес получателя"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.send-to;
+                    accessible-label: @tr("Адрес получателя");
+                    placeholder-text: "tgrin1…";
+                    edited(text) => {
+                        if root.send-prepared {
+                            root.invalidate-prepared();
+                        }
+                    }
+                    key-pressed(event) => {
+                        if event.modifiers.control && (event.text == "v" || event.text == "V"
+                            || event.text == "м" || event.text == "М") {
+                            root.send-to = root.paste-text();
+                            return accept;
+                        }
+
+                        if event.modifiers.control && (event.text == "z" || event.text == "Z"
+                            || event.text == "я" || event.text == "Я") {
+                            return reject;
+                        }
+                        if event.modifiers.control && (event.text == "a" || event.text == "A"
+                            || event.text == "ф" || event.text == "Ф") {
+                            self.select-all();
+                            return accept;
+                        }
+                        return reject;
+                    }
+                }
+                Text { text: @tr("Сумма, GRIN"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.send-amount;
+                    accessible-label: @tr("Сумма");
+                    placeholder-text: "0.000000000";
+                    edited(text) => {
+                        if root.send-prepared {
+                            root.invalidate-prepared();
+                        }
+                    }
+                    accepted => {
+                        if !root.send-busy && !root.send-prepared {
+                            root.send-prepare-clicked(root.send-to, root.send-amount);
+                        }
+                    }
+                }
+                Text { text: root.send-slate-id; color: Theme.muted; font-size: 12px; font-family: "Cascadia Mono"; }
+                if root.send-prepared: Rectangle {
+                    background: Theme.surface-2;
+                    border-radius: Theme.radius-control;
+                    border-width: 1px;
+                    border-color: Theme.border;
+                    VerticalLayout {
+                        padding: 10px;
+                        spacing: 4px;
+                        HorizontalLayout {
+                            Text { text: @tr("Подготовлено к отправке"); color: Theme.warning; font-size: 13px; font-weight: 600; horizontal-stretch: 1; }
+                            Button {
+                                text: @tr("Изменить");
+                                clicked => { root.invalidate-prepared(); }
+                            }
+                        }
+                        Text { text: @tr("Кому: ") + root.send-prepared-to; color: Theme.muted-2; font-size: 12px; wrap: word-wrap; }
+                        Text { text: @tr("Сумма: ") + root.send-prepared-amount + " · комиссия: " + root.send-prepared-fee; color: Theme.text; font-size: 13px; font-family: "Cascadia Mono"; wrap: word-wrap; }
+                    }
+                }
+                Text { text: @tr("Slatepack для получателя"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text: root.send-slatepack;
+                    read-only: true;
+                    accessible-label: @tr("Slatepack для получателя");
+                }
+                Button { text: @tr("Копировать slatepack"); clicked => { root.copy-send-clicked(root.send-slatepack); } }
+                Text { text: @tr("Ответ получателя"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.send-response;
+                    accessible-label: @tr("Ответ получателя");
+                    accepted => {
+                        if !root.send-busy && root.send-prepared && root.send-response != "" {
+                            root.send-finalize-clicked(root.send-slate-id, root.send-response);
+                        }
+                    }
+                }
+                Text { text: root.send-note; color: Theme.accent; font-size: 13px; }
+                Text { text: root.send-error; color: Theme.danger; font-size: 13px; }
+                Rectangle { vertical-stretch: 1; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: @tr("Подготовить");
+                        enabled: !root.send-busy && !root.send-prepared;
+                        clicked => { root.send-prepare-clicked(root.send-to, root.send-amount); }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    Button {
+                        text: @tr("Закрыть");
+                        clicked => {
+                            root.invalidate-prepared();
+                            root.show-send = false;
+                        }
+                    }
+                    Button {
+                        text: @tr("Завершить");
+                        enabled: !root.send-busy && root.send-prepared && root.send-response != "";
+                        clicked => { root.send-finalize-clicked(root.send-slate-id, root.send-response); }
+                    }
+                }
+            }
+        }
+    }
+
+    // Receive: paste incoming slate, get the response slate, then finalize.
+    if root.show-receive: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 620px) / 2;
+            y: (parent.height - Math.min(720px, parent.height - 32px)) / 2;
+            width: Math.min(620px, parent.width - 32px);
+            height: Math.min(720px, parent.height - 32px);
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 20px;
+                spacing: 8px;
+                Text { text: @tr("Получить GRIN"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text {
+                    text: root.address-text;
+                    color: Theme.accent;
+                    font-size: 11px;
+                    font-family: "Cascadia Mono";
+                    wrap: word-wrap;
+                }
+                Button { text: @tr("Новый адрес"); clicked => { root.rotate-address-clicked(); } }
+                Text { text: @tr("Синхронизация ноды"); color: Theme.muted; font-size: 12px; }
+                Text {
+                    text: root.node-text;
+                    color: root.node-ready ? Theme.accent
+                        : root.node-starting ? Theme.warning : Theme.muted-2;
+                    font-size: 13px;
+                    wrap: word-wrap;
+                }
+                ScrollView {
+                    VerticalLayout {
+                        spacing: 8px;
+                        HorizontalLayout {
+                            alignment: center;
+                            Image {
+                                source: root.address-qr;
+                                width: 120px;
+                                height: 120px;
+                                image-fit: contain;
+                            }
+                        }
+                        Text { text: @tr("Входящий slatepack"); color: Theme.muted-2; font-size: 13px; }
+                        LineEdit {
+                            text <=> root.receive-incoming;
+                            accessible-label: @tr("Входящий slatepack");
+                            key-pressed(event) => {
+                                if event.modifiers.control && (event.text == "v" || event.text == "V"
+                                    || event.text == "м" || event.text == "М") {
+                                    root.receive-incoming = root.paste-text();
+                                    return accept;
+                                }
+
+                                if event.modifiers.control && (event.text == "z" || event.text == "Z"
+                                    || event.text == "я" || event.text == "Я") {
+                                    return reject;
+                                }
+                                if event.modifiers.control && (event.text == "a" || event.text == "A"
+                                    || event.text == "ф" || event.text == "Ф") {
+                                    self.select-all();
+                                    return accept;
+                                }
+                                return reject;
+                            }
+                            accepted => {
+                                if !root.receive-busy {
+                                    root.receive-prepare-clicked(root.receive-incoming);
+                                }
+                            }
+                        }
+                        Button {
+                            text: @tr("Принять");
+                            enabled: !root.receive-busy;
+                                clicked => { root.receive-prepare-clicked(root.receive-incoming); }
+                        }
+                        Text { text: root.receive-slate-id; color: Theme.muted; font-size: 12px; font-family: "Cascadia Mono"; }
+                        Text { text: @tr("Ответ отправителю"); color: Theme.muted-2; font-size: 13px; }
+                        LineEdit {
+                            text: root.receive-slatepack;
+                            read-only: true;
+                            accessible-label: @tr("Ответ отправителю");
+                        }
+                        Button { text: @tr("Копировать ответ"); clicked => { root.copy-receive-clicked(root.receive-slatepack); } }
+                        Text { text: root.receive-note; color: Theme.accent; font-size: 13px; wrap: word-wrap; }
+                        Text { text: root.receive-error; color: Theme.danger; font-size: 13px; wrap: word-wrap; }
+                    }
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Rectangle { horizontal-stretch: 1; }
+                    Button { text: @tr("Закрыть"); clicked => { root.show-receive = false; } }
+                    Button {
+                        text: @tr("Завершить приём");
+                        enabled: !root.receive-busy && root.receive-slate-id != "";
+                        clicked => { root.receive-finalize-clicked(root.receive-slate-id); }
+                    }
+                }
+            }
+        }
+    }
+    // Settings: node URL/relay/min-conf. Network switching still needs a
+    // restart and is read-only here.
+    if root.show-settings: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 560px) / 2;
+            y: (parent.height - Math.min(740px, parent.height - 16px)) / 2;
+            width: Math.min(560px, parent.width - 32px);
+            height: Math.min(740px, parent.height - 16px);
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            ScrollView {
+                VerticalLayout {
+                padding: 16px;
+                spacing: 6px;
+                Text { text: @tr("Настройки"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text { text: @tr("Сеть"); color: Theme.muted-2; font-size: 13px; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: "testnet";
+                        clicked => { root.settings-network = "testnet"; }
+                    }
+                    Button {
+                        text: "mainnet";
+                        clicked => { root.settings-network = "mainnet"; }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    Text { text: root.settings-network; color: Theme.accent; font-size: 14px; vertical-alignment: center; }
+                }
+                Text {
+                    text: @tr("mainnet — реальные средства; смена сети заблокирует кошелёк");
+                    color: Theme.danger;
+                    font-size: 12px;
+                    visible: root.settings-network == "mainnet";
+                }
+                Text { text: @tr("Язык интерфейса"); color: Theme.muted-2; font-size: 13px; }
+                ComboBox {
+                    model: ["Русский", "English"];
+                    current-value: root.ui-language == "en" ? "English" : "Русский";
+                    selected(value) => {
+                        root.ui-language = value == "English" ? "en" : "ru";
+                        root.ui-language-note = @tr("Переключаю язык…");
+                        root.language-save-requested(value);
+                    }
+                }
+                Text { text: root.ui-language-note; color: Theme.muted; font-size: 12px; }
+                Button {
+                    text: @tr("Безопасность");
+                    clicked => { root.security-open-clicked(); }
+                }
+                Text { text: @tr("Профили"); color: Theme.muted-2; font-size: 13px; }
+                Text {
+                    text: @tr("Активный профиль: ") + root.active-wallet;
+                    color: Theme.muted;
+                    font-size: 12px;
+                }
+                Text { text: @tr("Имя кошелька"); color: Theme.muted-2; font-size: 13px; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    LineEdit {
+                        text <=> root.settings-profile;
+                        accessible-label: @tr("Имя кошелька");
+                        accepted => {
+                            root.settings-save-clicked(
+                                root.settings-network,
+                                root.settings-profile,
+                                root.settings-node-url,
+                                root.settings-relay,
+                                root.settings-min-conf,
+                            );
+                        }
+                    }
+                    Button {
+                        text: @tr("Создать профиль");
+                        enabled: !root.profile-create-busy;
+                        clicked => { root.profile-create-clicked(root.settings-profile); }
+                    }
+                }
+                Text {
+                    text: @tr("Каждый профиль — отдельный кошелёк и seed. Новое имя переключает на новый профиль; переименования нет. После создания откроется создание seed.");
+                    color: Theme.muted;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                if root.profile-create-error != "": Text {
+                    text: root.profile-create-error;
+                    color: Theme.danger;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                if root.profile-create-note != "": Text {
+                    text: root.profile-create-note;
+                    color: Theme.accent;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                Button {
+                    text: @tr("Показать seed");
+                    enabled: !root.seed-reveal-busy;
+                    clicked => { root.seed-reveal-open-clicked(); }
+                }
+                Text { text: @tr("Каталог данных ноды и кошельков"); color: Theme.muted-2; font-size: 13px; }
+                Text {
+                    text: @tr("Сейчас: ") + root.settings-active-data-dir;
+                    color: Theme.muted;
+                    font-family: "Cascadia Mono";
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                LineEdit {
+                    text <=> root.settings-data-dir;
+                    accessible-label: @tr("Каталог данных ноды и кошельков");
+                    enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: root.settings-data-dir-busy ? "Выбор…" : "Обзор…";
+                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                        clicked => { root.settings-data-dir-browse-clicked(); }
+                    }
+                    Button {
+                        text: @tr("Стандартный");
+                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                        clicked => { root.settings-data-dir = root.settings-default-data-dir; }
+                    }
+                    Button {
+                        text: @tr("Применить при перезапуске");
+                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                        clicked => { root.settings-data-dir-save-clicked(root.settings-data-dir); }
+                    }
+                }
+                Text {
+                    text: @tr("Файлы не копируются автоматически. Чтобы открыть существующие кошельки и цепь, скопируйте их в новый корень при закрытом Flint; иначе после перезапуска будут созданы новые данные.");
+                    color: Theme.warning;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                Text {
+                    text: @tr("Каталог задан параметром --data или FLINT_DATA_DIR; измените параметр запуска.");
+                    color: Theme.warning;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                    visible: root.settings-data-dir-forced;
+                }
+                Text { text: "Node URL"; color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.settings-node-url;
+                    accessible-label: "Node URL";
+                }
+                Text { text: "Relay URL"; color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.settings-relay;
+                    accessible-label: "Relay URL";
+                }
+                Text { text: @tr("Минимум подтверждений"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.settings-min-conf;
+                    accessible-label: @tr("Минимум подтверждений");
+                    accepted => {
+                        root.settings-save-clicked(
+                            root.settings-network,
+                            root.settings-profile,
+                            root.settings-node-url,
+                            root.settings-relay,
+                            root.settings-min-conf,
+                        );
+                    }
+                }
+                Text { text: @tr("Tor (приём и messenger-шлюз)"); color: Theme.muted-2; font-size: 13px; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Text {
+                        text: root.tor-running ? "включён" : "выключен";
+                        color: root.tor-running ? Theme.accent : Theme.muted;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                    }
+                    Button {
+                        text: root.tor-running ? "Остановить Tor" : "Запустить Tor";
+                        enabled: root.tor-available && !root.tor-busy;
+                        clicked => {
+                            if root.tor-running {
+                                root.tor-stop-clicked();
+                            } else {
+                                root.tor-start-clicked();
+                            }
+                        }
+                    }
+                    Button {
+                        text: @tr("Обновить Tor");
+                        enabled: root.tor-available && !root.tor-busy;
+                        clicked => { root.tor-refresh-clicked(); }
+                    }
+                }
+                Text {
+                    text: root.tor-onion;
+                    color: Theme.accent;
+                    font-family: "Cascadia Mono";
+                    font-size: 12px;
+                    wrap: word-wrap;
+                    visible: root.tor-onion != "";
+                }
+                Text { text: root.tor-note; color: Theme.muted; font-size: 12px; wrap: word-wrap; }
+                LineEdit {
+                    text <=> root.tor-bridges-text;
+                    accessible-label: @tr("Мосты Tor");
+                    placeholder-text: @tr("obfs4/webtunnel мосты, по одному на строку");
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: @tr("Сохранить мосты");
+                        enabled: !root.tor-busy;
+                        clicked => { root.tor-bridges-save-clicked(root.tor-bridges-text); }
+                    }
+                    Button {
+                        text: @tr("Показать лог");
+                        enabled: root.tor-available && !root.tor-busy;
+                        clicked => { root.tor-log-clicked(); }
+                    }
+                }
+                Text { text: root.tor-bridge-status; color: Theme.warning; font-size: 12px; wrap: word-wrap; }
+                Text { text: root.tor-log-text; color: Theme.muted; font-family: "Cascadia Mono"; font-size: 11px; wrap: word-wrap; }
+                Text { text: root.settings-note; color: Theme.accent; font-size: 13px; }
+                if root.settings-warning != "": Text {
+                    text: root.settings-warning;
+                    color: Theme.warning;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                Text { text: root.settings-error; color: Theme.danger; font-size: 13px; }
+                Text {
+                    text: @tr("Полный rescan: после копирования data выполните «Сканировать».");
+                    color: Theme.muted;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                Rectangle { vertical-stretch: 1; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button { text: @tr("Безопасность"); clicked => { root.security-open-clicked(); } }
+                    Rectangle { horizontal-stretch: 1; }
+                    Button { text: @tr("Закрыть"); clicked => { root.show-settings = false; } }
+                    Button {
+                        text: @tr("Сохранить");
+                        clicked => {
+                            root.settings-save-clicked(
+                                root.settings-network,
+                                root.settings-profile,
+                                root.settings-node-url,
+                                root.settings-relay,
+                                root.settings-min-conf,
+                            );
+                        }
+                    }
+                }
+                }
+            }
+        }
+    }
+    // Janus board: local demo board, take is labelled as demo.
+    if root.show-swaps: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 720px) / 2;
+            y: (parent.height - 620px) / 2;
+            width: 720px;
+            height: 660px;
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 24px;
+                spacing: 10px;
+                Text { text: @tr("Свопы JANUS"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text { text: @tr("демо-борд · не публичный протокол"); color: Theme.warning; font-size: 13px; }
+                Text { text: root.swap-note; color: Theme.muted-2; font-size: 13px; }
+                Rectangle { height: 1px; background: Theme.border; }
+                VerticalLayout {
+                    spacing: 8px;
+                    for row in root.swap-offers: Rectangle {
+                        height: 76px;
+                        border-radius: Theme.radius-control;
+                        background: Theme.surface-2;
+                        HorizontalLayout {
+                            padding: 12px;
+                            spacing: 10px;
+                            VerticalLayout {
+                                spacing: 3px;
+                                horizontal-stretch: 1;
+                                Text { text: row.pair; color: Theme.text; font-size: 15px; font-weight: 600; }
+                                Text { text: row.rate; color: Theme.muted-2; font-size: 13px; }
+                                Text { text: row.bounds; color: Theme.muted; font-size: 12px; }
+                            }
+                            VerticalLayout {
+                                spacing: 6px;
+                                Text { text: row.stamps; color: Theme.muted; font-size: 12px; }
+                                Button {
+                                    text: @tr("Взять");
+                                    clicked => { root.swap-take-clicked(row.id); }
+                                }
+                            }
+                        }
+                    }
+                }
+                Rectangle { vertical-stretch: 1; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: @tr("Симулировать");
+                        enabled: root.last-swap-id != "" && !root.swap-busy;
+                        clicked => { root.swap-simulate-clicked(root.last-swap-id); }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    Button { text: @tr("Закрыть"); clicked => { root.show-swaps = false; } }
+                }
+            }
+        }
+    }
+    // Password change and wallet deletion. Both are destructive: the UI keeps
+    // the confirmation and the runtime performs the actual operation.
+    if root.show-security: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 560px) / 2;
+            y: (parent.height - Math.min(740px, parent.height - 32px)) / 2;
+            width: Math.min(560px, parent.width - 32px);
+            height: Math.min(740px, parent.height - 32px);
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 24px;
+                spacing: 10px;
+                Text { text: @tr("Безопасность"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text { text: @tr("Текущий пароль"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.sec-old;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Текущий пароль");
+                }
+                Text { text: @tr("Новый пароль"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.sec-new;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Новый пароль");
+                }
+                Text { text: @tr("Повторите новый пароль"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.sec-new2;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Повторите новый пароль");
+                    accepted => {
+                        if !root.sec-busy {
+                            root.change-password-clicked(root.sec-old, root.sec-new, root.sec-new2);
+                        }
+                    }
+                }
+                Button {
+                    text: @tr("Сменить пароль");
+                    enabled: !root.sec-busy;
+                    clicked => { root.change-password-clicked(root.sec-old, root.sec-new, root.sec-new2); }
+                }
+                Rectangle { height: 1px; background: Theme.border; }
+                Text { text: root.sec-seed-status; color: Theme.muted; font-size: 12px; wrap: word-wrap; }
+                LineEdit {
+                    text <=> root.sec-seed-password;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Пароль для защиты seed");
+                    placeholder-text: @tr("Пароль для миграции");
+                }
+                LineEdit {
+                    text <=> root.sec-seed-confirm;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Повторите пароль для миграции");
+                    placeholder-text: @tr("Повторите пароль");
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: root.sec-remove-backups ? "Удалить backup: да" : "Удалить backup: нет";
+                        clicked => { root.sec-remove-backups = !root.sec-remove-backups; }
+                    }
+                    Button {
+                        text: @tr("Защитить seed (Argon2id)");
+                        enabled: !root.sec-busy;
+                        clicked => {
+                            root.seed-migrate-clicked(
+                                root.sec-seed-password,
+                                root.sec-seed-confirm,
+                                root.sec-remove-backups,
+                            );
+                        }
+                    }
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: @tr("Отключить Argon2id");
+                        enabled: !root.sec-busy;
+                        clicked => { root.seed-disable-clicked(root.sec-old); }
+                    }
+                    Button {
+                        text: @tr("Починить конверт");
+                        enabled: !root.sec-busy;
+                        clicked => { root.seed-repair-clicked(root.sec-old); }
+                    }
+                    Button {
+                        text: @tr("Показать seed");
+                        enabled: !root.sec-busy;
+                        clicked => { root.seed-reveal-open-clicked(); }
+                    }
+                }
+                Rectangle { height: 1px; background: Theme.border; }
+                Text { text: @tr("Удаление кошелька необратимо."); color: Theme.danger; font-size: 13px; }
+                LineEdit {
+                    text <=> root.sec-delete;
+                    accessible-label: @tr("Имя кошелька для удаления");
+                    placeholder-text: "default";
+                    accepted => {
+                        if !root.sec-busy {
+                            root.delete-wallet-clicked(root.sec-delete);
+                        }
+                    }
+                }
+                Button {
+                    text: @tr("Удалить кошелёк");
+                    enabled: !root.sec-busy;
+                    clicked => { root.delete-wallet-clicked(root.sec-delete); }
+                }
+                Text { text: root.sec-note; color: Theme.accent; font-size: 13px; }
+                Text { text: root.sec-error; color: Theme.danger; font-size: 13px; }
+                Rectangle { vertical-stretch: 1; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Rectangle { horizontal-stretch: 1; }
+                    Button {
+                        text: @tr("Закрыть");
+                        clicked => {
+                            root.show-security = false;
+                            root.sec-old = "";
+                            root.sec-new = "";
+                            root.sec-new2 = "";
+                            root.sec-delete = "";
+                            root.sec-seed-password = "";
+                            root.sec-seed-confirm = "";
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Seed reveal is password-gated and display-only; the phrase is cleared on
+    // close and never logged or copied automatically.
+    if root.show-seed: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 560px) / 2;
+            y: (parent.height - 620px) / 2;
+            width: Math.min(560px, parent.width - 32px);
+            height: Math.min(620px, parent.height - 32px);
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 24px;
+                spacing: 10px;
+                Text { text: @tr("Показать seed"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text {
+                    text: @tr("Никому не показывайте фразу. После проверки закройте окно.");
+                    color: Theme.danger;
+                    font-size: 13px;
+                    wrap: word-wrap;
+                }
+                Text { text: @tr("Пароль"); color: Theme.muted-2; font-size: 13px; }
+                LineEdit {
+                    text <=> root.seed-reveal-password;
+                    input-type: InputType.password;
+                    accessible-label: @tr("Пароль");
+                    accepted => {
+                        if !root.seed-reveal-busy {
+                            root.seed-reveal-clicked(root.seed-reveal-password);
+                        }
+                    }
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Button {
+                        text: @tr("Показать");
+                        enabled: !root.seed-reveal-busy;
+                        clicked => { root.seed-reveal-clicked(root.seed-reveal-password); }
+                    }
+                    Button {
+                        text: @tr("Закрыть");
+                        clicked => {
+                            root.show-seed = false;
+                            root.seed-reveal-password = "";
+                            root.seed-revealed = "";
+                            root.seed-reveal-error = "";
+                        }
+                    }
+                }
+                Text { text: root.seed-reveal-error; color: Theme.danger; font-size: 13px; wrap: word-wrap; }
+                if root.seed-revealed != "": VerticalLayout {
+                    spacing: 6px;
+                    Text { text: @tr("Seed-фраза"); color: Theme.muted-2; font-size: 13px; }
+                    TextEdit {
+                        text: root.seed-revealed;
+                        read-only: true;
+                        height: 130px;
+                        accessible-label: @tr("Seed-фраза");
+                    }
+                    Text {
+                        text: @tr("Фраза не копируется автоматически; закройте окно после записи.");
+                        color: Theme.muted;
+                        font-size: 12px;
+                        wrap: word-wrap;
+                    }
+                }
+                Rectangle { vertical-stretch: 1; }
+            }
+        }
+    }
+    // Encrypted messenger: local history and relay/direct transport.
+    if root.show-messages: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+
+        VerticalLayout {
+            padding: 20px;
+            spacing: 12px;
+
+            HorizontalLayout {
+                height: 58px;
+                spacing: 12px;
+                Image {
+                    source: @image-url("assets/flint-mark-48.png");
+                    width: 36px;
+                    height: 36px;
+                }
+                VerticalLayout {
+                    spacing: 1px;
+                    Text { text: @tr("Сообщения"); color: Theme.text; font-size: 24px; font-weight: 700; }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: root.messenger-address-expanded ? root.messenger-address : root.messenger-address-short;
+                            color: Theme.muted-2;
+                            font-family: "Cascadia Mono";
+                            font-size: 11px;
+                        }
+                        ActionButton {
+                            label: root.messenger-address-expanded ? @tr("Скрыть") : @tr("Показать");
+                            kind: "ghost";
+                            button-height: 26px;
+                            width: 78px;
+                            clicked => { root.messenger-address-expanded = !root.messenger-address-expanded; }
+                        }
+                        ActionButton {
+                            label: @tr("Копировать");
+                            kind: "ghost";
+                            button-height: 26px;
+                            width: 92px;
+                            clicked => { root.copy-address-clicked(); }
+                        }
+                        Text { text: root.clipboard-note; color: Theme.accent; font-size: 10px; vertical-alignment: center; }
+                    }
+                }
+                Rectangle { horizontal-stretch: 1; }
+                VerticalLayout {
+                    width: root.width < 1100px ? 150px : 300px;
+                    spacing: 1px;
+                    Text { text: @tr("СЕТЬ И ИСТОРИЯ"); color: Theme.muted; font-size: 9px; letter-spacing: 1px; }
+                    Text { text: root.messenger-status; color: Theme.muted-2; font-size: 12px; wrap: word-wrap; }
+                }
+                ActionButton {
+                    label: root.width < 1100px ? @tr("Входящие") : @tr("Проверить входящие");
+                    kind: "secondary";
+                    button-height: 38px;
+                    width: root.width < 1100px ? 116px : 180px;
+                    enabled: !root.messenger-busy;
+                    clicked => { root.messenger-inbox-clicked(); }
+                }
+                ActionButton {
+                    label: @tr("Закрыть");
+                    kind: "ghost";
+                    button-height: 38px;
+                    width: root.width < 1100px ? 80px : 100px;
+                    clicked => { root.messenger-close-clicked(); }
+                }
+            }
+
+            if root.messenger-error != "" && !root.show-add-contact && !root.show-recover-history: Text {
+                text: root.messenger-error;
+                color: Theme.danger;
+                font-size: 12px;
+                wrap: word-wrap;
+            }
+            if root.messenger-note != "" && !root.show-add-contact && !root.show-recover-history: Text {
+                text: root.messenger-note;
+                color: Theme.accent;
+                font-size: 12px;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                spacing: 14px;
+                vertical-stretch: 1;
+
+                Rectangle {
+                    width: root.width < 1100px ? 280px : 330px;
+                    background: Theme.surface;
+                    border-radius: Theme.radius-card;
+                    border-width: 1px;
+                    border-color: Theme.border;
+                    VerticalLayout {
+                        padding: 16px;
+                        spacing: 10px;
+                        HorizontalLayout {
+                            Text { text: @tr("Контакты"); color: Theme.text; font-size: 16px; font-weight: 600; }
+                            Rectangle { horizontal-stretch: 1; }
+                            ActionButton {
+                                label: "+";
+                                kind: "ghost";
+                                button-height: 32px;
+                                width: 36px;
+                                clicked => {
+                                    root.messenger-contact-address = "";
+                                    root.messenger-contact-name = "";
+                                    root.messenger-error = "";
+                                    root.show-add-contact = true;
+                                }
+                            }
+                        }
+
+                        CheckBox {
+                            text: @tr("Обрабатывать слейтпаки автоматически");
+                            checked <=> root.auto-process-slatepacks;
+                            toggled => {
+                                root.auto-process-toggled(root.auto-process-slatepacks);
+                            }
+                            enabled: !root.messenger-busy;
+                        }
+                        if root.auto-process-slatepacks: Text {
+                            text: @tr("Автофинализация только для slatepack от сохранённых контактов; ответ отправляется автоматически.");
+                            color: Theme.muted;
+                            font-size: 10px;
+                            wrap: word-wrap;
+                        }
+                        if root.messenger-contacts.length == 0: VerticalLayout {
+                            spacing: 8px;
+                            alignment: center;
+                            Text { text: "✉"; color: Theme.muted; font-size: 32px; horizontal-alignment: center; }
+                            Text { text: @tr("Контактов пока нет"); color: Theme.text; font-size: 15px; horizontal-alignment: center; }
+                            Text {
+                                text: @tr("Сохраните имя и адрес для переписки.");
+                                color: Theme.muted;
+                                font-size: 12px;
+                                wrap: word-wrap;
+                                horizontal-alignment: center;
+                            }
+                            ActionButton {
+                                label: @tr("Добавить контакт");
+                                kind: "secondary";
+                                clicked => {
+                                    root.messenger-contact-address = "";
+                                    root.messenger-contact-name = "";
+                                    root.messenger-error = "";
+                                    root.show-add-contact = true;
+                                }
+                            }
+                        }
+                        ListView {
+                            visible: root.messenger-contacts.length > 0;
+                            vertical-stretch: 1;
+                            for contact in root.messenger-contacts: Rectangle {
+                                height: 62px;
+                                border-radius: 10px;
+                                background: contact.address == root.messenger-selected-address ? Theme.accent-soft : transparent;
+                                border-width: contact.address == root.messenger-selected-address ? 1px : 0px;
+                                border-color: Theme.accent;
+                                HorizontalLayout {
+                                    padding: 8px;
+                                    spacing: 8px;
+                                    Rectangle {
+                                        width: 32px;
+                                        height: 32px;
+                                        border-radius: 16px;
+                                        background: Theme.surface-2;
+                                        Rectangle { x: 11px; y: 7px; width: 10px; height: 10px; border-radius: 5px; background: Theme.muted-2; }
+                                        Rectangle { x: 7px; y: 19px; width: 18px; height: 8px; border-radius: 4px; background: Theme.muted-2; }
+                                    }
+                                    VerticalLayout {
+                                        horizontal-stretch: 1;
+                                        spacing: 1px;
+                                        Text { text: contact.name; color: Theme.text; font-size: 13px; font-weight: 600; }
+                                        Text {
+                                            text: contact.short-address;
+                                            color: Theme.muted;
+                                            font-family: "Cascadia Mono";
+                                            font-size: 9px;
+                                        }
+                                    }
+                                }
+                                TouchArea {
+                                    accessible-role: button;
+                                    accessible-label: contact.name;
+                                    accessible-action-default => {
+                                        root.messenger-selected-address = contact.address;
+                                        root.messenger-selected-name = contact.name;
+                                        root.messenger-peer = contact.address;
+                                        root.messenger-history = "";
+                                        root.messenger-messages = [];
+                                        root.messenger-history-clicked(contact.address);
+                                    }
+                                    clicked => {
+                                        root.messenger-selected-address = contact.address;
+                                        root.messenger-selected-name = contact.name;
+                                        root.messenger-peer = contact.address;
+                                        root.messenger-history = "";
+                                        root.messenger-messages = [];
+                                        root.messenger-history-clicked(contact.address);
+                                    }
+                                }
+                            }
+                        }
+
+                        if root.messenger-selected-address != "": HorizontalLayout {
+                            spacing: 6px;
+                            ActionButton {
+                                label: @tr("Заблокировать");
+                                kind: "ghost";
+                                button-height: 32px;
+                                enabled: !root.messenger-busy;
+                                clicked => { root.messenger-block-clicked(root.messenger-selected-address, true); }
+                            }
+                            ActionButton {
+                                label: @tr("Удалить");
+                                kind: "ghost";
+                                button-height: 32px;
+                                enabled: !root.messenger-busy;
+                                clicked => {
+                                    root.messenger-contact-delete-clicked(root.messenger-selected-address);
+                                    root.messenger-selected-address = "";
+                                    root.messenger-selected-name = "";
+                                    root.messenger-peer = "";
+                                    root.messenger-messages = [];
+                                }
+                            }
+                        }
+
+                        Rectangle { height: 1px; background: Theme.border; }
+                        Text { text: @tr("Заблокированные адреса"); color: Theme.muted; font-size: 11px; }
+                        if root.messenger-blocked-addresses.length == 0: Text {
+                            text: @tr("Заблокированных адресов нет");
+                            color: Theme.muted;
+                            font-size: 11px;
+                        }
+                        ListView {
+                            visible: root.messenger-blocked-addresses.length > 0;
+                            height: 76px;
+                            for address in root.messenger-blocked-addresses: HorizontalLayout {
+                                height: 34px;
+                                spacing: 6px;
+                                Text {
+                                    text: address;
+                                    width: 148px;
+                                    color: Theme.muted-2;
+                                    font-family: "Cascadia Mono";
+                                    font-size: 9px;
+                                    overflow: elide;
+                                    vertical-alignment: center;
+                                }
+                                ActionButton {
+                                    label: @tr("Разблокировать");
+                                    kind: "ghost";
+                                    button-height: 28px;
+                                    width: 124px;
+                                    clicked => { root.messenger-block-clicked(address, false); }
+                                }
+                            }
+                        }
+                        ActionButton {
+                            label: @tr("Восстановить историю");
+                            kind: "ghost";
+                            button-height: 32px;
+                            clicked => {
+                                root.messenger-recovery-password = "";
+                                root.messenger-error = "";
+                                root.messenger-note = "";
+                                root.show-recover-history = true;
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                    background: Theme.surface;
+                    border-radius: Theme.radius-card;
+                    border-width: 1px;
+                    border-color: Theme.border;
+                    VerticalLayout {
+                        padding: 16px;
+                        spacing: 10px;
+                        HorizontalLayout {
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                spacing: 1px;
+                                Text {
+                                    text: root.messenger-selected-name != "" ? root.messenger-selected-name : @tr("Переписка");
+                                    color: Theme.text;
+                                    font-size: 18px;
+                                    font-weight: 600;
+                                }
+                                Text {
+                                    text: root.messenger-selected-address != "" ? root.messenger-selected-address : @tr("Выберите контакт или введите адрес");
+                                    color: Theme.muted;
+                                    font-family: "Cascadia Mono";
+                                    font-size: 10px;
+                                }
+                            }
+                            ActionButton {
+                                label: @tr("Обновить историю");
+                                kind: "ghost";
+                                button-height: 32px;
+                                width: 156px;
+                                enabled: root.messenger-peer != "" && !root.messenger-busy;
+                                clicked => { root.messenger-history-clicked(root.messenger-peer); }
+                            }
+                        }
+                        Rectangle { height: 1px; background: Theme.border; }
+                        if root.messenger-inbox != "": Text {
+                            text: root.messenger-inbox;
+                            color: Theme.muted-2;
+                            font-family: "Cascadia Mono";
+                            font-size: 11px;
+                            wrap: word-wrap;
+                        }
+                        if root.messenger-messages.length == 0: VerticalLayout {
+                            vertical-stretch: 1;
+                            spacing: 8px;
+                            alignment: center;
+                            Text { text: "✉"; color: Theme.muted; font-size: 38px; horizontal-alignment: center; }
+                            Text {
+                                text: root.messenger-selected-address != "" ? @tr("Сообщений пока нет") : @tr("Начните переписку");
+                                color: Theme.text;
+                                font-size: 18px;
+                                horizontal-alignment: center;
+                            }
+                            Text {
+                                text: root.messenger-selected-address != ""
+                                    ? @tr("Напишите первое сообщение, чтобы начать переписку.")
+                                    : @tr("Выберите контакт слева или введите tgrin/grin-адрес получателя.");
+                                color: Theme.muted;
+                                font-size: 12px;
+                                wrap: word-wrap;
+                                horizontal-alignment: center;
+                            }
+                        }
+                        ListView {
+                            visible: root.messenger-messages.length > 0;
+                            vertical-stretch: 1;
+                            for message in root.messenger-messages: VerticalLayout {
+                                spacing: 2px;
+                                alignment: message.incoming ? start : end;
+                                Rectangle {
+                                    width: min(parent.width * 0.72, 520px);
+                                    background: message.incoming ? Theme.surface-2 : Theme.accent-soft;
+                                    border-radius: 12px;
+                                    border-width: 1px;
+                                    border-color: message.incoming ? Theme.border : Theme.accent;
+                                    VerticalLayout {
+                                        padding: 10px;
+                                        spacing: 3px;
+                                        Text { text: message.text; color: Theme.text; font-size: 13px; wrap: word-wrap; }
+                                        HorizontalLayout {
+                                            spacing: 6px;
+                                            Text { text: message.direction; color: Theme.muted; font-size: 9px; }
+                                            Text { text: message.when; color: Theme.muted; font-size: 9px; }
+                                        }
+                                        if message.slatepack: ActionButton {
+                                            label: @tr("Обработать slatepack");
+                                            kind: "secondary";
+                                            button-height: 30px;
+                                            horizontal-stretch: 1;
+                                            clicked => {
+                                                root.receive-incoming = message.text;
+                                                root.receive-slate-id = "";
+                                                root.receive-slatepack = "";
+                                                root.receive-note = "";
+                                                root.receive-error = "";
+                                                root.show-messages = false;
+                                                root.show-receive = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Rectangle { height: 1px; background: Theme.border; }
+                        VerticalLayout {
+                            spacing: 6px;
+                            Text { text: @tr("Получатель"); color: Theme.muted; font-size: 11px; }
+                            LineEdit {
+                                text <=> root.messenger-peer;
+                                placeholder-text: @tr("tgrin… / grin…");
+                                accessible-label: @tr("Адрес получателя");
+                            }
+                            TextEdit {
+                                text <=> root.messenger-text;
+                                height: 72px;
+                                enabled: !root.messenger-busy;
+                                accessible-label: @tr("Текст сообщения");
+                                key-pressed(event) => {
+                                    if event.modifiers.control && event.text == "Enter" {
+                                        root.messenger-send-clicked(root.messenger-peer, root.messenger-text);
+                                        return accept;
+                                    }
+                                    return reject;
+                                }
+                            }
+                            HorizontalLayout {
+                                spacing: 8px;
+                                Text {
+                                    text: root.messenger-busy ? @tr("выполняется…") : "";
+                                    color: Theme.muted;
+                                    font-size: 11px;
+                                }
+                                Rectangle { horizontal-stretch: 1; }
+                                ActionButton {
+                                    label: @tr("Отправить");
+                                    kind: "primary";
+                                    button-height: 44px;
+                                    width: 150px;
+                                    enabled: !root.messenger-busy && root.messenger-text != "";
+                                    clicked => { root.messenger-send-clicked(root.messenger-peer, root.messenger-text); }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if root.show-add-contact: Rectangle {
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: Theme.scrim;
+            Rectangle {
+                x: (parent.width - 460px) / 2;
+                y: (parent.height - 430px) / 2;
+                width: 460px;
+                height: 430px;
+                background: Theme.surface;
+                border-radius: Theme.radius-card;
+                border-width: 1px;
+                border-color: Theme.border;
+                VerticalLayout {
+                    padding: 24px;
+                    spacing: 10px;
+                    Text { text: @tr("Добавить контакт"); color: Theme.text; font-size: 22px; font-weight: 700; }
+                    Text { text: @tr("Сохраните имя и адрес для переписки."); color: Theme.muted; font-size: 13px; wrap: word-wrap; }
+                    Text { text: @tr("Имя"); color: Theme.muted-2; font-size: 12px; }
+                    LineEdit {
+                        text <=> root.messenger-contact-name;
+                        placeholder-text: @tr("Как назвать контакт");
+                        accessible-label: @tr("Имя контакта");
+                        edited(text) => { root.messenger-error = ""; }
+                    }
+                    Text { text: @tr("Адрес"); color: Theme.muted-2; font-size: 12px; }
+                    LineEdit {
+                        text <=> root.messenger-contact-address;
+                        placeholder-text: @tr("tgrin… / grin…");
+                        accessible-label: @tr("Адрес контакта");
+                        edited(text) => { root.messenger-error = ""; }
+                    }
+                    if root.messenger-error != "": Text { text: root.messenger-error; color: Theme.danger; font-size: 12px; wrap: word-wrap; }
+                    Text { text: @tr("Используйте адрес собеседника."); color: Theme.muted; font-size: 11px; }
+                    Rectangle { vertical-stretch: 1; }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Rectangle { horizontal-stretch: 1; }
+                        ActionButton {
+                            label: @tr("Отмена");
+                            kind: "secondary";
+                            width: 130px;
+                            clicked => {
+                                root.show-add-contact = false;
+                                root.messenger-contact-name = "";
+                                root.messenger-contact-address = "";
+                                root.messenger-error = "";
+                            }
+                        }
+                        ActionButton {
+                            label: @tr("Сохранить");
+                            kind: "primary";
+                            width: 150px;
+                            enabled: !root.messenger-busy;
+                            clicked => { root.messenger-contact-save-clicked(root.messenger-contact-address, root.messenger-contact-name); }
+                        }
+                    }
+                }
+            }
+        }
+
+        if root.show-recover-history: Rectangle {
+            x: 0;
+            y: 0;
+            width: parent.width;
+            height: parent.height;
+            background: Theme.scrim;
+            Rectangle {
+                x: (parent.width - 500px) / 2;
+                y: (parent.height - 430px) / 2;
+                width: 500px;
+                height: 430px;
+                background: Theme.surface;
+                border-radius: Theme.radius-card;
+                border-width: 1px;
+                border-color: Theme.border;
+                VerticalLayout {
+                    padding: 24px;
+                    spacing: 10px;
+                    Text { text: @tr("Восстановить историю"); color: Theme.text; font-size: 22px; font-weight: 700; }
+                    Text {
+                        text: @tr("Введите пароль старой истории, чтобы попробовать восстановить переписку.");
+                        color: Theme.muted;
+                        font-size: 13px;
+                        wrap: word-wrap;
+                    }
+                    Text { text: @tr("Пароль старой истории"); color: Theme.muted-2; font-size: 12px; }
+                    LineEdit {
+                        text <=> root.messenger-recovery-password;
+                        input-type: InputType.password;
+                        placeholder-text: @tr("пароль старой истории");
+                        accessible-label: @tr("Пароль старой истории");
+                    }
+                    Text { text: @tr("Восстановление не гарантируется."); color: Theme.muted; font-size: 11px; }
+                    if root.messenger-error != "": Text { text: root.messenger-error; color: Theme.danger; font-size: 12px; wrap: word-wrap; }
+                    if root.messenger-note != "": Text { text: root.messenger-note; color: Theme.accent; font-size: 12px; wrap: word-wrap; }
+                    Rectangle { vertical-stretch: 1; }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Rectangle { horizontal-stretch: 1; }
+                        ActionButton {
+                            label: @tr("Отмена");
+                            kind: "secondary";
+                            width: 130px;
+                            clicked => {
+                                root.show-recover-history = false;
+                                root.messenger-recovery-password = "";
+                                root.messenger-error = "";
+                            }
+                        }
+                        ActionButton {
+                            label: @tr("Восстановить");
+                            kind: "primary";
+                            width: 160px;
+                            enabled: !root.messenger-busy;
+                            clicked => { root.messenger-recover-clicked(root.messenger-recovery-password); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Full local history from activity(200).
+    if root.show-history: Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        background: Theme.bg;
+        Rectangle {
+            x: (parent.width - 720px) / 2;
+            y: (parent.height - 620px) / 2;
+            width: 720px;
+            height: 660px;
+            background: Theme.surface;
+            border-radius: Theme.radius-card;
+            border-width: 1px;
+            border-color: Theme.border;
+            VerticalLayout {
+                padding: 24px;
+                spacing: 10px;
+                Text { text: @tr("История"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                Text { text: root.history-note; color: Theme.muted; font-size: 13px; }
+                Text { text: @tr("Очередь"); color: Theme.muted; font-size: 12px; letter-spacing: 2px; }
+                if root.pending-loading: Text {
+                    text: @tr("Загружаю очередь…");
+                    color: Theme.muted;
+                    font-size: 13px;
+                }
+                if root.pending-error != "": Rectangle {
+                    background: Theme.surface-2;
+                    border-radius: Theme.radius-control;
+                    border-width: 1px;
+                    border-color: Theme.danger;
+                    VerticalLayout {
+                        padding: 10px;
+                        spacing: 4px;
+                        Text { text: @tr("Очередь не загружена"); color: Theme.danger; font-size: 13px; font-weight: 600; }
+                        Text { text: root.pending-error; color: Theme.danger; font-size: 12px; wrap: word-wrap; }
+                        Text { text: @tr("Не считайте очередь пустой: состояние операций неизвестно."); color: Theme.warning; font-size: 12px; wrap: word-wrap; }
+                        Button {
+                            text: @tr("Повторить загрузку");
+                            enabled: !root.pending-loading;
+                            clicked => { root.pending-reload-clicked(); }
+                        }
+                    }
+                }
+                if root.pending-unreadable.length > 0: Rectangle {
+                    background: Theme.surface-2;
+                    border-radius: Theme.radius-control;
+                    border-width: 1px;
+                    border-color: Theme.warning;
+                    VerticalLayout {
+                        padding: 10px;
+                        spacing: 4px;
+                        Text { text: @tr("Нечитаемые записи: ") + root.pending-unreadable.length; color: Theme.warning; font-size: 13px; font-weight: 600; }
+                        for name in root.pending-unreadable: Text {
+                            text: "• " + name;
+                            color: Theme.warning;
+                            font-size: 12px;
+                            font-family: "Cascadia Mono";
+                            wrap: word-wrap;
+                        }
+                        Text { text: @tr("Диагностика: ") + root.pending-diagnostics; color: Theme.muted; font-size: 11px; wrap: word-wrap; }
+                        Text { text: @tr("Записи не удалены. Повтор/отмена для них недоступны."); color: Theme.warning; font-size: 12px; wrap: word-wrap; }
+                    }
+                }
+                if root.pending.length > 0: VerticalLayout {
+                    spacing: 6px;
+                    Text { text: @tr("Незавершённые переводы"); color: Theme.warning; font-size: 13px; }
+                    for row in root.pending: Rectangle {
+                        height: 68px;
+                        border-radius: Theme.radius-control;
+                        background: Theme.surface-2;
+                        HorizontalLayout {
+                            padding: 10px;
+                            spacing: 8px;
+                            VerticalLayout {
+                                spacing: 2px;
+                                horizontal-stretch: 1;
+                                Text { text: row.amount; color: Theme.text; font-size: 13px; vertical-alignment: center; }
+                                Text { text: row.next-action; color: Theme.muted-2; font-size: 11px; vertical-alignment: center; }
+                            }
+                            Text { text: row.state; color: Theme.warning; font-size: 12px; vertical-alignment: center; }
+                            if row.can-export: Button {
+                                text: @tr("Экспорт ответа");
+                                clicked => { root.export-pending-clicked(row.id); }
+                            }
+                            if row.can-export-request: Button {
+                                text: @tr("Экспорт запроса");
+                                clicked => { root.export-pending-request-clicked(row.id); }
+                            }
+                            if row.can-retry: Button {
+                                text: @tr("Повторить");
+                                clicked => { root.retry-pending-clicked(row.id); }
+                            }
+                            if row.can-cancel: Button {
+                                text: @tr("Отменить");
+                                clicked => { root.cancel-pending-clicked(row.id); }
+                            }
+                            if !row.can-retry && !row.can-cancel: Button {
+                                text: @tr("Обновить");
+                                clicked => { root.pending-reload-clicked(); }
+                            }
+                        }
+                    }
+                }
+                if !root.pending-loading && root.pending-error == "" && root.pending-unreadable.length == 0 && root.pending.length == 0: Text {
+                    text: @tr("Незавершённых операций нет");
+                    color: Theme.muted;
+                    font-size: 13px;
+                }
+                ListView {
+                    accessible-label: @tr("История операций");
+                    for row in root.history: Rectangle {
+                        height: 54px;
+                        border-radius: Theme.radius-control;
+                        background: Theme.surface-2;
+                        HorizontalLayout {
+                            padding: 12px;
+                            spacing: 10px;
+                            Text { text: row.title; color: Theme.text; font-size: 14px; horizontal-stretch: 1; vertical-alignment: center; }
+                            Text { text: row.amount; color: Theme.accent; font-size: 14px; font-family: "Cascadia Mono"; vertical-alignment: center; }
+                            Text { text: row.when; color: Theme.muted; font-size: 12px; vertical-alignment: center; }
+                        }
+                    }
+                }
+                Rectangle { vertical-stretch: 1; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Rectangle { horizontal-stretch: 1; }
+                    Button { text: @tr("Закрыть"); clicked => { root.show-history = false; } }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+

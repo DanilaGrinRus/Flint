@@ -1,0 +1,13 @@
+[package]
+name = "flint-transfer-contract"
+version = "1.0.0"
+edition = "2021"
+license = "GPL-3.0-only"
+rust-version = "1.92"
+description = "Platform-neutral Flint transfer stage/amount/action contract"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1"

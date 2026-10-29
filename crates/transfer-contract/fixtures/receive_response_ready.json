@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "slate_id": "00000000-0000-0000-0000-000000000001",
+  "direction": "receive",
+  "stage": "response_ready",
+  "amount_nano": 100000000,
+  "fee_nano": 23000000,
+  "peer": "tgrin1fixture",
+  "next_action": "export_response",
+  "can_resend": false,
+  "can_export_response": true,
+  "can_finalize": true,
+  "can_repost": false,
+  "can_cancel": false,
+  "last_error": null,
+  "updated_at": 0
+}

@@ -1,0 +1,116 @@
+name: windows
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      live_suite:
+        description: "Live suite to run on a labelled self-hosted runner"
+        required: true
+        default: none
+        type: choice
+        options:
+          - none
+          - tor
+          - funded-testnet
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+      - name: Vendor dependencies and fetch binaries
+        shell: pwsh
+        run: |
+          # vendor/ and resources/ are intentionally not committed.
+          Copy-Item .cargo/config.toml .cargo/config.toml.ci
+          Remove-Item .cargo/config.toml
+          cargo vendor vendor
+          Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
+          pwsh -File tools/fetch-node.ps1
+          pwsh -File tools/fetch-wallet.ps1
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Check
+        run: cargo check --workspace --all-targets --locked --offline
+      - name: Tests
+        run: cargo test --workspace --locked --offline
+      - name: Doctests
+        run: cargo test --workspace --doc --locked --offline
+      - name: Documentation
+        run: cargo doc --workspace --no-deps --locked --offline
+      - name: Crash-injection migration
+        run: cargo test -p flint-core --features crash-injection --test migration_crash --locked --offline
+      - name: Build Slint
+        run: cargo build -p flint-slint --locked --offline
+      - name: Headless selftest
+        run: cargo run -p flint-runtime --bin flint-selftest --locked --offline
+
+  live-tor:
+    # Explicit dispatch only. A skipped job is reported by GitHub as skipped;
+    # a selected job with missing Tor infrastructure fails in preflight.
+    if: github.event_name == 'workflow_dispatch' && inputs.live_suite == 'tor'
+    runs-on: [self-hosted, windows, flint-tor]
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tor preflight
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "resources/tor/tor.exe")) {
+            throw "Tor live suite selected but resources/tor/tor.exe is missing"
+          }
+      - name: Live Tor tests
+        shell: pwsh
+        run: |
+          cargo test -p flint-core --test direct_onion --test tor_hidden_service --test tor_listener_gateway -- --ignored --test-threads=1 --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "live Tor suite failed" }
+
+  live-funded-testnet:
+    # Explicit dispatch only. Requires a synced testnet node plus two disposable
+    # funded wallet roots marked with .crash-test-ok, supplied via repository
+    # variables/secrets on the labelled runner. Missing configuration is a
+    # failed preflight, never a skipped/passing test.
+    if: github.event_name == 'workflow_dispatch' && inputs.live_suite == 'funded-testnet'
+    runs-on: [self-hosted, windows, flint-live]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Funded testnet preflight
+        shell: pwsh
+        env:
+          FLINT_LIVE_A: ${{ vars.FLINT_LIVE_A }}
+          FLINT_LIVE_B: ${{ vars.FLINT_LIVE_B }}
+        run: |
+          if (-not $env:FLINT_LIVE_A -or -not $env:FLINT_LIVE_B) {
+            throw "FLINT_LIVE_A/FLINT_LIVE_B repository variables are required"
+          }
+          foreach ($root in @($env:FLINT_LIVE_A, $env:FLINT_LIVE_B)) {
+            if (-not (Test-Path (Join-Path $root ".crash-test-ok"))) {
+              throw "wallet root is not marked with .crash-test-ok: $root"
+            }
+          }
+          pwsh -File tools/run-testnet-node.ps1 status
+      - name: Full transaction lifecycle
+        shell: pwsh
+        env:
+          FLINT_LIVE_TESTNET: "1"
+          FLINT_LIVE_A: ${{ vars.FLINT_LIVE_A }}
+          FLINT_LIVE_B: ${{ vars.FLINT_LIVE_B }}
+          FLINT_LIVE_PASS: ${{ secrets.FLINT_LIVE_PASS }}
+          FLINT_LIVE_PASS_B: ${{ secrets.FLINT_LIVE_PASS_B }}
+          FLINT_LIVE_TIMEOUT_SECS: "300"
+        run: |
+          if (-not $env:FLINT_LIVE_PASS -or -not $env:FLINT_LIVE_PASS_B) {
+            throw "FLINT_LIVE_PASS/FLINT_LIVE_PASS_B secrets are required"
+          }
+          cargo test -p flint-runtime --test transaction_lifecycle --locked --offline -- --ignored --test-threads=1 --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "funded transaction lifecycle failed" }

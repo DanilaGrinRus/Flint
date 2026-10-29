@@ -1,0 +1,12 @@
+# Dependencies are vendored so the project builds offline and reproducibly.
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+
+[net]
+offline = true
+
+[build]
+incremental = true

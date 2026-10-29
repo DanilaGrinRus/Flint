@@ -1,0 +1,55 @@
+[package]
+name = "flint-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Grin (Mimblewimble) wallet service layer used by the Flint desktop app"
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+# Only for the node's native `GET /v1/status` (its own sync state), called from
+# blocking contexts; wallet traffic still goes through grin's own client.
+reqwest = { workspace = true, features = ["blocking"] }
+# Session crypto for the grin-wallet owner API (AES-256-GCM).
+ring = "0.17"
+# Seed envelope: Argon2id KDF (see docs/history/ARGON2ID.md).
+argon2 = { workspace = true }
+# Address derivation from a raw seed, the same way upstream does it.
+blake2-rfc = "0.2"
+base64 = "0.13"
+zeroize = { workspace = true }
+# Ack proofs and the shared address/envelope types used by the relay.
+flint-messenger = { path = "../messenger" }
+
+grin_wallet_libwallet = { workspace = true }
+grin_wallet_api = { workspace = true }
+grin_wallet_impls = { workspace = true }
+grin_wallet_config = { workspace = true }
+grin_wallet_util = { workspace = true }
+bech32 = { workspace = true }
+sha2 = { workspace = true }
+ed25519-dalek = { workspace = true }
+grin_core = { workspace = true }
+grin_keychain = { workspace = true }
+grin_util = { workspace = true }
+
+[features]
+default = []
+portable = []
+# Single-file build: embedded node implies portable data next to the exe.
+embed-node = ["portable"]
+# Failpoints used only by tests/migration_crash.rs; never enable in a release
+# build. Without FLINT_MIGRATION_CRASH_AT the hook is a no-op.
+crash-injection = []
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-log = "0.2"
