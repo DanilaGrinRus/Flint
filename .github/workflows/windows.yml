@@ -62,6 +62,13 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Vendor dependencies
+        shell: pwsh
+        run: |
+          Copy-Item .cargo/config.toml .cargo/config.toml.ci
+          Remove-Item .cargo/config.toml
+          cargo vendor vendor
+          Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
       - name: Tor preflight
         shell: pwsh
         run: |
@@ -84,6 +91,13 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - name: Vendor dependencies
+        shell: pwsh
+        run: |
+          Copy-Item .cargo/config.toml .cargo/config.toml.ci
+          Remove-Item .cargo/config.toml
+          cargo vendor vendor
+          Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
       - name: Funded testnet preflight
         shell: pwsh
         env:
