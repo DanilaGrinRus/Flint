@@ -51,9 +51,13 @@ ed25519-dalek = "2"
 x25519-dalek = { version = "2", features = ["static_secrets"] }
 curve25519-dalek = "4"
 chacha20poly1305 = "0.9"
+chacha20 = "0.8"
 hkdf = "0.12"
 getrandom = "0.2"
 base64 = "0.13"
+# Nostr transport (NIP-44/NIP-59): BIP-340 Schnorr signatures and x-only ECDH.
+secp256k1 = { version = "0.33", features = ["rand"] }
+hmac = "0.12"
 grin_core = { path = "third_party/grin-wallet/grin/core", version = "=5.5.2" }
 grin_keychain = { path = "third_party/grin-wallet/grin/keychain", version = "=5.5.2" }
 grin_util = { path = "third_party/grin-wallet/grin/util", version = "=5.5.2" }
@@ -76,3 +80,6 @@ lto = "thin"
 codegen-units = 4
 panic = "abort"
 strip = true
+
+
+

@@ -19,6 +19,7 @@ ed25519-dalek = { workspace = true }
 x25519-dalek = { workspace = true }
 curve25519-dalek = { workspace = true }
 chacha20poly1305 = { workspace = true }
+chacha20 = { workspace = true }
 # History-key wrapper v2: Argon2id (see docs/contracts/MESSENGER.md).
 argon2 = { workspace = true }
 hkdf = { workspace = true }
@@ -26,3 +27,8 @@ getrandom = { workspace = true }
 base64 = { workspace = true }
 zeroize = { workspace = true }
 ring = "0.17"
+# Nostr transport: BIP-340 signatures, x-only ECDH for NIP-44.
+secp256k1 = { workspace = true }
+hmac = { workspace = true }
+
+

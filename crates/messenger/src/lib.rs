@@ -22,6 +22,7 @@ pub mod error;
 pub mod filestore;
 pub mod history;
 pub mod keywrap;
+pub mod nostr;
 pub mod store;
 pub mod transport;
 
