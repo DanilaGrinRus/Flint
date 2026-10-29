@@ -110,6 +110,7 @@ jobs:
           Remove-Item .cargo/config.toml
           cargo vendor vendor
           Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
+          pwsh -File tools/fetch-wallet.ps1
       - name: Funded testnet preflight
         shell: pwsh
         env:
