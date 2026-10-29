@@ -1,0 +1,74 @@
+{
+  "checked_on": "2026-10-29",
+  "repository": "DanilaGrinRus/Flint-desktop-private",
+  "runs": [
+    {
+      "id": 40811329947,
+      "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40811329947",
+      "head_sha": "7d239a665cc43421e6f52e41e9e48d1e28c18d35",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "jobs": [
+        {
+          "id": 123242083353,
+          "name": "live-funded-testnet",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40811329947/job/123242083353"
+        },
+        {
+          "id": 123242083543,
+          "name": "build-test",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40811329947/job/123242083543"
+        },
+        {
+          "id": 123242084637,
+          "name": "live-tor",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40811329947/job/123242084637"
+        }
+      ]
+    },
+    {
+      "id": 40813171901,
+      "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40813171901",
+      "head_sha": "7d239a665cc43421e6f52e41e9e48d1e28c18d35",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "jobs": [
+        {
+          "id": 123248032065,
+          "name": "build-test",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40813171901/job/123248032065"
+        },
+        {
+          "id": 123248032240,
+          "name": "live-tor",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40813171901/job/123248032240"
+        },
+        {
+          "id": 123248032999,
+          "name": "live-funded-testnet",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40813171901/job/123248032999"
+        }
+      ]
+    },
+    {
+      "id": 40799284192,
+      "url": "https://github.com/DanilaGrinRus/Flint-desktop-private/actions/runs/40799284192",
+      "head_sha": "ca9ec7af992cb4d62fdc0a163fc19233a0325964",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "note": "Live jobs passed; their containing runs were cancelled because other jobs were cancelled. The older build-test run succeeded. These are pre-cleanup source checks, not a new device acceptance."
+}

@@ -1,5 +1,5 @@
 # Runs RustSec against Cargo.lock with an explicit list of accepted advisories.
-# Accepted findings and their rationale: docs/security/RUSTSEC_2026-10-28.md.
+# Accepted findings and their rationale: docs/SECURITY.md.
 # Usage: pwsh -File tools/rustsec.ps1 [-Update] [-Db <path>]
 param(
     [switch]$Update,
@@ -18,7 +18,7 @@ if (-not $audit) {
     if (Test-Path $local) { $audit = $local }
 }
 if (-not $audit) {
-    throw "cargo-audit not found; install it into .tmp/rustsec-tools (see docs/security/RUSTSEC_2026-10-28.md)"
+    throw "cargo-audit not found; install it into .tmp/rustsec-tools (see docs/SECURITY.md)"
 }
 
 if (-not (Test-Path (Join-Path $Db ".git"))) {

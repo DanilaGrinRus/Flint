@@ -91,7 +91,7 @@ $sbom = [ordered]@{
     }
     components = @($components) + @($native)
 }
-$path = Join-Path $root $Out
+$path = if ([IO.Path]::IsPathRooted($Out)) { $Out } else { Join-Path $root $Out }
 New-Item -ItemType Directory -Force (Split-Path -Parent $path) | Out-Null
 $json = $sbom | ConvertTo-Json -Depth 12
 Set-Content -Path $path -Value $json -Encoding UTF8

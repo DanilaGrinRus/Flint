@@ -19,7 +19,7 @@ ed25519-dalek = { workspace = true }
 x25519-dalek = { workspace = true }
 curve25519-dalek = { workspace = true }
 chacha20poly1305 = { workspace = true }
-# History-key wrapper v2: Argon2id (see docs/architecture/MESSENGER.md).
+# History-key wrapper v2: Argon2id (see docs/contracts/MESSENGER.md).
 argon2 = { workspace = true }
 hkdf = { workspace = true }
 getrandom = { workspace = true }

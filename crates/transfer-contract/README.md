@@ -6,7 +6,7 @@ does not depend on `C:\DHW`.
 
 ## Provenance
 
-- Contract semantics: `docs/architecture/IOS_SHARED_CONTRACT.md`, schema 1.
+- Contract semantics: desktop `docs/contracts/TRANSFER.md`, schema 1.
 - Desktop integration: `crates/slint-ui` pending actions/next-action gating.
 - Crypto and wallet signing stay in upstream `grin-wallet` 5.5.1/5.5.2 fork;
   this crate performs no cryptography.

@@ -1,133 +1,65 @@
-# Build and package the Slint-only preview.
-# Usage: pwsh -File tools/package-slint.ps1 [-SkipBuild]
-param(
-    [switch]$SkipBuild
-)
-
-$ErrorActionPreference = "Stop"
+# Portable и corresponding source пишутся только в новый dist/<version>-<build-id>.
+param([switch]$SkipBuild, [string]$BuildId = '', [string]$OutputDir = '')
+$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'lib/artifacts.ps1')
+$context = Get-FlintArtifactContext -Root $root -BuildId $BuildId -OutputDir $OutputDir
+$version = $context.Version
+$dir = Join-Path $context.Path 'Flint-slint-preview'
+if (Test-Path -LiteralPath $dir) { throw "Portable уже существует: $dir. Выберите новый BuildId." }
 Push-Location $root
 try {
-    $env:TMP = Join-Path $root ".tmp"
+    $env:TMP = Join-Path $root '.tmp'
     $env:TEMP = $env:TMP
+    New-Item -ItemType Directory -Path $env:TMP -Force | Out-Null
     if (-not $SkipBuild) {
-        cargo build --release -p flint-slint
-        if ($LASTEXITCODE -ne 0) { throw "flint-slint release build failed" }
-        cargo build --release -p flint-runtime --bin flint-selftest
-        if ($LASTEXITCODE -ne 0) { throw "flint-selftest release build failed" }
+        cargo build --release -p flint-slint --locked --offline
+        if ($LASTEXITCODE -ne 0) { throw 'Сборка flint-slint не удалась' }
+        cargo build --release -p flint-runtime --bin flint-selftest --locked --offline
+        if ($LASTEXITCODE -ne 0) { throw 'Сборка flint-selftest не удалась' }
     }
-
-    $exe = Join-Path $root "target\release\flint-slint.exe"
-    if (-not (Test-Path $exe)) { throw "missing $exe" }
-    $node = Join-Path $root "resources\node\grin.exe"
-    if (-not (Test-Path $node)) { throw "missing node binary: $node" }
-    $wallet = Join-Path $root "resources\wallet\grin-wallet.exe"
-    if (-not (Test-Path $wallet)) {
-        throw "missing RPC wallet: $wallet — run tools/fetch-wallet.ps1 first"
+    & (Join-Path $PSScriptRoot 'verify-native-assets.ps1')
+    $assets = @{
+        'target/release/flint-slint.exe' = 'Flint.exe'
+        'target/release/flint-selftest.exe' = 'flint-selftest.exe'
+        'resources/node/grin.exe' = 'resources/node/grin.exe'
+        'resources/wallet/grin-wallet.exe' = 'resources/wallet/grin-wallet.exe'
+        'resources/runtime/vcruntime140.dll' = 'vcruntime140.dll'
+        'resources/tor/expert/tor/tor.exe' = 'resources/tor/expert/tor/tor.exe'
+        'resources/tor/expert/tor/pluggable_transports/lyrebird.exe' = 'resources/tor/expert/tor/pluggable_transports/lyrebird.exe'
+        'resources/tor/expert/tor/pluggable_transports/pt_config.json' = 'resources/tor/expert/tor/pluggable_transports/pt_config.json'
+        'COPYING' = 'COPYING'
+        'THIRD_PARTY_NOTICES.md' = 'THIRD_PARTY_NOTICES.md'
     }
-
-    $manifest = Join-Path $root "resources\native-assets.sha256"
-    if (-not (Test-Path $manifest)) { throw "missing native asset manifest: $manifest" }
-    foreach ($line in Get-Content $manifest) {
-        if ($line -notmatch '^([0-9a-f]{64})\s+(.+)$') { throw "bad native asset pin: $line" }
-        $expected = $matches[1]
-        $rel = $matches[2]
-        $path = Join-Path $root $rel
-        if (-not (Test-Path $path)) { throw "missing pinned native asset: $path" }
-        $actual = (Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant()
-        if ($actual -ne $expected) { throw "native asset hash mismatch: $rel" }
+    foreach ($source in $assets.Keys) {
+        $destination = Join-Path $dir $assets[$source]
+        New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
+        Copy-Item -LiteralPath (Join-Path $root $source) -Destination $destination
     }
-
-    $dir = Join-Path $root "dist\Flint-slint-preview"
-    if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
-    New-Item -ItemType Directory -Force (Join-Path $dir "resources\node") | Out-Null
-    New-Item -ItemType Directory -Force (Join-Path $dir "resources\wallet") | Out-Null
-
-    Copy-Item $exe (Join-Path $dir "Flint.exe")
-    Copy-Item $node (Join-Path $dir "resources\node\grin.exe")
-    Copy-Item $wallet (Join-Path $dir "resources\wallet\grin-wallet.exe")
-
-    # Flint, selftest and grin-wallet import VCRUNTIME140.dll. Keep the runtime
-    # next to each executable so the portable preview starts without a
-    # machine-wide VC++ Redistributable install. UCRT api-ms-win-crt-* is an OS
-    # component on supported Windows 10/11. The pinned copy in resources/runtime
-    # is used instead of the machine's System32 file so the packaged bytes are
-    # reproducible and covered by resources/native-assets.sha256.
-    $vcruntime = Join-Path $root "resources\runtime\vcruntime140.dll"
-    if (-not (Test-Path $vcruntime)) { throw "missing pinned VC runtime: $vcruntime" }
-    Copy-Item $vcruntime (Join-Path $dir "vcruntime140.dll")
-    Copy-Item $vcruntime (Join-Path $dir "resources\wallet\vcruntime140.dll")
-
-    # Tor is optional, but a preview that advertises "Приём по Tor" must ship
-    # tor.exe and the unified lyrebird client; otherwise the settings button can
-    # only report a missing binary.
-    $torRoot = Join-Path $root "resources\tor\expert\tor"
-    foreach ($rel in @("tor.exe", "pluggable_transports\lyrebird.exe", "pluggable_transports\pt_config.json")) {
-        $src = Join-Path $torRoot $rel
-        if (-not (Test-Path $src)) { throw "missing Tor file: $src" }
-        $dst = Join-Path $dir ("resources\tor\expert\tor\" + $rel)
-        New-Item -ItemType Directory -Force (Split-Path $dst -Parent) | Out-Null
-        Copy-Item $src $dst
+    Copy-Item -LiteralPath (Join-Path $root 'resources/runtime/vcruntime140.dll') -Destination (Join-Path $dir 'resources/wallet/vcruntime140.dll')
+    Set-Content -LiteralPath (Join-Path $dir 'portable') -Value '' -NoNewline
+    @"
+Flint $version — portable DEV BUILD, testnet по умолчанию.
+Запуск: Flint.exe. Данные кошельков сохраняются рядом с программой в data/.
+RPC: Flint.exe --backend=grin-wallet. Для скана и отправки нужна testnet-нода.
+flint-selftest.exe выполняет изолированную проверку без пользовательских средств.
+Соответствующие исходники, SBOM и SHA256SUMS находятся рядом с portable-пакетом.
+"@ | Set-Content -LiteralPath (Join-Path $dir 'README.txt') -Encoding UTF8
+    Invoke-FlintIsolatedSelftest -Root $root -Binary (Join-Path $dir 'flint-selftest.exe') -ReportPath (Join-Path $context.Path 'selftest.json')
+    $zip = Join-Path $context.Path "Flint-$version-slint-preview.zip"
+    [IO.Compression.ZipFile]::CreateFromDirectory($dir, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
+    & (Join-Path $PSScriptRoot 'source.ps1') -Version $version -OutputDir $context.Path
+    & (Join-Path $PSScriptRoot 'sbom.ps1') -Out (Join-Path $context.Path 'sbom.json')
+    & (Join-Path $PSScriptRoot 'verify-sbom.ps1') -Sbom (Join-Path $context.Path 'sbom.json')
+    $info = [ordered]@{
+        version=$version; build_id=$context.BuildId; state='packaged'; signed=$false
+        target='x86_64-pc-windows-msvc'; profile='release'
+        generated_at=(Get-Date).ToUniversalTime().ToString('o')
+        cargo_lock_sha256=(Get-FileHash -LiteralPath (Join-Path $root 'Cargo.lock') -Algorithm SHA256).Hash.ToLowerInvariant()
+        rustc=(rustc -Vv | Out-String).Trim(); cargo=(cargo -V | Out-String).Trim()
+        zip=(Split-Path -Leaf $zip); source_zip="Flint-$version-source.zip"
     }
-    Copy-Item (Join-Path $root "COPYING") $dir
-    Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.md") $dir
-    Set-Content (Join-Path $dir "portable") "" -NoNewline
-
-    $selftest = Join-Path $root "target\release\flint-selftest.exe"
-    if (Test-Path $selftest) { Copy-Item $selftest (Join-Path $dir "flint-selftest.exe") }
-
-    @'
-Flint Slint preview (0.1.69)
-DEV BUILD, not audited, testnet only.
-
-Slint-only shell. Wallet, send/receive, history, swaps, settings,
-QR, clipboard, node controls, seed security, the RPC backend, Tor and messenger
-(send/inbox/history/contacts/blocked) are available.
-
-Run Flint.exe. Data is kept next to the executable (portable).
-RPC mode: run `Flint.exe --backend=grin-wallet` (or set FLINT_BACKEND=grin-wallet);
-the bundled `resources\wallet\grin-wallet.exe` is used. A testnet node is still
-required for scanning, sending and balance refresh.
-`flint-selftest.exe` runs the headless wallet/Janus/node check.
-The package carries Microsoft vcruntime140.dll next to Flint/selftest and
-resources\wallet so no machine-wide VC++ Redistributable is required.
-'@ | Set-Content (Join-Path $dir "README.txt") -Encoding UTF8
-
-    $zip = Join-Path $root "dist\Flint-0.1.69-slint-preview.zip"
-    if (Test-Path $zip) { Remove-Item $zip -Force }
-    Compress-Archive -Path (Join-Path $dir "*") -DestinationPath $zip -CompressionLevel Optimal
-    $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
-    "$hash  dist/Flint-0.1.69-slint-preview.zip" | Set-Content (Join-Path $root "dist\Flint-slint-preview.sha256") -Encoding ascii
-
-    # Canonical latest portable build, kept separate from dist build output.
-    $lastver = Join-Path $root "lastver"
-    if (Test-Path $lastver) { Remove-Item $lastver -Recurse -Force }
-    New-Item -ItemType Directory -Force $lastver | Out-Null
-    Copy-Item $dir (Join-Path $lastver "Flint-slint-preview") -Recurse
-    Copy-Item $zip $lastver
-    Copy-Item (Join-Path $root "dist\Flint-slint-preview.sha256") $lastver
-    # lastver is the canonical snapshot: sources must travel with the binary.
-    & (Join-Path $root "tools\source.ps1") -Version "0.1.69" -OutputDir $lastver
-    $sourceZip = Join-Path $lastver "Flint-0.1.69-source.zip"
-    $sourceHash = (Get-FileHash $sourceZip -Algorithm SHA256).Hash.ToLowerInvariant()
-    $exeHash = (Get-FileHash (Join-Path $dir "Flint.exe") -Algorithm SHA256).Hash.ToLowerInvariant()
-    @{
-        version = "0.1.69"
-        built_at = (Get-Date).ToString("o")
-        zip = "Flint-0.1.69-slint-preview.zip"
-        zip_sha256 = $hash
-        zip_size = (Get-Item $zip).Length
-        source_zip = "Flint-0.1.69-source.zip"
-        source_sha256 = $sourceHash
-        source_size = (Get-Item $sourceZip).Length
-        exe_sha256 = $exeHash
-        exe_size = (Get-Item (Join-Path $dir "Flint.exe")).Length
-        source = "crates + tools/package-slint.ps1"
-    } | ConvertTo-Json | Set-Content (Join-Path $lastver "BUILD-INFO.json") -Encoding UTF8
-
-    Write-Host "preview: $zip"
-    Write-Host "latest:  $lastver"
-    Write-Host "sha256: $hash"
-} finally {
-    Pop-Location
-}
+    $info | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $context.Path 'BUILD-INFO.json') -Encoding UTF8
+    Write-FlintArtifactHashes -Path $context.Path
+    Write-Host "Артефакты: $($context.Path)"
+} finally { Pop-Location }

@@ -31,10 +31,8 @@ jobs:
         shell: pwsh
         run: |
           # vendor/ and resources/ are intentionally not committed.
-          Copy-Item .cargo/config.toml .cargo/config.toml.ci
-          Remove-Item .cargo/config.toml
-          cargo vendor vendor
-          Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
+          pwsh -File tools/bootstrap.ps1 -RestoreVendor
+          if ($LASTEXITCODE -ne 0) { throw "Dependency bootstrap failed" }
           pwsh -File tools/fetch-node.ps1
           pwsh -File tools/fetch-wallet.ps1
       - name: Format
@@ -71,16 +69,14 @@ jobs:
       - name: Vendor dependencies
         shell: pwsh
         run: |
-          Copy-Item .cargo/config.toml .cargo/config.toml.ci
-          Remove-Item .cargo/config.toml
-          cargo vendor vendor
-          Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
+          pwsh -File tools/bootstrap.ps1 -RestoreVendor
+          if ($LASTEXITCODE -ne 0) { throw "Dependency bootstrap failed" }
       - name: Tor preflight
         shell: pwsh
         env:
           FLINT_TOR_BIN: ${{ vars.FLINT_TOR_BIN }}
         run: |
-          if (-not $env:FLINT_TOR_BIN -and -not (Test-Path "resources/tor/tor.exe")) {
+          if (-not $env:FLINT_TOR_BIN -and -not (Test-Path "resources/tor/expert/tor/tor.exe")) {
             throw "Tor live suite selected but no tor.exe (resources or FLINT_TOR_BIN)"
           }
       - name: Live Tor tests
@@ -110,10 +106,8 @@ jobs:
       - name: Vendor dependencies
         shell: pwsh
         run: |
-          Copy-Item .cargo/config.toml .cargo/config.toml.ci
-          Remove-Item .cargo/config.toml
-          cargo vendor vendor
-          Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
+          pwsh -File tools/bootstrap.ps1 -RestoreVendor
+          if ($LASTEXITCODE -ne 0) { throw "Dependency bootstrap failed" }
           pwsh -File tools/fetch-wallet.ps1
       - name: Funded testnet preflight
         shell: pwsh

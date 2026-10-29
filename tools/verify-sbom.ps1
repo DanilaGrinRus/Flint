@@ -5,7 +5,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$path = Join-Path $root $Sbom
+$path = if ([IO.Path]::IsPathRooted($Sbom)) { $Sbom } else { Join-Path $root $Sbom }
 if (-not (Test-Path $path)) { throw "SBOM not found: $path" }
 $data = Get-Content $path -Raw | ConvertFrom-Json
 if ($data.bomFormat -ne "CycloneDX") { throw "not a CycloneDX document" }

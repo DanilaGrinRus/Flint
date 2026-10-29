@@ -1,118 +1,72 @@
-# Builds a source archive next to the release binaries.
-#
-# vendor/, resources/ and target/ are deliberately excluded: they are large,
-# platform-specific or fetched by tools/fetch-*.ps1. SOURCE.md in the archive
-# explains how to reconstruct a working tree.
-param(
-    [string]$Version = "",
-    [string]$OutputDir = ""
-)
-$ErrorActionPreference = "Stop"
+# Соответствующие исходники релиза. Полный vendor восстанавливается явным bootstrap.
+param([string]$Version = '', [string]$BuildId = '', [string]$OutputDir = '')
+$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-if (-not $Version) {
-    $Version = (Select-String -Path (Join-Path $root "Cargo.toml") -Pattern '^version\s*=\s*"([^"]+)"' |
-        Select-Object -First 1).Matches[0].Groups[1].Value
-}
-$dist = if ($OutputDir) { $OutputDir } else { Join-Path $root "dist" }
-$stage = Join-Path $root ".tmp\source-$Version"
-$zip = Join-Path $dist "Flint-$Version-source.zip"
-New-Item -ItemType Directory -Force $dist | Out-Null
-if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
-New-Item -ItemType Directory -Force $stage | Out-Null
+. (Join-Path $PSScriptRoot 'lib/artifacts.ps1')
+$Version = Get-FlintVersion -Manifest (Join-Path $root 'Cargo.toml') -Expected $Version
+$context = Get-FlintArtifactContext -Root $root -BuildId $BuildId -OutputDir $OutputDir
+$zip = Join-Path $context.Path "Flint-$Version-source.zip"
+if (Test-Path -LiteralPath $zip) { throw "Исходный архив уже существует: $zip. Выберите новый BuildId." }
+$stage = Assert-FlintContainedPath -Root $root -Path (Join-Path $root ('.tmp/flint-source-' + [guid]::NewGuid().ToString('N')))
+New-Item -ItemType Directory -Path $stage -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $stage '.flint-ephemeral') -Value 'source-staging' -Encoding ascii
+try {
 
-function Copy-ForkTree([string]$Source, [string]$Destination) {
-    New-Item -ItemType Directory -Force $Destination | Out-Null
-    foreach ($entry in Get-ChildItem $Source -Force) {
-        if ($entry.PSIsContainer) {
-            if (@(".git", "target", "test_output", ".tmp", "dist", "data", "vendor") -contains $entry.Name) {
-                continue
-            }
-            Copy-ForkTree $entry.FullName (Join-Path $Destination $entry.Name)
-        } else {
-            Copy-Item $entry.FullName (Join-Path $Destination $entry.Name) -Force
-        }
+function Copy-FlintSourceTree([string]$Source, [string]$Destination) {
+    $item = Get-Item -LiteralPath $Source -Force
+    if ($item.Name -match '^\.env(?:\..*)?$|^wallet\.seed(?:\..*)?$|^\.api_secret$' -or $item.Name -in @('testnet-funded.txt','grinflint-ci-wallet.txt')) { return }
+    if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Ссылка в исходниках: $Source" }
+    if (-not $item.PSIsContainer) {
+        if ($item.Name -notmatch '\.log$|^selftest\.json$') { Copy-Item -LiteralPath $Source -Destination $Destination }
+        return
+    }
+    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+    foreach ($entry in Get-ChildItem -LiteralPath $Source -Force) {
+        if ($entry.PSIsContainer -and $entry.Name -in @('.git','target','test_output','.tmp','dist','data','vendor','node_modules','.cleanup-rollback','.secrets','.wallet-data','.flint','wallet_data','wallets')) { continue }
+        Copy-FlintSourceTree -Source $entry.FullName -Destination (Join-Path $Destination $entry.Name)
     }
 }
 
-$items = @(
-    "Cargo.toml",
-    "Cargo.lock",
-    "COPYING",
-    "THIRD_PARTY_NOTICES.md",
-    "README.md",
-    "AGENTS.md",
-    "DESIGN.md",
-    "crates",
-    "tools",
-    "docs",
-    ".github",
-    ".cargo",
-    "third_party"
-)
+$items = @('Cargo.toml','Cargo.lock','COPYING','THIRD_PARTY_NOTICES.md','README.md','AGENTS.md',
+    'crates','tools','docs','evidence','lang','.github','.cargo','third_party')
 foreach ($item in $items) {
-    $src = Join-Path $root $item
-    if (-not (Test-Path $src)) { continue }
-    $dst = Join-Path $stage $item
-    New-Item -ItemType Directory -Force (Split-Path $dst -Parent) | Out-Null
-    if ($item -eq "third_party") {
-        Copy-ForkTree $src $dst
-    } else {
-        Copy-Item $src $dst -Recurse -Force
-    }
+    $source = Join-Path $root $item
+    if (Test-Path -LiteralPath $source) { Copy-FlintSourceTree -Source $source -Destination (Join-Path $stage $item) }
 }
-
-# Generated / local-only trees inside otherwise-source directories.
-foreach ($generated in @()) {
-    $path = Join-Path $stage $generated
-    if (Test-Path $path) { Remove-Item $path -Recurse -Force }
-}
-Get-ChildItem $stage -Recurse -File -Include "*.log","selftest.json" -ErrorAction SilentlyContinue |
-    Remove-Item -Force -ErrorAction SilentlyContinue
-
-# GPL corresponding source for the Slint dependency. The rest of vendor/ is
-# fetched from Cargo.lock; these crates are the UI toolkit itself.
-$slintVendor = Join-Path $stage "vendor"
-New-Item -ItemType Directory -Force $slintVendor | Out-Null
-Get-ChildItem (Join-Path $root "vendor") -Directory |
-    Where-Object { $_.Name -match '^(slint|i-slint)' } |
-    ForEach-Object { Copy-Item $_.FullName (Join-Path $slintVendor $_.Name) -Recurse -Force }
-
+New-Item -ItemType Directory -Path (Join-Path $stage 'resources') -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $root 'resources/native-assets.sha256') -Destination (Join-Path $stage 'resources/native-assets.sha256')
+$slintSources = @(Get-ChildItem -LiteralPath (Join-Path $root 'vendor') -Directory | Where-Object { $_.Name -match '^(slint|i-slint)(-|$)' })
+if (-not $slintSources.Count) { throw 'Нет соответствующих исходников Slint в vendor. Сначала восстановите vendor.' }
+foreach ($source in $slintSources) { Copy-FlintSourceTree -Source $source.FullName -Destination (Join-Path $stage "vendor/$($source.Name)") }
 @"
-Flint $Version — source archive
-================================
+Flint $Version — соответствующие исходники (GPL-3.0-only)
 
-This archive contains the Rust workspace, Slint UI, tools and documentation used
-to build the $Version release. Flint is licensed under GPL-3.0-only; see COPYING
-and THIRD_PARTY_NOTICES.md.
+В архиве: workspace, закреплённый third_party/grin-wallet вместе с Grin,
+каталог lang, инструменты, инструкции и точные исходники Slint.
+vendor содержит ТОЛЬКО Slint: прямой offline build без восстановления остальных
+зависимостей не поддерживается. Cargo.lock и .cargo/config.toml сохранены.
 
-`third_party/grin-wallet` contains the exact F-04 fork and grin submodule;
-`.cargo/config.toml` keeps Cargo offline. `GRIN_WALLET_FORK.toml` records both
-commits and `grin-wallet-sources.sha256` authenticates every included fork file.
-The Flint patch is also included as `third_party/grin-wallet-flint.patch`.
+Подготовка чистой копии (сеть нужна только по явному запросу):
+    pwsh -File tools/bootstrap.ps1 -RestoreVendor
+    pwsh -File tools/bootstrap.ps1 -FetchNode -BuildWallet
+    pwsh -File tools/ci.ps1
+    pwsh -File tools/release.ps1
 
-`vendor/` includes the exact Slint source used by this archive (GPLv3
-corresponding source). Other vendored dependencies are intentionally excluded:
+bootstrap без флагов только проверяет зависимости и не скачивает их.
+Tor expert bundle (tor.exe, lyrebird.exe, pt_config.json) и vcruntime140.dll
+нужно предоставить отдельно и проверить по resources/native-assets.sha256.
+Автоматическое скачивание Tor/VC runtime здесь не реализовано.
+Данные кошельков, ноды, build cache и локальные secrets в архив не входят.
+Пакет бинарников распространяется вместе с этим соответствующим source archive.
+"@ | Set-Content -LiteralPath (Join-Path $stage 'SOURCE.md') -Encoding UTF8
 
-- vendor/ (rest)    — run `cargo vendor --locked vendor` with network access;
-- resources/node    — run `pwsh -File tools/fetch-node.ps1`;
-- resources/wallet  — run `pwsh -File tools/fetch-wallet.ps1` (builds the pinned
-                       fork; it does not download an upstream binary);
-- resources/tor     — Tor expert bundle (tor.exe + lyrebird.exe);
-- target/, dist/, data/, .tmp/, .node/ — build outputs/local data.
-
-When distributing a Slint binary, include this archive (with `vendor/slint*`)
-or provide an equivalent GPL-compliant source offer.
-
-Build:
-    cargo build --release -p flint-slint --locked --offline
-    cargo build --release -p flint-runtime --bin flint-selftest --locked --offline
-    pwsh -File tools/fetch-wallet.ps1
-    flint-selftest.exe
-
-The source version is defined once in Cargo.toml (workspace.package.version).
-"@ | Set-Content (Join-Path $stage "SOURCE.md") -Encoding UTF8
-
-if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -CompressionLevel Optimal
-$size = [math]::Round((Get-Item $zip).Length / 1MB, 1)
-Write-Host "source: $zip ($size MB)"
+# ZipFile сохраняет скрытые .cargo/.github; Compress-Archive может их пропустить.
+Remove-Item -LiteralPath (Join-Path $stage '.flint-ephemeral')
+[IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
+Write-FlintArtifactHashes -Path $context.Path
+Write-Host "source: $zip"
+} finally {
+    # Удаляется только созданная этим запуском копия исходников.
+    $stage = Assert-FlintContainedPath -Root $root -Path $stage
+    Remove-Item -LiteralPath $stage -Recurse -Force
+}

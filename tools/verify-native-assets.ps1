@@ -1,11 +1,13 @@
 $ErrorActionPreference = 'Stop'
-$root = 'C:\DHW'
+$root = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'lib/artifacts.ps1')
 $failed = $false
 Get-Content (Join-Path $root 'resources\native-assets.sha256') | ForEach-Object {
     if ($_ -notmatch '^([0-9a-f]{64})\s+(.+)$') { throw "bad manifest line" }
     $expected = $Matches[1]
     $relative = $Matches[2]
-    $actual = (Get-FileHash (Join-Path $root $relative) -Algorithm SHA256).Hash.ToLowerInvariant()
+    $path = Assert-FlintContainedPath -Root $root -Path (Join-Path $root $relative)
+    $actual = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actual -ne $expected) {
         $failed = $true
         Write-Output "MISMATCH $relative"
@@ -13,4 +15,4 @@ Get-Content (Join-Path $root 'resources\native-assets.sha256') | ForEach-Object 
         Write-Output "OK $relative"
     }
 }
-if ($failed) { exit 1 }
+if ($failed) { throw 'Не совпали контрольные суммы native assets' }

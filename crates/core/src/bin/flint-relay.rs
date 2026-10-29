@@ -2,7 +2,7 @@
 //!
 //! It has no wallet at all: only opaque messenger envelopes, quotas, TTL and
 //! signed recipient acks. Bind it to loopback and publish it through a Tor
-//! hidden service (see docs/operations/RELAY.md), or put a TLS reverse proxy in front of
+//! hidden service (see docs/OPERATIONS.md), or put a TLS reverse proxy in front of
 //! it. Never expose this plaintext listener to the public internet.
 
 use std::path::PathBuf;

@@ -1,20 +1,19 @@
-# Build the standalone, versioned transfer-contract source package for iOS CI.
-param(
-    [string]$Version = "1.0.0",
-    [string]$OutputDir = "lastver"
-)
-$ErrorActionPreference = "Stop"
+# Версионированный source package контракта для iOS CI; версия берётся из его Cargo.toml.
+param([string]$Version = '', [string]$BuildId = '', [string]$OutputDir = '')
+$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$source = Join-Path $root "crates/transfer-contract"
-$out = Join-Path $root $OutputDir
-New-Item -ItemType Directory -Force $out | Out-Null
-$zip = Join-Path $out "flint-transfer-contract-$Version.zip"
-if (Test-Path $zip) { Remove-Item $zip -Force }
+. (Join-Path $PSScriptRoot 'lib/artifacts.ps1')
+$source = Join-Path $root 'crates/transfer-contract'
+Assert-FlintNoReparseTree -Root $root -Path $source
+$Version = Get-FlintVersion -Manifest (Join-Path $source 'Cargo.toml') -Section 'package' -Expected $Version
+$context = Get-FlintArtifactContext -Root $root -BuildId $BuildId -OutputDir $OutputDir
+$zip = Join-Path $context.Path "flint-transfer-contract-$Version.zip"
+if (Test-Path -LiteralPath $zip) { throw "Архив уже существует: $zip. Выберите новый BuildId." }
 Push-Location $source
-try {
-    Compress-Archive -Path @("Cargo.toml", "src", "fixtures", "README.md") -DestinationPath $zip -Force
-} finally { Pop-Location }
-$hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
-Set-Content (Join-Path $out "flint-transfer-contract-$Version.sha256") "$hash  flint-transfer-contract-$Version.zip" -Encoding ASCII
+try { Compress-Archive -LiteralPath @('Cargo.toml','src','fixtures','README.md') -DestinationPath $zip }
+finally { Pop-Location }
+$hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+Set-Content -LiteralPath (Join-Path $context.Path "flint-transfer-contract-$Version.sha256") -Value "$hash  flint-transfer-contract-$Version.zip" -Encoding ascii
+Write-FlintArtifactHashes -Path $context.Path
 Write-Host "package=$zip"
 Write-Host "sha256=$hash"

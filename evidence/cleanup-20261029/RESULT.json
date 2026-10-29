@@ -1,0 +1,35 @@
+{
+  "before_GiB": 116.4,
+  "after_GiB": 7.93,
+  "reduction_GiB": 108.46,
+  "tests_passed": 324,
+  "tests_ignored": 32,
+  "ci": "PASS",
+  "clippy": "PASS with warnings",
+  "package": "PASS unsigned",
+  "source_check": "PASS with existing locked vendor",
+  "data": [
+    {
+      "path": ".secrets",
+      "metadata_unchanged": true
+    },
+    {
+      "path": "fixtures",
+      "metadata_unchanged": true
+    },
+    {
+      "path": "dist\\data",
+      "metadata_unchanged": true
+    },
+    {
+      "path": "archive\\archV\\legacy-data",
+      "metadata_unchanged": true
+    },
+    {
+      "path": "mobile\\grinflint-backups",
+      "metadata_unchanged": true
+    }
+  ],
+  "backup": "C:\\DHW-backups\\cleanup-20261029-a74f\\originals-and-checks",
+  "modules": "deferred to Harness"
+}

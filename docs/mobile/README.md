@@ -1,20 +1,16 @@
-# Flint — мобильные приложения
+# Мобильные треки
 
-Дата создания: 2026-10-27.
+**iOS — отдельный проект:** [mobile/GrinFlint](../../mobile/GrinFlint/).
+Его актуальные правила и документы находятся внутри этого репозитория.
+Копии desktop docs/mobile/ios удалены: несинхронизируемый снимок не является
+вторым источником текущего состояния. Desktop не собирает iOS-приложение.
 
-- [iOS: пояснения к копиям и состояние](ios/COPY_NOTES.md).
-- [iOS: исходная дорожная карта](ios/roadmap.md).
-- [Android: план разработки](android/PLAN.md).
+Общий Rust-контракт — [contracts/TRANSFER.md](../contracts/TRANSFER.md),
+backend/recovery — [ARCHITECTURE.md](../ARCHITECTURE.md) и
+[ADR F-04](../contracts/RECEIVE_RECOVERY.md). Совпадение версии upstream не
+доказывает одинаковую реализацию: нужны pin/patch/capability и общие fixtures.
+SwiftUI, Keychain и lifecycle остаются платформенными.
 
-`ios/` содержит копии документов из `C:\DHW\mobile\GrinFlint`, а не перемещённые
-оригиналы. Это снимок на указанную дату; автоматической синхронизации нет.
-Рабочий код iOS остаётся в `mobile/GrinFlint/`; здесь хранится документация.
-`android/` пока содержит план, создание Android-приложения этим не подтверждается.
-
-Мобильные приложения относятся к той же серии Flint. Предлагается общее Rust-ядро
-с отдельными платформенными интерфейсами и хранилищами секретов. Возможность
-сборки общего ядра на обеих мобильных платформах нужно доказать отдельно.
-
-Общие ограничения и гейты: [STATUS](../status/STATUS.md),
-[MAINNET_READINESS](../status/MAINNET_READINESS.md),
-[ROADMAP](../status/ROADMAP.md). DEV BUILD, не аудирован, не для реальных средств.
+**Android — только [план](android/PLAN.md)**, реализации в этом дереве нет.
+Данные mobile/grinflint-backups не относятся к кэшу и не удаляются с build outputs.
+Все мобильные проверки — testnet; desktop READY не переносится на мобильные сборки.

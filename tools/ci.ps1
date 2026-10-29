@@ -2,6 +2,7 @@
 # Usage: pwsh -File tools/ci.ps1
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'lib/artifacts.ps1')
 $tmp = Join-Path $root ".tmp"
 New-Item -ItemType Directory -Force $tmp | Out-Null
 $env:TMP = $tmp
@@ -27,8 +28,9 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "rustdoc failed" }
     cargo build -p flint-slint --locked --offline
     if ($LASTEXITCODE -ne 0) { throw "Slint debug build failed" }
-    cargo run -p flint-runtime --bin flint-selftest --locked --offline
-    if ($LASTEXITCODE -ne 0) { throw "selftest failed" }
+    cargo build -p flint-runtime --bin flint-selftest --locked --offline
+    if ($LASTEXITCODE -ne 0) { throw "selftest build failed" }
+    Invoke-FlintIsolatedSelftest -Root $root -Binary (Join-Path $root 'target/debug/flint-selftest.exe')
     Write-Host "CI: ok"
 } finally {
     Pop-Location
