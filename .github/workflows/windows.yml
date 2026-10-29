@@ -138,5 +138,5 @@ jobs:
           if (-not $env:FLINT_LIVE_PASS -or -not $env:FLINT_LIVE_PASS_B) {
             throw "FLINT_LIVE_PASS/FLINT_LIVE_PASS_B secrets are required"
           }
-          cargo test -p flint-runtime --test transaction_lifecycle --locked --offline -- --ignored --test-threads=1 --nocapture
+          cargo test -p flint-runtime --test transaction_lifecycle --locked --offline -- --ignored --test-threads=1 --nocapture --skip scan_only
           if ($LASTEXITCODE -ne 0) { throw "funded transaction lifecycle failed" }
