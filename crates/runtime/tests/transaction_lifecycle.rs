@@ -152,7 +152,7 @@ fn exercise(backend: BackendKind, full_cycle: bool) {
     );
     grin_core::global::set_local_chain_type(grin_core::global::ChainTypes::Testnet);
     grin_core::global::init_global_chain_type(grin_core::global::ChainTypes::Testnet);
-    let (env_a, env_b) = if matches!(backend, BackendKind::Rpc) {
+    let (env_a, env_b) = if backend.is_rpc() {
         ("FLINT_LIVE_RPC_A", "FLINT_LIVE_RPC_B")
     } else {
         ("FLINT_LIVE_A", "FLINT_LIVE_B")
@@ -171,7 +171,7 @@ fn exercise(backend: BackendKind, full_cycle: bool) {
             "refusing a mainnet-labelled wallet root"
         );
     }
-    let (pass_a_env, pass_b_env) = if matches!(backend, BackendKind::Rpc) {
+    let (pass_a_env, pass_b_env) = if backend.is_rpc() {
         ("FLINT_LIVE_RPC_PASS", "FLINT_LIVE_RPC_PASS_B")
     } else {
         ("FLINT_LIVE_PASS", "FLINT_LIVE_PASS_B")
