@@ -152,8 +152,13 @@ fn exercise(backend: BackendKind, full_cycle: bool) {
     );
     grin_core::global::set_local_chain_type(grin_core::global::ChainTypes::Testnet);
     grin_core::global::init_global_chain_type(grin_core::global::ChainTypes::Testnet);
-    let root_a = PathBuf::from(std::env::var("FLINT_LIVE_A").expect("FLINT_LIVE_A"));
-    let root_b = PathBuf::from(std::env::var("FLINT_LIVE_B").expect("FLINT_LIVE_B"));
+    let (env_a, env_b) = if matches!(backend, BackendKind::Rpc) {
+        ("FLINT_LIVE_RPC_A", "FLINT_LIVE_RPC_B")
+    } else {
+        ("FLINT_LIVE_A", "FLINT_LIVE_B")
+    };
+    let root_a = PathBuf::from(std::env::var(env_a).unwrap_or_else(|_| panic!("{env_a}")));
+    let root_b = PathBuf::from(std::env::var(env_b).unwrap_or_else(|_| panic!("{env_b}")));
     assert_ne!(root_a, root_b, "sender and receiver roots must differ");
     for root in [&root_a, &root_b] {
         assert!(
@@ -166,8 +171,13 @@ fn exercise(backend: BackendKind, full_cycle: bool) {
             "refusing a mainnet-labelled wallet root"
         );
     }
-    let password_a = std::env::var("FLINT_LIVE_PASS").expect("FLINT_LIVE_PASS");
-    let password_b = std::env::var("FLINT_LIVE_PASS_B").expect("FLINT_LIVE_PASS_B");
+    let (pass_a_env, pass_b_env) = if matches!(backend, BackendKind::Rpc) {
+        ("FLINT_LIVE_RPC_PASS", "FLINT_LIVE_RPC_PASS_B")
+    } else {
+        ("FLINT_LIVE_PASS", "FLINT_LIVE_PASS_B")
+    };
+    let password_a = std::env::var(pass_a_env).unwrap_or_else(|_| panic!("{pass_a_env}"));
+    let password_b = std::env::var(pass_b_env).unwrap_or_else(|_| panic!("{pass_b_env}"));
     let timeout = Duration::from_secs(
         std::env::var("FLINT_LIVE_TIMEOUT_SECS")
             .ok()
