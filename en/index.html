@@ -25,6 +25,7 @@
   </a>
   <nav aria-label="Main navigation">
     <a href="#features">Features</a>
+    <a href="#messenger">Messenger</a>
     <a href="#compare">Comparison</a>
     <a href="#honesty">Honesty</a>
     <a href="#platforms">Platforms</a>
@@ -141,6 +142,46 @@
     </div>
   </section>
 
+  <section id="messenger">
+    <p class="section-kicker">Messenger</p>
+    <h2 class="section-title">Messages and Slatepack without extra middlemen</h2>
+    <p class="section-note">
+      The envelope travels from sender to recipient through the chosen transport.
+      Neither a successful delivery nor HTTP 200 proves a transfer — only the
+      chain does.
+    </p>
+    <div class="grid grid-3">
+      <article class="card">
+        <h3>Auto-finalization</h3>
+        <p>Off by default and enabled only for saved contacts. A received S1 goes
+          through prepare/finalize receive, and S2 is matched against the waiting
+          send rather than the “latest” operation. The manual path keeps the
+          amount and address check.</p>
+        <p class="mono small">opt-in · saved contacts only</p>
+      </article>
+      <article class="card">
+        <h3>Tor and direct onion</h3>
+        <p>The onion is derived from the slatepack key, and only a loopback
+          gateway is published outward, never the owner API. Direct delivery
+          targets the recipient's onion through the same Tor SOCKS and needs the
+          peer online; offline delivery is handled by the relay with TTL, quotas
+          and a signed ACK.</p>
+        <p class="mono small">direct onion · relay until TTL · bridges via lyrebird</p>
+      </article>
+      <article class="card is-soon">
+        <h3>Nostr — planned, not shipped</h3>
+        <p>Considered as a separate offline-delivery transport: NIP-17/NIP-44 DMs,
+          dedicated transport keys and rotation, possibly NIP-05 names. The
+          current build has no Nostr support — it appears only after
+          implementation and its own acceptance.</p>
+        <p class="mono small">not implemented · roadmap</p>
+      </article>
+    </div>
+    <p class="callout">
+      Delivery is transport, not confirmation: queued and a signed ACK mean the
+      envelope was accepted, while confirmed means the kernel is in the chain.
+    </p>
+  </section>
   <section id="compare">
     <p class="section-kicker">Comparison</p>
     <h2 class="section-title">Flint and typical approaches</h2>
@@ -279,3 +320,4 @@
 
 </body>
 </html>
+
