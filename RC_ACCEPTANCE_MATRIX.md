@@ -1,8 +1,9 @@
 # RC acceptance matrix
 
-Build under test: `lastver/Flint-0.1.69-keyboard` (portable), pending final
-repackaging after the latest source changes. Evidence paths are repository-local;
-device evidence is recorded in `DEVICE_ACCEPTANCE.md`.
+Build under test: `dist/Flint-0.1.69-slint-preview.zip` (portable), exe
+`a61557b5…`, zip `39048993…`, source `6833c2f4…`.
+**Result: READY_FOR_EXTERNAL_DEVICE_TESTS.** Only physical-device checks in
+`DEVICE_ACCEPTANCE.md` remain.
 
 | Function | Backend | Verification | Result | Evidence |
 |---|---|---|---|---|
@@ -26,9 +27,9 @@ device evidence is recorded in `DEVICE_ACCEPTANCE.md`.
 | muted contrast | UI | automated ratio + manual | PASS | 5.25:1; 125% screenshot |
 | 150% scaling | UI | manual | PASS | window 1920×1290; onboarding/create/restore screenshots |
 | Tor direct live | RPC | live suite | PASS | direct_onion 1, tor_hidden_service 2, tor_listener_gateway 1 |
-| GitHub live jobs | both | dispatch preflight | NOT VERIFIED | jobs defined, not run in GitHub |
-| dependencies/advisories | both | RustSec/native assets | NOT VERIFIED | final run pending |
-| portable package/SBOM/source | both | build + launch outside tree | PASS | zip `9d913509…`, exe `91db1181…`; launch outside tree PASS |
+| GitHub live jobs | both | GitHub dispatch | PASS | build-test run 40799284192; live-funded-testnet run 40811329947; live-tor run 40813171901 |
+| dependencies/advisories | both | RustSec/native assets | PASS | 2 accepted vulnerabilities, 0 unaccepted; 17 warnings |
+| portable package/SBOM/source | both | build + launch outside tree | PASS | zip `39048993…`, exe `a61557b5…`, source `6833c2f4…`; launch outside tree PASS |
 | device-only checks | both | physical Windows devices | DEVICE ONLY | `DEVICE_ACCEPTANCE.md` |
 
 ## Status

@@ -19,7 +19,16 @@
 - Контрольный снимок: `20261029-plan12` — **320 passed, 0 failed,
   31 ignored**, UI-тесты — 21 passed. Снимок: 696 файлов, 62 517 489 байт,
   `match:true`; source SHA-256 `71bbb77c…`.
-- Portable RC: `dist/Flint-0.1.69-slint-preview.zip`, exe `91db1181…`, unsigned; SBOM/источники/контракт включены. RPC receive-response export реализован; live-evidence RPC export ещё нет.\n- Локализация: единый источник `lang/catalog.json`; `tools/i18n-gen.ps1`
+- Portable RC: `dist/Flint-0.1.69-slint-preview.zip`, exe `a61557b5…`,
+  source `6833c2f4…`, unsigned; SBOM/источники/контракт включены.
+- **GitHub CI/live jobs выполнены:** build-test **PASS**
+  (run 40799284192); live-funded-testnet **PASS** (run 40811329947,
+  embedded + RPC full-cycle, живой testnet); live-tor **PASS**
+  (run 40813171901). Локальный self-hosted runner использовался только
+  для live-джоб.
+- **Статус: READY_FOR_EXTERNAL_DEVICE_TESTS.** Автоматические и локальные
+  live-проверки закрыты; остаются только физические проверки из
+  `DEVICE_ACCEPTANCE.md`.
   генерирует `.po` и `src/i18n_catalog.rs`, `-Check` входит в CI.
 - `main.rs` разделён дальше: `format.rs`, `presentation.rs`, `sanitize.rs`,
   `platform.rs`, `tor_node.rs`, `settings_handlers.rs`, `onboarding_handlers.rs`, `messenger_handlers.rs`, `activity_handlers.rs`; main — 2098 строк.
