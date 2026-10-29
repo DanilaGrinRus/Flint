@@ -77,12 +77,16 @@ jobs:
           Move-Item .cargo/config.toml.ci .cargo/config.toml -Force
       - name: Tor preflight
         shell: pwsh
+        env:
+          FLINT_TOR_BIN: ${{ vars.FLINT_TOR_BIN }}
         run: |
-          if (-not (Test-Path "resources/tor/tor.exe")) {
-            throw "Tor live suite selected but resources/tor/tor.exe is missing"
+          if (-not $env:FLINT_TOR_BIN -and -not (Test-Path "resources/tor/tor.exe")) {
+            throw "Tor live suite selected but no tor.exe (resources or FLINT_TOR_BIN)"
           }
       - name: Live Tor tests
         shell: pwsh
+        env:
+          FLINT_TOR_BIN: ${{ vars.FLINT_TOR_BIN }}
         run: |
           cargo test -p flint-core --test direct_onion --test tor_hidden_service --test tor_listener_gateway -- --ignored --test-threads=1 --nocapture
           if ($LASTEXITCODE -ne 0) { throw "live Tor suite failed" }
