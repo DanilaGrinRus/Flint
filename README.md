@@ -6,6 +6,7 @@
 **DEV BUILD: не аудирован, не для реальных средств. По умолчанию testnet.**
 Последний принятый RC готов к внешним проверкам устройств; это не mainnet-релиз.
 Фактические результаты, ограничения и идентичность сборки — [docs/STATUS.md](docs/STATUS.md).
+Сайт проекта — <https://danilagrinrus.github.io/Flint/>, публичный репозиторий — <https://github.com/DanilaGrinRus/Flint>.
 
 ## Возможности текущего RC
 
@@ -99,3 +100,4 @@ CI проверяет исходники; package создаёт portable, relea
 [GPL-3.0-only](COPYING), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 Поставка включает corresponding source зависимостей/Slint и закреплённого fork,
 требуемые notices, SBOM и контрольные суммы. Хэши не заменяют подпись релиза.
+

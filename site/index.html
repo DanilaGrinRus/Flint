@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flint — нативный кошелёк Grin для Windows</title>
+<meta name="description" content="Flint — desktop-кошелёк Grin (Mimblewimble) на Rust и Slint: ключи и история у вас, открытый код GPL-3.0, воспроизводимая сборка. Сейчас testnet, DEV BUILD.">
+<meta property="og:title" content="Flint — нативный кошелёк Grin">
+<meta property="og:description" content="Ключи у вас. Код открыт. Сборка проверяема. Windows · testnet · DEV BUILD.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://danilagrinrus.github.io/Flint/assets/flint-main.png">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#top" aria-label="Flint — на главную">
+    <img src="assets/logo.svg" alt="" width="34" height="34">
+    <span>Flint</span>
+  </a>
+  <nav aria-label="Основная навигация">
+    <a href="#features">Возможности</a>
+    <a href="#compare">Сравнение</a>
+    <a href="#honesty">Честность</a>
+    <a href="#platforms">Платформы</a>
+    <a href="#download">Скачать</a>
+    <a class="gh" href="https://github.com/DanilaGrinRus/Flint">GitHub</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Windows · Rust + Slint · GPL-3.0</p>
+      <h1>Ваш Grin.<br><span class="grad">Ваши ключи.</span></h1>
+      <p class="lead">
+        Flint — нативный desktop-кошелёк Grin (Mimblewimble). Ключи, история и нода
+        остаются на вашем диске: без кастодиального посредника, без WebView и без
+        скрытых серверов между вами и сетью.
+      </p>
+      <p class="badges">
+        <span class="badge badge-mint">testnet</span>
+        <span class="badge">DEV BUILD</span>
+        <span class="badge">unsigned</span>
+        <span class="badge">не аудирован</span>
+      </p>
+      <div class="cta">
+        <a class="btn btn-mint" href="https://github.com/DanilaGrinRus/Flint/releases/tag/v0.1.69-cleanup-20261029">Скачать testnet-сборку</a>
+        <a class="btn" href="https://github.com/DanilaGrinRus/Flint">Исходный код</a>
+      </div>
+      <p class="fineprint">
+        Только для тестовой сети и одноразовых кошельков. Сборка не проходила
+        внешний аудит и не подписана — не используйте её для реальных средств.
+      </p>
+    </div>
+    <figure class="shot">
+      <img src="assets/flint-main.png" width="900" height="760"
+           alt="Главное окно Flint: профиль default, баланс 0 GRIN, статус testnet, получение средств">
+      <figcaption>Flint 0.1.69 · testnet · обзор кошелька</figcaption>
+    </figure>
+  </section>
+
+  <section class="status" id="status" aria-label="Статус платформ">
+    <article class="card status-card is-ready">
+      <p class="status-tag">Доступно для тестов</p>
+      <h2>Windows</h2>
+      <p>RC для внешних проверок на устройствах: testnet, unsigned, DEV BUILD.</p>
+      <p class="mono small">x86_64 · Rust MSVC · Slint</p>
+    </article>
+    <article class="card status-card">
+      <p class="status-tag">Ожидается</p>
+      <h2>iOS</h2>
+      <p>Отдельный репозиторий GrinFlint: preview-сборка проходит CI, установка на
+        физический iPhone ещё не проверена.</p>
+      <p class="mono small">SwiftUI · свой AGENTS.md и приёмка</p>
+    </article>
+    <article class="card status-card is-soon">
+      <p class="status-tag">Ожидается</p>
+      <h2>Android</h2>
+      <p>Пока только проектный план. Приложения нет, дат не обещаем.</p>
+      <p class="mono small">план · без реализации</p>
+    </article>
+  </section>
+
+  <section id="features">
+    <p class="section-kicker">Возможности</p>
+    <h2 class="section-title">Что умеет кошелёк</h2>
+    <div class="grid">
+      <article class="card feature">
+        <h3>Некастодиальный</h3>
+        <p>Seed и пароль остаются у вас. Восстановление из 24 слов в чистый каталог:
+          полный скан, сверка адреса с прежним, честные состояния
+          spendable / awaiting / total / immature / locked.</p>
+      </article>
+      <article class="card feature">
+        <h3>Два backend</h3>
+        <p>Встроенный grin-wallet из закреплённого fork или управляемый
+          grin-wallet RPC. Capability определяет, какие действия доступны,
+          интерфейс не угадывает.</p>
+      </article>
+      <article class="card feature">
+        <h3>Полный цикл Slatepack</h3>
+        <p>send → receive → finalize → post → подтверждение по цепи.
+          Безопасные отмена и повтор: незавершённая операция продолжается после
+          перезапуска, повтор не подписывает второй раз.</p>
+      </article>
+      <article class="card feature">
+        <h3>Скан и история</h3>
+        <p>Нода, полный скан, балансы, история операций и продолжение
+          незавершённых переводов. Отсутствие связи — это не «нулевой баланс»,
+          а явный статус.</p>
+      </article>
+      <article class="card feature">
+        <h3>Шифрованные сообщения</h3>
+        <p>Контакты, история, durable inbox/outbox. Доставка через relay или
+          direct onion по Tor. Owner API наружу не публикуется.</p>
+      </article>
+      <article class="card feature">
+        <h3>Нативный UI</h3>
+        <p>Slint: без WebView2, без Node.js для самого кошелька. Мышь и
+          клавиатура, масштаб, ru/en, моноширинные суммы с табличными цифрами.</p>
+      </article>
+      <article class="card feature">
+        <h3>Проверяемая сборка</h3>
+        <p>Offline vendor, Cargo.lock, SBOM, SHA-256 поставки и соответствующие
+          исходники. Сборку можно повторить из архива, а не верить на слово.</p>
+      </article>
+      <article class="card feature">
+        <h3>Локальные данные</h3>
+        <p>Профили и сети разделены, у каждого — свой seed и история.
+          Кошельки, нода и настройки остаются файлами на вашем диске.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="compare">
+    <p class="section-kicker">Сравнение</p>
+    <h2 class="section-title">Flint и типичные подходы</h2>
+    <p class="section-note">
+      Справа — обобщённые категории, а не конкретные продукты: у каждого сервиса
+      свои правила. Сноска честнее, чем подсветка неудобных клеток.
+    </p>
+    <p class="table-hint">На узком экране таблица прокручивается вбок.</p><div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Что важно</th><th scope="col" class="mine">Flint</th><th scope="col">Кастодиальные веб-сервисы</th><th scope="col">Закрытые GUI-клиенты</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Кто держит ключи</th><td class="mine">Вы</td><td>Сервис</td><td>Вы</td></tr>
+          <tr><th scope="row">Исходный код</th><td class="mine">Открыт, GPL-3.0-only</td><td>Обычно закрыт</td><td>Закрыт</td></tr>
+          <tr><th scope="row">Соответствующие исходники, SBOM, SHA-256</th><td class="mine">В поставке</td><td>Нет</td><td>Обычно нет</td></tr>
+          <tr><th scope="row">Восстановление из seed с полным сканом</th><td class="mine">Да, со сверкой адреса</td><td>Зависит от сервиса</td><td>Зависит от реализации</td></tr>
+          <tr><th scope="row">Два backend (embedded / RPC)</th><td class="mine">Да</td><td>—</td><td>Редко</td></tr>
+          <tr><th scope="row">Slatepack: цикл, повтор, отмена</th><td class="mine">Да, с продолжением после рестарта</td><td>Скрыто внутри сервиса</td><td>Зависит</td></tr>
+          <tr><th scope="row">Шифрованные сообщения и Tor</th><td class="mine">Да, v1 без forward secrecy</td><td>Обычно нет</td><td>Нет</td></tr>
+          <tr><th scope="row">Внешний аудит</th><td class="mine">Нет — и мы это пишем</td><td>Заявляется</td><td>Заявляется</td></tr>
+          <tr><th scope="row">Статус</th><td class="mine">testnet RC, не для реальных средств</td><td>Продукт</td><td>Продукт</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="honesty">
+    <p class="section-kicker">Честность разработки</p>
+    <h2 class="section-title">Что есть, чего нет и как мы это проверяем</h2>
+    <div class="two-col">
+      <article class="card list-card">
+        <h3 class="ok">Уже работает</h3>
+        <ul>
+          <li>Создание, открытие, блокировка, восстановление и backup</li>
+          <li>Профили с независимыми seed и историей</li>
+          <li>Нода, полный скан, балансы и история</li>
+          <li>Slatepack: send → receive → finalize → post → подтверждение</li>
+          <li>Отмена, повтор и продолжение незавершённых операций</li>
+          <li>Messenger v1: контакты, история, relay и direct onion</li>
+          <li>ru/en, масштабирование, клавиатурные сценарии</li>
+        </ul>
+      </article>
+      <article class="card list-card">
+        <h3 class="no">Ещё нет</h3>
+        <ul>
+          <li>Mainnet-релиза и разрешения на реальные средства</li>
+          <li>Внешнего аудита и Authenticode-подписи</li>
+          <li>iOS- и Android-приложений в сторах</li>
+          <li>Фоновой Windows-службы ноды</li>
+          <li>Публичного relay как сервиса</li>
+          <li>Forward secrecy в messenger (планируется v2)</li>
+          <li>Физических проверок D-01…D-10 и аварий disk-full / power-loss</li>
+        </ul>
+      </article>
+    </div>
+    <div class="facts">
+      <div class="fact"><strong>324</strong><span>автотеста в CI, 0 падений; live-наборы запускаются отдельно</span></div>
+      <div class="fact"><strong>2</strong><span>принятых advisory зависимостей, 0 непринятых — список раскрыт</span></div>
+      <div class="fact"><strong>0</strong><span>обещаний про mainnet, аудит или даты мобильных релизов</span></div>
+    </div>
+    <p class="callout">
+      Если нужен кошелёк для реальных сумм прямо сейчас — Flint не подходит.
+      Проект существует, чтобы проверять поведение Grin-кошелька открыто:
+      код, тесты, доказательства и открытые ограничения лежат в репозитории.
+    </p>
+  </section>
+
+  <section id="platforms">
+    <p class="section-kicker">Платформы</p>
+    <h2 class="section-title">Одна доменная модель, разные оболочки</h2>
+    <div class="grid grid-3">
+      <article class="card">
+        <h3>Windows · сейчас</h3>
+        <p>Slint-клиент, Rust MSVC, portable-пакет с нодой, Tor и runtime DLL.
+          Встроенный или управляемый grin-wallet, локальные профили.</p>
+      </article>
+      <article class="card">
+        <h3>iOS · ожидается</h3>
+        <p>GrinFlint — отдельный репозиторий со своей приёмкой. SwiftUI-оболочка,
+          общий Rust-контракт, свой жизненный цикл и Keychain. Desktop-проверки
+          готовность iOS не подтверждают.</p>
+      </article>
+      <article class="card">
+        <h3>Android · ожидается</h3>
+        <p>Только план. Общие правила переводов и форматы уже описаны, но
+          приложения и его приёмки нет.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="download">
+    <p class="section-kicker">Скачать</p>
+    <h2 class="section-title">Testnet-preview 0.1.69</h2>
+    <div class="download-grid">
+      <article class="card download">
+        <p class="mono small">Flint-0.1.69-slint-preview.zip · 43 693 406 Б</p>
+        <p class="mono small hash">SHA-256 d693ddc5a0ea852552a1c32ef1bda4752d7b1174ab82858e0779c662cc318c25</p>
+        <a class="btn btn-mint" href="https://github.com/DanilaGrinRus/Flint/releases/tag/v0.1.69-cleanup-20261029">Открыть релиз</a>
+        <p class="fineprint">
+          Бинарник не подписан: Windows может показать SmartScreen. Проверьте
+          SHA-256 после скачивания. Пакет содержит ноду, Tor и runtime DLL.
+        </p>
+      </article>
+      <article class="card download">
+        <p class="mono small">Flint-0.1.69-source.zip · 13 222 811 Б</p>
+        <p class="mono small hash">Соответствующие исходники: workspace, закреплённый fork, Slint, lang, tools</p>
+        <a class="btn" href="https://github.com/DanilaGrinRus/Flint/releases/tag/v0.1.69-cleanup-20261029">Исходники в релизе</a>
+        <p class="fineprint">
+          Сборка: <code>pwsh -File tools/bootstrap.ps1 -RestoreVendor</code>,
+          затем <code>tools/ci.ps1</code> и <code>tools/package-slint.ps1</code>.
+          Полный vendor в архив не входит — это указано в SOURCE.md.
+        </p>
+      </article>
+    </div>
+    <p class="fineprint center">
+      Только testnet и одноразовые кошельки. Не переносите сюда реальные seed
+      и mainnet-данные.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-brand">
+    <img src="assets/logo.svg" alt="" width="26" height="26">
+    <span>Flint</span>
+  </div>
+  <p>GPL-3.0-only · код и доказательства в
+    <a href="https://github.com/DanilaGrinRus/Flint">GitHub</a> ·
+    не аудирован, только testnet</p>
+  <p class="fineprint">© 2026 Flint. Собрано из открытых исходников; чужие товарные знаки не используются.</p>
+</footer>
+
+</body>
+</html>
+
+
