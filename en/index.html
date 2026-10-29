@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flint — native Grin wallet for Windows</title>
+<meta name="description" content="Flint is a desktop wallet for Grin (Mimblewimble) built with Rust and Slint: keys and history stay with you, open GPL-3.0 code, a reproducible build. Testnet only, DEV BUILD.">
+<meta property="og:title" content="Flint — native Grin wallet">
+<meta property="og:description" content="Your keys. Open code. A build you can check. Windows · testnet · DEV BUILD.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://danilagrinrus.github.io/Flint/assets/flint-main.png">
+<meta property="og:locale" content="en">
+<meta name="color-scheme" content="dark">
+<link rel="alternate" hreflang="ru" href="https://danilagrinrus.github.io/Flint/">
+<link rel="alternate" hreflang="en" href="https://danilagrinrus.github.io/Flint/en/">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#top" aria-label="Flint — home">
+    <img src="../assets/logo.svg" alt="" width="34" height="34">
+    <span>Flint</span>
+  </a>
+  <nav aria-label="Main navigation">
+    <a href="#features">Features</a>
+    <a href="#compare">Comparison</a>
+    <a href="#honesty">Honesty</a>
+    <a href="#platforms">Platforms</a>
+    <a href="#download">Download</a>
+    <a class="gh" href="https://github.com/DanilaGrinRus/Flint">GitHub</a>
+    <a class="lang" href="../" hreflang="ru" lang="ru" aria-label="Русская версия">RU</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Windows · Rust + Slint · GPL-3.0</p>
+      <h1>Your Grin.<br><span class="grad">Your keys.</span></h1>
+      <p class="lead">
+        Flint is a native desktop wallet for Grin (Mimblewimble). Keys, history
+        and the node stay on your disk: no custodial middleman, no WebView and no
+        hidden servers between you and the network.
+      </p>
+      <p class="badges">
+        <span class="badge badge-mint">testnet</span>
+        <span class="badge">DEV BUILD</span>
+        <span class="badge">unsigned</span>
+        <span class="badge">not audited</span>
+      </p>
+      <div class="cta">
+        <a class="btn btn-mint" href="https://github.com/DanilaGrinRus/Flint/releases/tag/v0.1.69-cleanup-20261029">Download testnet build</a>
+        <a class="btn" href="https://github.com/DanilaGrinRus/Flint">Source code</a>
+      </div>
+      <p class="fineprint">
+        Test network and disposable wallets only. The build has not been audited
+        and is unsigned — do not use it for real funds.
+      </p>
+    </div>
+    <figure class="shot">
+      <img src="../assets/flint-main.png" width="900" height="760"
+           alt="Flint main window: default profile, 0 GRIN balance, testnet badge, receive panel">
+      <figcaption>Flint 0.1.69 · testnet · wallet overview</figcaption>
+    </figure>
+  </section>
+
+  <section class="status" id="status" aria-label="Platform status">
+    <article class="card status-card is-ready">
+      <p class="status-tag">Available for testing</p>
+      <h2>Windows</h2>
+      <p>RC for external device tests: testnet, unsigned, DEV BUILD.</p>
+      <p class="mono small">x86_64 · Rust MSVC · Slint</p>
+    </article>
+    <article class="card status-card">
+      <p class="status-tag">Coming soon</p>
+      <h2>iOS</h2>
+      <p>Separate GrinFlint repository: the preview build passes CI, installation
+        on a physical iPhone is not verified yet.</p>
+      <p class="mono small">SwiftUI · its own AGENTS.md and acceptance</p>
+    </article>
+    <article class="card status-card is-soon">
+      <p class="status-tag">Coming soon</p>
+      <h2>Android</h2>
+      <p>Project plan only. No app, and we promise no dates.</p>
+      <p class="mono small">plan · no implementation</p>
+    </article>
+  </section>
+
+  <section id="features">
+    <p class="section-kicker">Features</p>
+    <h2 class="section-title">What the wallet does</h2>
+    <div class="grid">
+      <article class="card feature">
+        <h3>Non-custodial</h3>
+        <p>Seed and password stay with you. Restore from 24 words into a clean
+          directory: full scan, address comparison with the previous one, honest
+          spendable / awaiting / total / immature / locked states.</p>
+      </article>
+      <article class="card feature">
+        <h3>Two backends</h3>
+        <p>The embedded grin-wallet from the pinned fork, or a managed
+          grin-wallet RPC. Capability decides which actions are available; the
+          UI does not guess.</p>
+      </article>
+      <article class="card feature">
+        <h3>Full Slatepack cycle</h3>
+        <p>send → receive → finalize → post → on-chain confirmation.
+          Safe cancel and retry: an unfinished operation continues after a
+          restart, and a retry never signs a second time.</p>
+      </article>
+      <article class="card feature">
+        <h3>Scan and history</h3>
+        <p>Node, full scan, balances, transaction history and continuation of
+          unfinished transfers. No connection is an explicit status, not a
+          “zero balance”.</p>
+      </article>
+      <article class="card feature">
+        <h3>Encrypted messages</h3>
+        <p>Contacts, history, durable inbox/outbox. Delivery via relay or direct
+          onion over Tor. The owner API is never exposed.</p>
+      </article>
+      <article class="card feature">
+        <h3>Native UI</h3>
+        <p>Slint: no WebView2, no Node.js for the wallet itself. Mouse and
+          keyboard, scaling, ru/en, monospaced amounts with tabular figures.</p>
+      </article>
+      <article class="card feature">
+        <h3>Verifiable build</h3>
+        <p>Offline vendor, Cargo.lock, SBOM, delivery SHA-256 and corresponding
+          sources. The build can be reproduced from the archive instead of
+          trusted.</p>
+      </article>
+      <article class="card feature">
+        <h3>Local data</h3>
+        <p>Profiles and networks are separated, each with its own seed and
+          history. Wallets, node and settings stay as files on your disk.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="compare">
+    <p class="section-kicker">Comparison</p>
+    <h2 class="section-title">Flint and typical approaches</h2>
+    <p class="section-note">
+      On the right are generalized categories, not specific products: every
+      service has its own rules. A footnote is more honest than shading
+      inconvenient cells.
+    </p>
+    <p class="table-hint">On narrow screens the table scrolls sideways.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">What matters</th><th scope="col" class="mine">Flint</th><th scope="col">Custodial web services</th><th scope="col">Closed GUI clients</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Who holds the keys</th><td class="mine">You</td><td>The service</td><td>You</td></tr>
+          <tr><th scope="row">Source code</th><td class="mine">Open, GPL-3.0-only</td><td>Usually closed</td><td>Closed</td></tr>
+          <tr><th scope="row">Corresponding sources, SBOM, SHA-256</th><td class="mine">In the delivery</td><td>No</td><td>Usually no</td></tr>
+          <tr><th scope="row">Restore from seed with full scan</th><td class="mine">Yes, with address comparison</td><td>Depends on the service</td><td>Depends on the implementation</td></tr>
+          <tr><th scope="row">Two backends (embedded / RPC)</th><td class="mine">Yes</td><td>—</td><td>Rare</td></tr>
+          <tr><th scope="row">Slatepack: cycle, retry, cancel</th><td class="mine">Yes, resumes after restart</td><td>Hidden inside the service</td><td>Depends</td></tr>
+          <tr><th scope="row">Encrypted messages and Tor</th><td class="mine">Yes, v1 without forward secrecy</td><td>Usually no</td><td>No</td></tr>
+          <tr><th scope="row">External audit</th><td class="mine">No — and we say so</td><td>Claimed</td><td>Claimed</td></tr>
+          <tr><th scope="row">Status</th><td class="mine">testnet RC, not for real funds</td><td>Product</td><td>Product</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="honesty">
+    <p class="section-kicker">Development honesty</p>
+    <h2 class="section-title">What exists, what does not, and how we check it</h2>
+    <div class="two-col">
+      <article class="card list-card">
+        <h3 class="ok">Already works</h3>
+        <ul>
+          <li>Creating, opening, locking, restoring and backup</li>
+          <li>Profiles with independent seed and history</li>
+          <li>Node, full scan, balances and history</li>
+          <li>Slatepack: send → receive → finalize → post → confirmation</li>
+          <li>Cancel, retry and continuation of unfinished operations</li>
+          <li>Messenger v1: contacts, history, relay and direct onion</li>
+          <li>ru/en, scaling, keyboard flows</li>
+        </ul>
+      </article>
+      <article class="card list-card">
+        <h3 class="no">Not yet</h3>
+        <ul>
+          <li>Mainnet release and permission to use real funds</li>
+          <li>External audit and an Authenticode signature</li>
+          <li>iOS and Android apps in stores</li>
+          <li>A background Windows node service</li>
+          <li>A public relay as a service</li>
+          <li>Forward secrecy in messenger (planned for v2)</li>
+          <li>Physical checks D-01…D-10 and disk-full / power-loss failures</li>
+        </ul>
+      </article>
+    </div>
+    <div class="facts">
+      <div class="fact"><strong>324</strong><span>automated tests in CI, 0 failures; live suites run separately</span></div>
+      <div class="fact"><strong>2</strong><span>accepted dependency advisories, 0 unaccepted — the list is public</span></div>
+      <div class="fact"><strong>0</strong><span>promises about mainnet, audit or mobile release dates</span></div>
+    </div>
+    <p class="callout">
+      If you need a wallet for real money right now, Flint is not it. The project
+      exists to test Grin wallet behaviour in the open: code, tests, evidence and
+      open limitations live in the repository.
+    </p>
+  </section>
+
+  <section id="platforms">
+    <p class="section-kicker">Platforms</p>
+    <h2 class="section-title">One domain model, different shells</h2>
+    <div class="grid grid-3">
+      <article class="card">
+        <h3>Windows · now</h3>
+        <p>Slint client, Rust MSVC, portable package with the node, Tor and
+          runtime DLLs. Embedded or managed grin-wallet, local profiles.</p>
+      </article>
+      <article class="card">
+        <h3>iOS · coming soon</h3>
+        <p>GrinFlint is a separate repository with its own acceptance. SwiftUI
+          shell, shared Rust contract, its own lifecycle and Keychain. Desktop
+          checks do not confirm iOS readiness.</p>
+      </article>
+      <article class="card">
+        <h3>Android · coming soon</h3>
+        <p>Plan only. Shared transfer rules and formats are already described,
+          but there is no app and no acceptance.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="download">
+    <p class="section-kicker">Download</p>
+    <h2 class="section-title">Testnet preview 0.1.69</h2>
+    <div class="download-grid">
+      <article class="card download">
+        <p class="mono small">Flint-0.1.69-slint-preview.zip · 43 693 406 B</p>
+        <p class="mono small hash">SHA-256 d693ddc5a0ea852552a1c32ef1bda4752d7b1174ab82858e0779c662cc318c25</p>
+        <a class="btn btn-mint" href="https://github.com/DanilaGrinRus/Flint/releases/tag/v0.1.69-cleanup-20261029">Open release</a>
+        <p class="fineprint">
+          The binary is unsigned: Windows may show SmartScreen. Verify SHA-256
+          after downloading. The package includes the node, Tor and runtime DLLs.
+        </p>
+      </article>
+      <article class="card download">
+        <p class="mono small">Flint-0.1.69-source.zip · 13 222 811 B</p>
+        <p class="mono small hash">Corresponding sources: workspace, pinned fork, Slint, lang, tools</p>
+        <a class="btn" href="https://github.com/DanilaGrinRus/Flint/releases/tag/v0.1.69-cleanup-20261029">Sources in the release</a>
+        <p class="fineprint">
+          Build: <code>pwsh -File tools/bootstrap.ps1 -RestoreVendor</code>, then
+          <code>tools/ci.ps1</code> and <code>tools/package-slint.ps1</code>.
+          The full vendor is not part of the archive — see SOURCE.md.
+        </p>
+      </article>
+    </div>
+    <p class="fineprint center">
+      Testnet and disposable wallets only. Do not move real seeds or mainnet data
+      here.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-brand">
+    <img src="../assets/logo.svg" alt="" width="26" height="26">
+    <span>Flint</span>
+  </div>
+  <p>GPL-3.0-only · code and evidence on
+    <a href="https://github.com/DanilaGrinRus/Flint">GitHub</a> ·
+    not audited, testnet only</p>
+  <p class="fineprint">© 2026 Flint. Built from open sources; no third-party trademarks are used.</p>
+</footer>
+
+</body>
+</html>

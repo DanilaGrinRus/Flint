@@ -103,6 +103,17 @@ a:focus-visible, .btn:focus-visible {
 }
 .top nav a { color: var(--muted); }
 .top nav a:hover { color: var(--ink); }
+.top nav .lang {
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+.top nav .lang:hover { color: var(--ink); border-color: var(--mint); background: rgba(61, 220, 151, 0.1); }
+
 .top nav .gh {
   color: var(--mint);
   border: 1px solid var(--line-strong);
@@ -410,3 +421,4 @@ footer p { margin: 6px 0; }
     font-size: 0.82rem;
   }
 }
+
