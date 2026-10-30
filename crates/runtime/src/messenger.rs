@@ -661,6 +661,9 @@ impl WalletRuntime {
             // Persist the armor task before the history tombstone. A crash
             // between these writes then leaves a recoverable queue entry
             // instead of a known message with no automation task.
+            // The transport already unwrapped the envelope (relay, direct onion
+            // or Nostr); automation only looks at the Flint sender and armor, so
+            // a Nostr-delivered slatepack from a saved contact is queued here too.
             if let MessageKind::Text { text } = &message.kind {
                 let trimmed = text.trim();
                 if trimmed.starts_with("BEGINSLATEPACK.")

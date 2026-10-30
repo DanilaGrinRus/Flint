@@ -278,6 +278,56 @@ mod tests {
         assert!(relay.stored().iter().any(|event| event.kind == KIND_DELETE));
     }
 
+    /// The transport only wraps the Flint envelope: slatepack armor must come
+    /// back byte-for-byte so the inbox automation can recognize it regardless
+    /// of whether the envelope arrived over relay, direct onion or Nostr.
+    #[test]
+    fn slatepack_armor_survives_over_nostr() {
+        let relay = Arc::new(MemoryRelay::new());
+        let alice_keys = keys("0000000000000000000000000000000000000000000000000000000000000001");
+        let bob_keys = keys("0000000000000000000000000000000000000000000000000000000000000002");
+
+        let alice = Identity::from_seed([11u8; 32], "tgrin").expect("alice");
+        let bob = Identity::from_seed([22u8; 32], "tgrin").expect("bob");
+
+        let mut directory = MapDirectory::default();
+        directory
+            .0
+            .insert(bob.address().to_string(), peer(&bob_keys));
+        directory
+            .0
+            .insert(alice.address().to_string(), peer(&alice_keys));
+
+        let alice_transport =
+            NostrTransport::new(SharedRelay(relay.clone()), alice_keys, directory.clone());
+        let bob_transport = NostrTransport::new(SharedRelay(relay), bob_keys, directory);
+
+        let armor = "BEGINSLATEPACK. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ENDSLATEPACK.";
+        let envelope = Envelope::seal_default(
+            &alice,
+            bob.address(),
+            MessageKind::Text {
+                text: armor.to_string(),
+            },
+        )
+        .expect("seal");
+        alice_transport.deliver(&envelope).expect("deliver");
+
+        let fetched = bob_transport
+            .fetch(bob.address(), envelope.created_at, 10)
+            .expect("fetch");
+        assert_eq!(fetched.len(), 1);
+        let opened = fetched[0]
+            .open(&bob, envelope.created_at)
+            .expect("open envelope");
+        assert_eq!(
+            opened.kind,
+            MessageKind::Text {
+                text: armor.to_string()
+            }
+        );
+    }
+
     #[test]
     fn contact_directory_maps_saved_keys() {
         use crate::envelope::Identity;
