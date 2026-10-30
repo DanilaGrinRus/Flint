@@ -22,10 +22,10 @@ Mainnet-данные и реальные кошельки не участвую�
 
 Публичный репозиторий — <https://github.com/DanilaGrinRus/Flint>, сайт —
 <https://danilagrinrus.github.io/Flint/> (GitHub Pages из ветки gh-pages).
-Testnet-preview опубликован как prerelease `0.1.69-ui-20261030`
-(tag `v0.1.69-ui-20261030`): binary zip sha256
-`1868678557a9f0afa12d0fd66f79abf4d2f2f101515e3019f4f5803bdec9e5b3`,
-source zip sha256 `d00025385deb392fcb422696466ee43874ce8c9aaf09e73359769a6108212aea`;
+Testnet-preview опубликован как prerelease `0.1.69-sec-20261030`
+(tag `v0.1.69-sec-20261030`): binary zip sha256
+`d3ed2ff4b704097f99c38d0b17c67ccedbdd5da7d06e86cedba50f3baa806334`,
+source zip sha256 `eeede9082552cf9065aa76846c381751a407daa19f9300a4195fc3b6610d5c77`;
 SHA256SUMS, sbom.json, selftest.json и BUILD-INFO.json; сборка unsigned.
 Публикация не меняет статус приёмки: физические D-01…D-10 остаются открытыми.
 
@@ -159,7 +159,6 @@ commit/build, команда или CI run, PASS/FAIL/NOT VERIFIED, ссылка
 свидетельство и предел вывода. Большие логи, переписка и промежуточные планы
 не копируются сюда. Удаление исходного evidence требует либо сохранённого
 эквивалента, либо явной пометки, что доступна только историческая запись.
-
 
 
 
