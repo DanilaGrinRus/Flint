@@ -396,7 +396,7 @@ pub fn patch_node_secret(config: &std::path::Path, secret: &std::path::Path) -> 
 /// Remove `node_api_secret_path` from the wallet config. Used when an external
 /// node is configured without an explicit secret: a stale line would otherwise
 /// keep sending the managed node's local bearer credential to that endpoint.
-fn clear_node_secret(config: &std::path::Path) -> Result<()> {
+pub fn clear_node_secret(config: &std::path::Path) -> Result<()> {
     let text = fs::read_to_string(config)?;
     let mut out = String::new();
     let mut changed = false;

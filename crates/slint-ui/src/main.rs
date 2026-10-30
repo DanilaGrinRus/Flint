@@ -85,6 +85,78 @@ fn single_instance_guard() -> bool {
     true
 }
 
+/// Exclusive claim on the selected data root. The named mutex above only covers
+/// one Windows session and one UI process; a second session, a junction alias or
+/// a direct helper could otherwise open the same wallet directory concurrently.
+/// The handle lives for the whole process and the OS releases it on exit.
+#[cfg(windows)]
+struct DataRootLock(*mut std::ffi::c_void);
+
+#[cfg(windows)]
+impl Drop for DataRootLock {
+    fn drop(&mut self) {
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn CloseHandle(handle: *mut std::ffi::c_void) -> i32;
+        }
+        unsafe {
+            CloseHandle(self.0);
+        }
+    }
+}
+
+#[cfg(windows)]
+fn acquire_data_root_lock(root: &std::path::Path) -> Result<DataRootLock, String> {
+    use std::ffi::c_void;
+    use std::os::windows::ffi::OsStrExt;
+
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn CreateFileW(
+            name: *const u16,
+            access: u32,
+            share: u32,
+            security: *const c_void,
+            disposition: u32,
+            flags: u32,
+            template: *mut c_void,
+        ) -> *mut c_void;
+        fn GetLastError() -> u32;
+    }
+
+    std::fs::create_dir_all(root).map_err(|error| format!("каталог данных недоступен: {error}"))?;
+    let path = root.join("flint.lock");
+    let name: Vec<u16> = path
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    // GENERIC_WRITE, share=0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL.
+    let handle = unsafe {
+        CreateFileW(
+            name.as_ptr(),
+            0x4000_0000,
+            0,
+            std::ptr::null(),
+            4,
+            0x80,
+            std::ptr::null_mut(),
+        )
+    };
+    if handle as isize == -1 {
+        return Err(format!(
+            "каталог данных уже занят другим экземпляром Flint (код {})",
+            unsafe { GetLastError() }
+        ));
+    }
+    Ok(DataRootLock(handle))
+}
+
+#[cfg(not(windows))]
+fn acquire_data_root_lock(_root: &std::path::Path) -> Result<(), String> {
+    Ok(())
+}
+
 fn status_line(status: &WalletStatus) -> String {
     let phase = i18n::tr(if status.unlocked {
         "кошелёк открыт"
@@ -1059,6 +1131,13 @@ fn main() -> Result<(), slint::PlatformError> {
             return Ok(());
         }
     };
+    let _data_root_lock = match acquire_data_root_lock(paths.root()) {
+        Ok(guard) => guard,
+        Err(error) => {
+            show_startup_error(&error);
+            return Ok(());
+        }
+    };
 
     let language = std::fs::read_to_string(paths.root().join("ui-language")).unwrap_or_default();
 
@@ -1989,9 +2068,9 @@ fn main() -> Result<(), slint::PlatformError> {
 #[cfg(test)]
 mod tests {
     use super::{
-        balance_change_warning, format_amount, is_slatepack_armor, node_error_action,
-        pending_actions, pending_allowed, pending_next_action, profile_request_error,
-        qr_image_size, PendingAction, PendingGate, SharedPendingGate,
+        acquire_data_root_lock, balance_change_warning, format_amount, is_slatepack_armor,
+        node_error_action, pending_actions, pending_allowed, pending_next_action,
+        profile_request_error, qr_image_size, PendingAction, PendingGate, SharedPendingGate,
     };
     use std::collections::HashSet;
     use std::sync::{Arc, Mutex};
@@ -2021,6 +2100,28 @@ mod tests {
         assert!(warning.contains("1451.862000000"), "{warning}");
         assert!(balance_change_warning("1.000000000", "1.000000000").is_empty());
         assert!(balance_change_warning("bad", "1.000000000").is_empty());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn data_root_lock_is_exclusive() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let root =
+            std::env::temp_dir().join(format!("flint-data-lock-{}-{stamp}", std::process::id()));
+        let first = acquire_data_root_lock(&root).expect("first owner");
+        assert!(
+            acquire_data_root_lock(&root).is_err(),
+            "the same data root must not have two owners"
+        );
+        drop(first);
+        assert!(
+            acquire_data_root_lock(&root).is_ok(),
+            "lock must be released"
+        );
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]

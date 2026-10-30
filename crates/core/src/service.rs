@@ -932,7 +932,13 @@ impl WalletService {
             .paths
             .node_dir(&self.settings.network)
             .join(".api_secret");
-        crate::rpc_backend::patch_node_secret(&config_path, &node_secret);
+        if crate::node::is_loopback_node_url(&self.settings.node_url) {
+            crate::rpc_backend::patch_node_secret(&config_path, &node_secret)?;
+        } else {
+            // Never leave a path that would feed the managed node's local
+            // credential to an external endpoint.
+            crate::rpc_backend::clear_node_secret(&config_path)?;
+        }
 
         let mut wallet = DefaultWalletImpl::<HTTPNodeClient>::new(self.node_client()?)
             .map_err(FlintError::wallet)?;
@@ -961,7 +967,13 @@ impl WalletService {
             .paths
             .node_dir(&self.settings.network)
             .join(".api_secret");
-        crate::rpc_backend::patch_node_secret(&config_path, &node_secret);
+        if crate::node::is_loopback_node_url(&self.settings.node_url) {
+            crate::rpc_backend::patch_node_secret(&config_path, &node_secret)?;
+        } else {
+            // Never leave a path that would feed the managed node's local
+            // credential to an external endpoint.
+            crate::rpc_backend::clear_node_secret(&config_path)?;
+        }
 
         // Wrong password fails here, before any file is written.
         let prepared = store.prepare_unlock(password)?;
