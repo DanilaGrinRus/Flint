@@ -6,7 +6,7 @@ NOT VERIFIED — проверки нет.
 
 | Сценарий | Статус | Что есть | Чего не хватает |
 |---|---|---|---|
-| Откат данных в прошлое | PARTIAL | durable pending/journal, `reconcile_posted`, сверка суммы с цепью; повторная подпись запрещена состояниями | нет сверки «устаревшего Locked» с цепью до повторной отправки; сценарий backup→send→restore не прогнан |
+| Откат данных в прошлое | PASS (механизм) | перед подписью `retrieve_outputs(refresh)` и сверка входов S1; потраченный/ненайденный вход → failed_recoverable и отказ; RPC-тест на spent/missing | живой backup→send→restore не прогнан |
 | Два Flint над одной БД | PASS | именованный mutex `Local\FlintWalletSingleInstance` + эксклюзивный `<data>/flint.lock` (share=0) на весь процесс; второй процесс/алиас не открывает каталог; тест `data_root_lock_is_exclusive` | другой пользователь и RPC-профиль не проверены |
 | Подмена после подтверждения | PASS (механизм) | маркер `SendConfirmation` с digest S1 и контекстом; finalize сверяет токен, network/index/destination/amount/fee; legacy pending fail-closed; автофинализация отправок отключена | нет живого окна/end-to-end с реальным S1 и переключением профиля |
 | Ложный localhost | NOT VERIFIED (частично) | network/readiness/auth-ошибки, chain и user-agent; embedded `open_legacy`/`open_envelope` больше не прописывают локальный `.api_secret` внешней ноде | нет криптографической идентичности ноды; процесс того же пользователя на loopback может собрать секрет, который приложение ему отправит |

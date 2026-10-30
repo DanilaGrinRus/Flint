@@ -215,6 +215,27 @@ impl WalletRpc {
             .unwrap_or_default())
     }
 
+    /// Outputs with optional spent status, refreshed from the node. `updated ==
+    /// false` means the wallet could not refresh and the list may be stale.
+    pub fn outputs(
+        &self,
+        token: &Value,
+        include_spent: bool,
+        refresh: bool,
+    ) -> Result<(bool, Vec<Value>)> {
+        let value = self.call(
+            "retrieve_outputs",
+            json!([token, include_spent, refresh, null]),
+        )?;
+        let updated = value.get(0).and_then(Value::as_bool).unwrap_or(false);
+        let list = value
+            .get(1)
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        Ok((updated, list))
+    }
+
     pub fn node_height(&self, token: &Value) -> Result<u64> {
         let value = self.call("node_height", json!([token]))?;
         value

@@ -784,6 +784,7 @@ mod tests {
             let Ok(mut socket) = accept(stream) else {
                 return;
             };
+            let mut sent = false;
             for _ in 0..5000 {
                 if socket
                     .send(tungstenite::Message::Text(
@@ -793,6 +794,12 @@ mod tests {
                 {
                     break;
                 }
+                sent = true;
+            }
+            // Keep the connection open so the client observes its own budget
+            // error instead of a reset caused by our socket dropping.
+            if sent {
+                std::thread::sleep(Duration::from_secs(5));
             }
         });
 
