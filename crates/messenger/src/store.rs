@@ -33,8 +33,13 @@ pub trait Store: Transport {}
 
 impl<T: Transport> Store for T {}
 
+struct StoredEnvelope {
+    envelope: Envelope,
+    expires_at: u64,
+}
+
 pub struct MemoryMailbox {
-    queues: Mutex<HashMap<String, Vec<Envelope>>>,
+    queues: Mutex<HashMap<String, Vec<StoredEnvelope>>>,
     max_queue: usize,
     max_ciphertext: usize,
 }
@@ -43,6 +48,14 @@ impl Default for MemoryMailbox {
     fn default() -> Self {
         Self::new(100, 64 * 1024)
     }
+}
+
+/// Expiry used for retention and replay guards. A sender clock in the future
+/// cannot keep an entry longer than `MAX_TTL_SECS` from *our* now.
+fn bounded_expires_at(created_at: u64, ttl: u64, now: u64) -> u64 {
+    created_at
+        .saturating_add(ttl)
+        .min(now.saturating_add(MAX_TTL_SECS))
 }
 
 impl MemoryMailbox {
@@ -78,7 +91,7 @@ impl Transport for MemoryMailbox {
             .lock()
             .map_err(|_| Error::Store("mailbox poisoned".into()))?;
         let queue = queues.entry(envelope.recipient.clone()).or_default();
-        if queue.iter().any(|item| item.id == envelope.id) {
+        if queue.iter().any(|item| item.envelope.id == envelope.id) {
             // At-least-once delivery: duplicates are accepted but stored once.
             return Ok(());
         }
@@ -88,7 +101,11 @@ impl Transport for MemoryMailbox {
                 self.max_queue
             )));
         }
-        queue.push(envelope.clone());
+        let received_at = unix_now();
+        queue.push(StoredEnvelope {
+            expires_at: bounded_expires_at(envelope.created_at, envelope.ttl, received_at),
+            envelope: envelope.clone(),
+        });
         Ok(())
     }
 
@@ -99,8 +116,12 @@ impl Transport for MemoryMailbox {
             .lock()
             .map_err(|_| Error::Store("mailbox poisoned".into()))?;
         let queue = queues.entry(key).or_default();
-        queue.retain(|item| !item.is_expired(now));
-        Ok(queue.iter().take(limit.max(1)).cloned().collect())
+        queue.retain(|item| item.expires_at > now);
+        Ok(queue
+            .iter()
+            .take(limit.max(1))
+            .map(|item| item.envelope.clone())
+            .collect())
     }
 
     fn ack(&self, recipient: &Address, ids: &[String]) -> Result<usize> {
@@ -113,7 +134,7 @@ impl Transport for MemoryMailbox {
             return Ok(0);
         };
         let before = queue.len();
-        queue.retain(|item| !ids.contains(&item.id));
+        queue.retain(|item| !ids.contains(&item.envelope.id));
         Ok(before - queue.len())
     }
 }
@@ -210,12 +231,12 @@ impl<T: Transport> Messenger<T> {
                     batch.failed.push(FailedEnvelope {
                         id: envelope.id,
                         error: e.to_string(),
-                        expires_at: envelope.created_at.saturating_add(envelope.ttl),
+                        expires_at: bounded_expires_at(envelope.created_at, envelope.ttl, now),
                     });
                     continue;
                 }
             };
-            let expires_at = envelope.created_at.saturating_add(envelope.ttl);
+            let expires_at = bounded_expires_at(envelope.created_at, envelope.ttl, now);
             if seen.insert(message.id.clone(), expires_at).is_some() {
                 batch.duplicates.push(envelope.id);
             } else if batch.opened.len() < limit {
@@ -290,6 +311,39 @@ mod tests {
         let fetched = mailbox.fetch(bob().address(), unix_now(), 10).unwrap();
         assert_eq!(fetched.len(), 1);
         assert_eq!(fetched[0].id, "b");
+    }
+
+    #[test]
+    fn future_clock_cannot_extend_storage() {
+        let mailbox = MemoryMailbox::default();
+        let base = unix_now();
+        let future = base.saturating_add(MAX_TTL_SECS.saturating_mul(10));
+        let mut item = Envelope::seal(
+            &alice(),
+            bob().address(),
+            MessageKind::Text {
+                text: "future".into(),
+            },
+            MAX_TTL_SECS,
+            future,
+        )
+        .unwrap();
+        item.id = "future".into();
+        mailbox.deliver(&item).unwrap();
+        // Fetching just past our own TTL cap drops it even though the sender
+        // timestamp claims it should live much longer.
+        let fetched = mailbox
+            .fetch(
+                bob().address(),
+                base.saturating_add(MAX_TTL_SECS).saturating_add(1),
+                10,
+            )
+            .unwrap();
+        assert!(fetched.is_empty());
+        assert_eq!(
+            bounded_expires_at(future, MAX_TTL_SECS, base),
+            base.saturating_add(MAX_TTL_SECS)
+        );
     }
 
     #[test]

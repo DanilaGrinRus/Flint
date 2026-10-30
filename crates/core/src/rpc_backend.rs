@@ -477,6 +477,8 @@ pub struct RpcReceiveRecord {
     /// `intent` | `received` | `lost`; old records default to `received`.
     #[serde(default = "default_receive_state")]
     pub state: String,
+    #[serde(default = "legacy_rpc_journal_version")]
+    pub format_version: u32,
     pub created_at: i64,
 }
 
@@ -525,6 +527,12 @@ fn mark_receive_failed(record: &mut RpcReceiveRecord, error: &str) {
 
 /// Journal record for an RPC send: which stage the transfer reached, so a crash
 /// between "signed" and "published" can be resumed without signing again.
+const RPC_JOURNAL_FORMAT_VERSION: u32 = 2;
+
+fn legacy_rpc_journal_version() -> u32 {
+    1
+}
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RpcSendRecord {
     pub slate_id: String,
@@ -534,6 +542,8 @@ pub struct RpcSendRecord {
     /// create a new signature.
     #[serde(default)]
     pub confirmation: Option<crate::model::SendConfirmation>,
+    #[serde(default = "legacy_rpc_journal_version")]
+    pub format_version: u32,
     /// `locked` | `finalizing` | `finalized_not_posted` | `posted`
     pub stage: String,
     /// Exact S1 armor persisted before delivery so the pending center can
@@ -767,9 +777,15 @@ impl RpcBackend {
         }
         crate::win_acl::restrict(&path)?;
         let bytes = std::fs::read(&path)?;
-        serde_json::from_slice(&bytes)
-            .map(Some)
-            .map_err(|e| FlintError::Invalid(format!("журнал RPC повреждён: {e}")))
+        let mut record: RpcSendRecord = serde_json::from_slice(&bytes)?;
+        if record.format_version > RPC_JOURNAL_FORMAT_VERSION {
+            return Err(FlintError::Invalid(format!(
+                "формат журнала RPC {} новее поддерживаемого {}: обновите Flint, денежные действия заблокированы",
+                record.format_version, RPC_JOURNAL_FORMAT_VERSION
+            )));
+        }
+        record.format_version = RPC_JOURNAL_FORMAT_VERSION;
+        Ok(Some(record))
     }
 
     /// Import records from the shared pre-profile directory, but only those
@@ -1046,6 +1062,7 @@ impl RpcBackend {
             destination: destination.to_string(),
             amount,
             confirmation: Some(confirmation),
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             stage: "locked".to_string(),
             request: Some(slatepack.clone()),
             attempts: 0,
@@ -1472,6 +1489,7 @@ impl RpcBackend {
             destination: destination.to_string(),
             amount,
             confirmation: None,
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             stage: "locking".to_string(),
             request: None,
             attempts: 0,
@@ -1608,9 +1626,16 @@ impl RpcBackend {
         }
         crate::win_acl::restrict(&path)?;
         let bytes = std::fs::read(&path)?;
-        serde_json::from_slice(&bytes)
-            .map(Some)
-            .map_err(|e| FlintError::Invalid(format!("журнал приёма RPC повреждён: {e}")))
+        let mut record: RpcReceiveRecord = serde_json::from_slice(&bytes)
+            .map_err(|e| FlintError::Invalid(format!("журнал приёма RPC повреждён: {e}")))?;
+        if record.format_version > RPC_JOURNAL_FORMAT_VERSION {
+            return Err(FlintError::Invalid(format!(
+                "формат журнала приёма RPC {} новее поддерживаемого {}: обновите Flint, денежные действия заблокированы",
+                record.format_version, RPC_JOURNAL_FORMAT_VERSION
+            )));
+        }
+        record.format_version = RPC_JOURNAL_FORMAT_VERSION;
+        Ok(Some(record))
     }
 
     /// Sender address of an incoming slatepack, decrypted with our address key.
@@ -1678,6 +1703,7 @@ impl RpcBackend {
             destination: "self".to_string(),
             amount,
             confirmation: None,
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             stage: "locking".to_string(),
             request: None,
             attempts: 0,
@@ -1861,6 +1887,7 @@ impl RpcBackend {
                 request: request.clone(),
                 sender: sender.clone(),
                 state: "intent".to_string(),
+                format_version: RPC_JOURNAL_FORMAT_VERSION,
                 created_at: chrono::Utc::now().timestamp_millis(),
             };
             self.save_receive(&intent)?;
@@ -1910,6 +1937,7 @@ impl RpcBackend {
             request: request.clone(),
             sender: sender.clone(),
             state: "received".to_string(),
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             created_at: chrono::Utc::now().timestamp_millis(),
         };
         crate::crash::receive_journal_write()?;
@@ -2290,6 +2318,7 @@ mod tests {
             request: None,
             sender: None,
             state: "intent".into(),
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             created_at: 0,
         };
         for error in ["timeout", "invalid slate", "DB Not Found"] {
@@ -2371,6 +2400,7 @@ mod tests {
             destination: "tgrin1dest".into(),
             amount: 7,
             confirmation: None,
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             stage: "finalizing".into(),
             request: None,
             attempts: 0,
@@ -2450,6 +2480,7 @@ mod tests {
             destination: "tgrin1dest".into(),
             amount: 7,
             confirmation: None,
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             stage: "locked".into(),
             request: None,
             attempts: 0,
@@ -2613,6 +2644,7 @@ mod tests {
             request: None,
             sender: None,
             state: "received".into(),
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             created_at: 0,
         };
         let first = json!({"id": "id", "amount": 1});
@@ -2638,6 +2670,7 @@ mod tests {
             request: Some(json!({"id": "id", "amount": 1})),
             sender: None,
             state: "received".into(),
+            format_version: RPC_JOURNAL_FORMAT_VERSION,
             created_at: 0,
         };
         let raw = serde_json::to_string(&record).expect("serialize");

@@ -10,7 +10,7 @@
 привязан к loopback, receive сверяет отпечаток S1, ошибки RPC-конфига
 возвращаются, Nostr URL проверяется разбором и имеет сетевые/размерные бюджеты,
 сохранённый открытый node_url заменяется локальным с предупреждением. Проверки:
-core 200, messenger 83 (+1 ignored), workspace 361 passed / 0 failed / 33 ignored;
+core 202, messenger 84 (+1 ignored), workspace 365 passed / 0 failed / 33 ignored;
 LNK1104 не воспроизвёлся. Подробности — evidence/security-fixes-20261030/README.md.
 iOS-находки остаются в mobile/GrinFlint.
 
@@ -107,6 +107,7 @@ BUILD-INFO не менялись; актуальные SHA-256 — в SHA256SUMS
 2026-10-30: маркер подтверждения отправки: `SendConfirmation` (network, address_index, destination, amount, fee, digest S1) хранится в `PendingSlate` и `RpcSendRecord`; `prepare` возвращает opaque token, `finalize` требует его и сверяет контекст, адрес, сумму, комиссию и digest. Старые pending без маркера fail-closed; автофинализация отправок из messenger отключена и уходит в `needs_review`. Core 199, workspace 359 passed / 0 failed / 33 ignored.
 2026-10-30: rollback-проверка pending: перед новой подписью backend обновляет outputs из ноды и сверяет входы S1; потраченный/ненайденный вход → `FailedRecoverable`/`failed_recoverable` и отказ, без подписи. Embedded — `retrieve_outputs(refresh)`, RPC — `retrieve_outputs` + разбор S1. Тест `rollback_guard_rejects_spent_or_missing_inputs`; живой сценарий backup→send→restore ещё не прогнан. Core 200, workspace 360.
 2026-10-30: обнаружение второй копии профиля: на Windows runtime держит эксклюзивный lock `%LOCALAPPDATA%\Flint\locks\<network>-<address>.lock` (share=0) на всё время открытого кошелька; вторая копия с тем же адресом получает `clone_warning`, UI показывает баннер, отправка/подпись блокируются, lock освобождается при lock/shutdown/смене профиля. Тест `clone_guard_is_exclusive_per_address`. Ограничение: другой пользователь Windows или другая машина не видит lock; ключ — текущий адрес профиля. Workspace 361.
+2026-10-30: закрыты формат и время: `format.json` (формат 2) проверяется до чтения данных, `PendingSlate`/RPC-журналы получили `format_version` и отказывают более новому формату; TTL/дедуп/очередь ограничены `MAX_TTL_SECS` от момента получения, будущие часы отправителя не продлевают хранение. Добавлен e2e-тест подделки S1 с тем же UUID (изменённая сумма отклонена). Core 202, messenger 84, workspace 365.
 
 Повторный полный локальный CI на закоммиченном дереве (`64793c5`): PASS —
 324 passed, 0 failed, 32 ignored; i18n ok (216 static entries); Slint собран;

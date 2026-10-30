@@ -108,6 +108,38 @@ pub struct SettingsUpdateOutcome {
     pub restart_error: Option<String>,
 }
 
+/// Bump when the on-disk layout of journals/history changes incompatibly.
+pub const DATA_FORMAT_VERSION: u32 = 2;
+
+/// Refuse to open data written by a newer Flint. A marker file is cheap and
+/// checked before any wallet/journal/history reader runs, so an unknown format
+/// cannot be mistaken for empty data. Old binaries cannot know the marker; this
+/// protects future versions from silent downgrade, not the reverse.
+pub(crate) fn ensure_data_format(root: &std::path::Path) -> Result<(), String> {
+    let path = root.join("format.json");
+    if !path.exists() {
+        // Legacy root: stamp it only when writable; failure to stamp does not
+        // block reading legacy data.
+        let payload = serde_json::json!({"format_version": DATA_FORMAT_VERSION});
+        let _ = std::fs::write(&path, payload.to_string());
+        return Ok(());
+    }
+    let raw = std::fs::read_to_string(&path)
+        .map_err(|error| format!("format.json: не удалось прочитать: {error}"))?;
+    let value: serde_json::Value =
+        serde_json::from_str(&raw).map_err(|error| format!("format.json: повреждён: {error}"))?;
+    let version = value
+        .get("format_version")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(0) as u32;
+    if version > DATA_FORMAT_VERSION {
+        return Err(format!(
+            "данные созданы более новой версией Flint (формат {version}, поддерживается {DATA_FORMAT_VERSION}): обновите приложение, чтобы не потерять историю"
+        ));
+    }
+    Ok(())
+}
+
 #[derive(Clone)]
 pub struct WalletRuntime {
     wallet: Arc<Mutex<WalletService>>,
@@ -873,5 +905,35 @@ fn disk_space(_path: &std::path::Path) -> Result<(u64, u64), String> {
 impl Default for WalletRuntime {
     fn default() -> Self {
         Self::new()
+    }
+}
+#[cfg(test)]
+mod format_tests {
+    use super::*;
+
+    #[test]
+    fn newer_data_format_is_refused() {
+        let root = std::env::temp_dir().join(format!(
+            "flint-format-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&root).expect("root");
+        std::fs::write(
+            root.join("format.json"),
+            format!(r#"{{"format_version": {}}}"#, DATA_FORMAT_VERSION + 1),
+        )
+        .expect("write");
+        assert!(ensure_data_format(&root).is_err());
+        std::fs::write(
+            root.join("format.json"),
+            format!(r#"{{"format_version": {}}}"#, DATA_FORMAT_VERSION),
+        )
+        .expect("write");
+        assert!(ensure_data_format(&root).is_ok());
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

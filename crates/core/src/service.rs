@@ -1484,6 +1484,7 @@ impl WalletService {
                 .map_err(FlintError::wallet)?,
             request: None,
             confirmation: Some(confirmation),
+            format_version: JOURNAL_FORMAT_VERSION,
             state: Some(TxState::Prepared),
             attempts: 0,
             last_error: None,
@@ -1947,6 +1948,7 @@ impl WalletService {
                 .map_err(FlintError::wallet)?,
             request: Some(request.clone()),
             confirmation: None,
+            format_version: JOURNAL_FORMAT_VERSION,
             state: Some(TxState::ReceiveIntent),
             attempts: 0,
             last_error: None,
@@ -1991,6 +1993,7 @@ impl WalletService {
                 .map_err(FlintError::wallet)?,
             request: Some(request.clone()),
             confirmation: None,
+            format_version: JOURNAL_FORMAT_VERSION,
             state: Some(TxState::ResponseReceived),
             attempts: 0,
             last_error: None,
@@ -2289,7 +2292,15 @@ impl WalletService {
         }
         crate::win_acl::restrict(&path)?;
         let raw = fs::read_to_string(path)?;
-        Ok(serde_json::from_str(&raw)?)
+        let mut pending: PendingSlate = serde_json::from_str(&raw)?;
+        if pending.format_version > JOURNAL_FORMAT_VERSION {
+            return Err(FlintError::Invalid(format!(
+                "формат журнала {} новее поддерживаемого {}: обновите Flint, денежные действия заблокированы",
+                pending.format_version, JOURNAL_FORMAT_VERSION
+            )));
+        }
+        pending.format_version = JOURNAL_FORMAT_VERSION;
+        Ok(pending)
     }
 
     /// Move a finished record into `archive/` instead of deleting it. This is
@@ -2402,6 +2413,13 @@ fn lc_mut(
     .map_err(FlintError::wallet)
 }
 
+/// Bump when a field changes meaning; older records default to 1.
+const JOURNAL_FORMAT_VERSION: u32 = 2;
+
+fn legacy_journal_version() -> u32 {
+    1
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct PendingSlate {
     kind: String,
@@ -2418,6 +2436,9 @@ struct PendingSlate {
     /// cannot be finalized (fail-closed).
     #[serde(default)]
     confirmation: Option<crate::model::SendConfirmation>,
+    /// Format marker for forward-compatibility checks.
+    #[serde(default = "legacy_journal_version")]
+    format_version: u32,
     /// `None` in records written before the journal existed; `resolved_state`
     /// reconstructs the only plausible value from `kind`.
     #[serde(default)]
@@ -2820,6 +2841,7 @@ mod tests {
                 .expect("blank slate is versionable"),
             request: None,
             confirmation: None,
+            format_version: JOURNAL_FORMAT_VERSION,
             state: Some(TxState::Locked),
             attempts: 0,
             last_error: None,
@@ -3014,11 +3036,76 @@ mod tests {
             slate: versioned,
             request: None,
             confirmation: Some(confirmation.clone()),
+            format_version: JOURNAL_FORMAT_VERSION,
             state: Some(TxState::Locked),
             attempts: 0,
             last_error: None,
         };
         (pending, confirmation)
+    }
+
+    #[test]
+    fn forged_s1_with_same_id_is_refused_end_to_end() {
+        use grin_wallet_libwallet::slatepack::{Slatepacker, SlatepackerArgs};
+
+        let root = fresh_root("forged-s1");
+        let mut service = WalletService::open_at(AppPaths::at(&root));
+        service
+            .create_wallet("Flint-Strong-1234!")
+            .expect("create receiver wallet");
+
+        let id = Uuid::new_v4();
+        let mut first = Slate::blank(2, false);
+        first.id = id;
+        first.amount = 1_000;
+        let packer = Slatepacker::new(SlatepackerArgs {
+            sender: None,
+            recipients: Vec::new(),
+            dec_key: None,
+        });
+        let first_armor = packer
+            .armor_slatepack(&packer.create_slatepack(&first).expect("slatepack"))
+            .expect("armor");
+        service
+            .prepare_receive(&first_armor)
+            .expect("first receive builds a response");
+
+        let mut changed = first;
+        changed.amount = 2_000;
+        let changed_armor = packer
+            .armor_slatepack(&packer.create_slatepack(&changed).expect("slatepack"))
+            .expect("armor");
+        let error = service
+            .prepare_receive(&changed_armor)
+            .expect_err("same id with another amount must be refused");
+        assert!(
+            error.to_string().contains("другим содержимым"),
+            "unexpected error: {error}"
+        );
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn newer_journal_format_blocks_load() {
+        let root = fresh_root("journal-version");
+        let service = WalletService::open_at(AppPaths::at(&root));
+        let id = Uuid::new_v4().to_string();
+        service
+            .save_pending(&id, &pending("send", 1))
+            .expect("save");
+        let path = service.pending_path(&id).expect("path");
+        let mut value: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).expect("read")).expect("json");
+        value["format_version"] = serde_json::json!(999);
+        std::fs::write(&path, serde_json::to_vec(&value).expect("json")).expect("write");
+        let error = service
+            .load_pending(&id)
+            .expect_err("newer format must fail");
+        assert!(
+            error.to_string().contains("новее поддерживаемого"),
+            "unexpected error: {error}"
+        );
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]

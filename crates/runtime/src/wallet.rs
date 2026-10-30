@@ -261,6 +261,14 @@ impl WalletRuntime {
     /// Argon2id envelope before upstream creates its database.
     pub fn create(&self, password: &str) -> Result<CreatedWallet, String> {
         self.scan.ensure_idle("создание кошелька")?;
+        let root = self
+            .wallet
+            .lock()
+            .map_err(|_| "кошелёк занят".to_string())?
+            .paths()
+            .root()
+            .to_path_buf();
+        crate::ensure_data_format(&root)?;
         if self.is_rpc() {
             return self.create_rpc(password);
         }
