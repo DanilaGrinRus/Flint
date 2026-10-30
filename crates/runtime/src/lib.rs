@@ -425,6 +425,19 @@ impl WalletRuntime {
         Ok(w.settings_view())
     }
 
+    /// Set or clear the Nostr relay. Separate from `relay_url` and validated by
+    /// the transport itself; an empty value disables the transport.
+    pub fn update_nostr_relay(
+        &self,
+        url: Option<String>,
+    ) -> Result<flint_core::model::SettingsView, String> {
+        let mut w = self
+            .wallet
+            .lock()
+            .map_err(|_| "кошелёк занят".to_string())?;
+        w.update_nostr_relay(url).map_err(|e| e.to_string())
+    }
+
     pub fn data_root_view(&self) -> Result<flint_core::config::DataRootView, String> {
         let w = self
             .wallet

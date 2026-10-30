@@ -196,6 +196,7 @@ mod tests {
     use super::*;
     use crate::envelope::{Identity, MessageKind};
     use crate::nostr::MemoryRelay;
+    use crate::nostr::WsRelay;
     use std::str::FromStr;
     use std::sync::Arc;
 
@@ -352,5 +353,152 @@ mod tests {
             .fetch(alice.address(), super::super::unix_now_secs(), 10)
             .expect("fetch");
         assert!(fetched.is_empty());
+    }
+
+    /// End-to-end drill over a real socket: a minimal in-process relay accepts
+    /// the gift wrap, answers OK, then serves it back on REQ and sends EOSE.
+    /// Loopback only; no public relay is touched.
+    #[test]
+    fn transport_roundtrip_over_loopback_relay() {
+        use std::net::TcpListener;
+        use std::sync::Mutex as StdMutex;
+        use tungstenite::accept;
+
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let address = listener.local_addr().expect("addr");
+        let store: Arc<StdMutex<Vec<Event>>> = Arc::new(StdMutex::new(Vec::new()));
+        let server_store = store.clone();
+        std::thread::spawn(move || {
+            for stream in listener.incoming() {
+                let Ok(stream) = stream else { break };
+                let Ok(mut socket) = accept(stream) else {
+                    break;
+                };
+                loop {
+                    let Ok(message) = socket.read() else { break };
+                    let text = match message {
+                        tungstenite::Message::Text(text) => text.to_string(),
+                        tungstenite::Message::Close(_) => break,
+                        _ => continue,
+                    };
+                    let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) else {
+                        continue;
+                    };
+                    let Some(array) = value.as_array() else {
+                        continue;
+                    };
+                    match array.first().and_then(|v| v.as_str()) {
+                        Some("EVENT") => {
+                            let Some(raw) = array.get(1).cloned() else {
+                                continue;
+                            };
+                            let Ok(event) = serde_json::from_value::<Event>(raw) else {
+                                continue;
+                            };
+                            server_store.lock().expect("store").push(event.clone());
+                            let _ = socket.send(tungstenite::Message::Text(
+                                serde_json::json!(["OK", event.id, true, ""])
+                                    .to_string()
+                                    .into(),
+                            ));
+                        }
+                        Some("REQ") => {
+                            let subscription = array
+                                .get(1)
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("s")
+                                .to_string();
+                            let filter = array.get(2).cloned().unwrap_or_default();
+                            let events = server_store.lock().expect("store").clone();
+                            for event in events {
+                                if !event.kind.to_string().is_empty()
+                                    && filter["kinds"]
+                                        .as_array()
+                                        .map(|kinds| {
+                                            kinds
+                                                .iter()
+                                                .any(|k| k.as_u64() == Some(event.kind as u64))
+                                        })
+                                        .unwrap_or(true)
+                                    && filter["#p"]
+                                        .as_array()
+                                        .map(|tags| {
+                                            tags.iter().any(|tag| {
+                                                event
+                                                    .p_tags()
+                                                    .iter()
+                                                    .any(|p| Some(p.as_str()) == tag.as_str())
+                                            })
+                                        })
+                                        .unwrap_or(true)
+                                    && filter["since"]
+                                        .as_u64()
+                                        .map(|since| event.created_at >= since)
+                                        .unwrap_or(true)
+                                {
+                                    let _ = socket.send(tungstenite::Message::Text(
+                                        serde_json::json!(["EVENT", subscription, event])
+                                            .to_string()
+                                            .into(),
+                                    ));
+                                }
+                            }
+                            let _ = socket.send(tungstenite::Message::Text(
+                                serde_json::json!(["EOSE", subscription]).to_string().into(),
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        });
+
+        let alice_keys =
+            NostrKeys::from_hex("0000000000000000000000000000000000000000000000000000000000000001")
+                .expect("alice");
+        let bob_keys =
+            NostrKeys::from_hex("0000000000000000000000000000000000000000000000000000000000000002")
+                .expect("bob");
+        let alice = Identity::from_seed([11u8; 32], "tgrin").expect("alice id");
+        let bob = Identity::from_seed([22u8; 32], "tgrin").expect("bob id");
+        let mut directory = ContactDirectory::default();
+        directory
+            .insert_hex(&bob.address().to_string(), &bob_keys.public_hex())
+            .expect("bob key");
+        directory
+            .insert_hex(&alice.address().to_string(), &alice_keys.public_hex())
+            .expect("alice key");
+
+        let url = format!("ws://{}", address);
+        let alice_transport = NostrTransport::new(
+            WsRelay::new(&url).expect("relay"),
+            alice_keys,
+            directory.clone(),
+        );
+        let bob_transport =
+            NostrTransport::new(WsRelay::new(&url).expect("relay"), bob_keys, directory);
+
+        let envelope = Envelope::seal_default(
+            &alice,
+            bob.address(),
+            MessageKind::Text {
+                text: "over loopback".into(),
+            },
+        )
+        .expect("seal");
+        alice_transport.deliver(&envelope).expect("deliver");
+
+        // The relay's wrap timestamp is randomized; query from "now" minus the
+        // subscription window the transport builds.
+        let now = super::super::unix_now_secs();
+        let fetched = bob_transport.fetch(bob.address(), now, 10).expect("fetch");
+        assert_eq!(fetched.len(), 1, "delivered envelope must come back");
+        assert_eq!(fetched[0].id, envelope.id);
+        assert_eq!(
+            bob_transport
+                .ack(bob.address(), std::slice::from_ref(&envelope.id))
+                .expect("ack"),
+            1
+        );
     }
 }

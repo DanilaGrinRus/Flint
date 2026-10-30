@@ -276,6 +276,9 @@ export component AppWindow inherits Window {
     in-out property <[ContactRow]> messenger-contacts: [];
     in-out property <string> messenger-contact-address: "";
     in-out property <string> messenger-contact-name: "";
+    in-out property <string> messenger-contact-nostr: "";
+    in-out property <string> messenger-nostr-key: "";
+    in-out property <string> messenger-transport: "";
     in-out property <string> messenger-recovery-password: "";
     in-out property <bool> messenger-busy: false;
     in-out property <bool> show-send: false;
@@ -329,6 +332,7 @@ export component AppWindow inherits Window {
     in-out property <string> profile-create-note: "";
     in-out property <string> settings-node-url: "";
     in-out property <string> settings-relay: "";
+    in-out property <string> settings-nostr-relay: "";
     in-out property <string> settings-min-conf: "10";
     in-out property <string> settings-active-data-dir: "";
     in-out property <string> settings-data-dir: "";
@@ -369,7 +373,7 @@ export component AppWindow inherits Window {
     callback auto-process-toggled(bool);
     callback messenger-send-clicked(string, string);
     callback messenger-inbox-clicked();
-    callback messenger-contact-save-clicked(string, string);
+    callback messenger-contact-save-clicked(string, string, string);
     callback messenger-contact-delete-clicked(string);
     callback messenger-history-clicked(string);
     callback messenger-block-clicked(string, bool);
@@ -395,6 +399,7 @@ export component AppWindow inherits Window {
     callback seed-reveal-clicked(string);
     callback seed-migrate-clicked(string, string, bool);
     callback settings-save-clicked(string, string, string, string, string);
+callback settings-nostr-save-clicked(string);
     callback settings-data-dir-browse-clicked();
     callback settings-data-dir-save-clicked(string);
     callback tor-start-clicked();
@@ -1915,6 +1920,22 @@ export component AppWindow inherits Window {
                     text <=> root.settings-relay;
                     accessible-label: "Relay URL";
                 }
+                Text { text: "Nostr relay (wss://)"; color: Theme.muted-2; font-size: 13px; }
+                HorizontalLayout {
+                    spacing: 8px;
+                    LineEdit {
+                        horizontal-stretch: 1;
+                        text <=> root.settings-nostr-relay;
+                        placeholder-text: "wss://…";
+                        accessible-label: "Nostr relay";
+                    }
+                    ActionButton {
+                        label: @tr("Сохранить");
+                        kind: "secondary";
+                        width: 120px;
+                        clicked => { root.settings-nostr-save-clicked(root.settings-nostr-relay); }
+                    }
+                }
                 Text { text: @tr("Минимум подтверждений"); color: Theme.muted-2; font-size: 13px; }
                 LineEdit {
                     text <=> root.settings-min-conf;
@@ -2347,6 +2368,17 @@ export component AppWindow inherits Window {
                         }
                         Text { text: root.clipboard-note; color: Theme.accent; font-size: 10px; vertical-alignment: center; }
                     }
+                    if root.messenger-transport != "" : Text {
+                        text: @tr("Транспорт: ") + root.messenger-transport;
+                        color: Theme.muted-2;
+                        font-size: 11px;
+                    }
+                    if root.messenger-nostr-key != "" : Text {
+                        text: "Nostr: " + root.messenger-nostr-key;
+                        color: Theme.muted-2;
+                        font-family: "Cascadia Mono";
+                        font-size: 10px;
+                    }
                 }
                 Rectangle { horizontal-stretch: 1; }
                 VerticalLayout {
@@ -2759,6 +2791,13 @@ export component AppWindow inherits Window {
                         accessible-label: @tr("Адрес контакта");
                         edited(text) => { root.messenger-error = ""; }
                     }
+                    Text { text: @tr("Nostr-ключ (необязательно)"); color: Theme.muted-2; font-size: 12px; }
+                    LineEdit {
+                        text <=> root.messenger-contact-nostr;
+                        placeholder-text: @tr("64 hex символа");
+                        accessible-label: @tr("Nostr-ключ контакта");
+                        edited(text) => { root.messenger-error = ""; }
+                    }
                     if root.messenger-error != "": Text { text: root.messenger-error; color: Theme.danger; font-size: 12px; wrap: word-wrap; }
                     Text { text: @tr("Используйте адрес собеседника."); color: Theme.muted; font-size: 11px; }
                     Rectangle { vertical-stretch: 1; }
@@ -2781,7 +2820,7 @@ export component AppWindow inherits Window {
                             kind: "primary";
                             width: 150px;
                             enabled: !root.messenger-busy;
-                            clicked => { root.messenger-contact-save-clicked(root.messenger-contact-address, root.messenger-contact-name); }
+                            clicked => { root.messenger-contact-save-clicked(root.messenger-contact-address, root.messenger-contact-name, root.messenger-contact-nostr); }
                         }
                     }
                 }
@@ -2985,6 +3024,7 @@ export component AppWindow inherits Window {
         }
     }
 }
+
 
 
 

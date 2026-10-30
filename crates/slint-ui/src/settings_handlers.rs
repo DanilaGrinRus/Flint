@@ -49,6 +49,7 @@ pub fn install(app: &AppWindow, wallet: WalletRuntime, pending_gate: SharedPendi
                     app.set_settings_network(view.network.into());
                     app.set_settings_node_url(view.node_url.into());
                     app.set_settings_relay(view.relay_url.into());
+                    app.set_settings_nostr_relay(view.nostr_relay_url.into());
                     app.set_settings_min_conf(view.min_confirmations.to_string().into());
                     app.set_settings_note("".into());
                     app.set_settings_warning(view.settings_warning.into());
@@ -60,6 +61,30 @@ pub fn install(app: &AppWindow, wallet: WalletRuntime, pending_gate: SharedPendi
 
     {
         let weak = app.as_weak();
+        app.on_settings_nostr_save_clicked({
+            let weak = weak.clone();
+            let wallet = wallet_source.clone();
+            move |url| {
+                let url = url.to_string();
+                if let Some(app) = weak.upgrade() {
+                    app.set_settings_error("".into());
+                    app.set_settings_note("".into());
+                }
+                match wallet.update_nostr_relay(Some(url)) {
+                    Ok(view) => {
+                        if let Some(app) = weak.upgrade() {
+                            app.set_settings_nostr_relay(view.nostr_relay_url.into());
+                            app.set_settings_note("Nostr relay сохранён".into());
+                        }
+                    }
+                    Err(error) => {
+                        if let Some(app) = weak.upgrade() {
+                            app.set_settings_error(i18n::tr(&error).into());
+                        }
+                    }
+                }
+            }
+        });
         app.on_settings_data_dir_browse_clicked(move || {
             let initial = match weak.upgrade() {
                 Some(app)

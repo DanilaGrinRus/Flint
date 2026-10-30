@@ -31,6 +31,7 @@ pub fn install(
             let status = wallet.messenger_status();
             let contacts = wallet.messenger_contacts();
             let blocked = wallet.messenger_blocked();
+            let nostr_identity = wallet.messenger_nostr_identity();
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(app) = weak.upgrade() {
                     if app.get_wallet_generation() as u64 != generation {
@@ -58,6 +59,11 @@ pub fn install(
                             presentation::contact_rows(&contacts),
                         )));
                     }
+                    if let Ok(identity) = &nostr_identity {
+                        if let Some(key) = identity["public_key"].as_str() {
+                            app.set_messenger_nostr_key(key.into());
+                        }
+                    }
                     if let Ok(blocked) = blocked {
                         app.set_messenger_blocked(presentation::blocked_text(&blocked).into());
                         app.set_messenger_blocked_addresses(slint::ModelRc::new(
@@ -71,16 +77,18 @@ pub fn install(
                             app.set_messenger_address_short(
                                 short_address(messenger_address).into(),
                             );
-                            let direct = status["direct"].as_bool().unwrap_or(false);
+                            let transport = status["transport"].as_str().unwrap_or("relay");
+                            let transport_label = match transport {
+                                "nostr" => "Nostr",
+                                "direct" => "прямой onion",
+                                _ => "relay",
+                            };
+                            app.set_messenger_transport(transport_label.into());
                             let key = status["history_key"].as_bool().unwrap_or(false);
                             let mut line = format!(
                                 "{} · {} · {}",
                                 status["network"].as_str().unwrap_or("?"),
-                                if direct {
-                                    "прямой onion"
-                                } else {
-                                    "relay"
-                                },
+                                transport_label,
                                 if key {
                                     "ключ истории открыт"
                                 } else {
@@ -336,11 +344,12 @@ pub fn install(
     {
         let weak = app.as_weak();
         let wallet = wallet_source.clone();
-        app.on_messenger_contact_save_clicked(move |address, name| {
+        app.on_messenger_contact_save_clicked(move |address, name, nostr| {
             let weak = weak.clone();
             let wallet = wallet.clone();
             let address = address.to_string();
             let name = name.to_string();
+            let nostr = nostr.to_string();
             let saved_address = address.clone();
             let saved_name = name.clone();
             if let Some(app) = weak.upgrade() {
@@ -348,7 +357,11 @@ pub fn install(
             }
             let generation = wallet.context_generation();
             thread::spawn(move || {
-                let result = wallet.messenger_contact_save(&address, &name);
+                let result = if nostr.trim().is_empty() {
+                    wallet.messenger_contact_save(&address, &name)
+                } else {
+                    wallet.messenger_contact_save_nostr(&address, &name, Some(nostr.as_str()))
+                };
                 let contacts = wallet.messenger_contacts().ok();
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = weak.upgrade() {
