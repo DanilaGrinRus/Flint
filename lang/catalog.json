@@ -2339,6 +2339,18 @@
     {
       "key": "ответ мог быть потерян; повторный приём запрещён, проверьте журнал",
       "en": "the reply may be lost; do not receive again, check the journal"
+    },
+    {
+      "key": "Нода догоняет цепь: транзакция может быть отвергнута сетью, а входы останутся заблокированы до отмены.",
+      "en": "The node is still syncing: the transaction may be rejected by the network and its inputs stay locked until cancelled."
+    },
+    {
+      "key": "Разрешить отправку при несинхронизированной ноде",
+      "en": "Allow sending while the node is not synced"
+    },
+    {
+      "key": "нода догоняет цепь: транзакция может быть отвергнута сетью, а входы останутся заблокированы до отмены",
+      "en": "the node is still syncing: the transaction may be rejected by the network and its inputs stay locked until cancelled"
     }
   ]
 }
