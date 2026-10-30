@@ -1,6 +1,6 @@
 # Flint — фактическое состояние
 
-Актуализировано: 2026-10-29. Это единственный текущий статус desktop-проекта.
+Актуализировано: 2026-10-30. Это единственный текущий статус desktop-проекта.
 История изменений хранится в Git; правила работы — в [AGENTS.md](../AGENTS.md).
 
 **DEV BUILD: не аудирован, не для реальных средств. Сеть — testnet.**
@@ -78,6 +78,9 @@ BUILD-INFO не менялись; актуальные SHA-256 — в SHA256SUMS
 сохранён вне дерева (`C:\DHW-backups\delivery-20261029\`).
 
 2026-10-30: заложен Nostr-транспорт messenger (ADR NOSTR-1, контракт в [MESSENGER.md](contracts/MESSENGER.md)): NIP-44 v2 с официальными векторами, события NIP-01/BIP-340, NIP-59 seal/gift wrap, отдельный transport key на профиль, Transport-обёртка с MemoryRelay; 14 новых тестов, lint-messenger 73/73. Зависимости secp256k1/chacha20/hmac, vendor пересобран, offline-резолв проверен. WebSocket-клиент relay добавлен (`WsRelay`, rustls+ring, таймауты, OK/REQ/EOSE): live-проба чтения на `wss://nos.lol` PASS, публичный relay damus отвечает `auth-required` (NIP-42 в v1 нет). Проводка: настройка `nostr_relay_url` (отдельно от `relay_url`), поле `nostr` у контакта, `AppTransport::Nostr` и поле статуса `transport`. UI: настройки разбиты на разделы «Профиль и язык», «Seed и пароль», «Relay», «Tor», «Нода и данные»; поле Nostr relay, Nostr-ключ в диалоге контакта, свой ключ с кнопкой копирования в панели контактов. Loopback end-to-end drill (publish → OK → REQ → EVENT → EOSE → fetch → ack по реальному сокету) — PASS; 77 тестов messenger. Визуальная проверка в реальном окне (одноразовый testnet-профиль) — PASS, evidence/ui-nostr-20261030; копирование ключа проверено через буфер. Остаются: публикация на внешнем relay (NIP-42), приёмка зависимостей и поставка.
+2026-10-30: UI-полировка. Собственный набор иконок 24×24 (навигация, действия, пустые состояния); `ActionButton` во всех кнопках вместо `Button` (primary/secondary/ghost/danger, контурный disabled); настройки разбиты на разделы «Профиль и язык», «Seed и пароль», «Relay», «Tor», «Нода и данные»; «История» переверстана (шапка, «Очередь»/«Операции» в ScrollView, пустые состояния, закреплённый подвал); «Получение» и «Безопасность» — прокрутка с закреплённым подвалом, QR 160×160 pixelated. Проверено в окне 1300×900 и 1000×800; evidence/ui-icons-20261030, ui-polish-20261030, ui-history-20261030, ui-buttons-20261030. Тесты: 342 passed / 0 failed / 33 ignored; flint-slint 21. Остаётся: визуальная проверка диалога «Отправка» (в тестовом профиле недоступна), новая поставка, публикация Nostr на внешнем relay.
+
+2026-10-30: приёмка зависимостей текущего дерева — RustSec PASS (db 99670cfc0bc5, lock 449647BDF4CE; 2 accepted, 0 unaccepted, 17 warnings), SBOM 1161 компонент (1155 cargo + 6 native) сгенерирован и проверен; evidence/deps-20261030. Новые зависимости Nostr непринятых advisories не добавили. Поставка не обновлена: dist/0.1.69-cleanup-20261029 относится к прошлой сборке.
 
 Повторный полный локальный CI на закоммиченном дереве (`64793c5`): PASS —
 324 passed, 0 failed, 32 ignored; i18n ok (216 static entries); Slint собран;
