@@ -309,6 +309,7 @@ function Invoke-DiskFullSimulation {
     $before = Get-ReceiveActivity
     $send = Invoke-Success "A" @("send", $DestB, "$Amount")
     $id = Get-SlateId $send.Out
+    $confirmation = Get-Confirmation $send.Out
     $slateFile = Join-Path $runDir "disk-full-slate1.txt"
     Save-Slatepack $send.Out $slateFile
 
@@ -378,6 +379,7 @@ try {
         $before = Get-ReceiveActivity
         $send = Invoke-Success "A" @("send", $DestB, "$Amount")
         $id = Get-SlateId $send.Out
+        $confirmation = Get-Confirmation $send.Out
         $slateFile = Join-Path $runDir "$Stage-slate1.txt"
         Save-Slatepack $send.Out $slateFile
 
@@ -427,4 +429,5 @@ try {
     Remove-Item Env:FLINT_SIMULATE_RECEIVE_DISK_FULL -ErrorAction SilentlyContinue
     Remove-Item Env:FLINT_WALLET_PASS -ErrorAction SilentlyContinue
 }
+
 

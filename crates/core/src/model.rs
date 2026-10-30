@@ -147,12 +147,16 @@ pub struct SendConfirmation {
 }
 
 impl SendConfirmation {
-    pub fn token(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string(self)
+    /// Opaque URL-safe token, safe for argv/env and logs-free UI plumbing.
+    pub fn token(&self) -> String {
+        let bytes = serde_json::to_vec(self).unwrap_or_default();
+        base64::encode_config(bytes, base64::URL_SAFE_NO_PAD)
     }
 
-    pub fn from_token(token: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(token)
+    pub fn from_token(token: &str) -> Result<Self, String> {
+        let bytes = base64::decode_config(token, base64::URL_SAFE_NO_PAD)
+            .map_err(|error| format!("token: {error}"))?;
+        serde_json::from_slice(&bytes).map_err(|error| format!("token: {error}"))
     }
 }
 

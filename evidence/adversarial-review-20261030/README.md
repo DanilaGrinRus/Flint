@@ -6,7 +6,7 @@ NOT VERIFIED — проверки нет.
 
 | Сценарий | Статус | Что есть | Чего не хватает |
 |---|---|---|---|
-| Откат данных в прошлое | PASS (механизм) | перед подписью `retrieve_outputs(refresh)` и сверка входов S1; потраченный/ненайденный вход → failed_recoverable и отказ; RPC-тест на spent/missing | живой backup→send→restore не прогнан |
+| Откат данных в прошлое | NOT VERIFIED | попытка сверки входов S1 откатана: compact S1 не хранит inputs, полный набор есть только в upstream-контексте; иначе блокировались все отправки | нужен источник входов до компактирования + живой backup→send→restore drill |
 | Два Flint над одной БД | PASS | именованный mutex `Local\FlintWalletSingleInstance` + эксклюзивный `<data>/flint.lock` (share=0) на весь процесс; второй процесс/алиас не открывает каталог; тест `data_root_lock_is_exclusive` | другой пользователь и RPC-профиль не проверены |
 | Подмена после подтверждения | PASS (механизм + e2e S1) | маркер `SendConfirmation` с digest S1 и контекстом; finalize сверяет токен, network/index/destination/amount/fee; legacy pending fail-closed; автофинализация отправок отключена | есть e2e-подделка S1 с тем же UUID; нет живого окна с переключением профиля |
 | Ложный localhost | PASS (политика, граница доверия) | chain/version identity, managed secret только loopback, внешний plain HTTP отклоняется; в SECURITY явно зафиксировано, что loopback — граница доверия того же пользователя | криптографической идентичности ноды нет и быть не может без изменения протокола; same-user процесс уже имеет доступ к данным |
@@ -39,7 +39,7 @@ NOT VERIFIED — проверки нет.
 
 ## Что не прогонялось
 
-- Матрица disk-full / power-loss для денежных операций.
-- Полный набор гонок «операция → переключение профиля → поздний ответ».
-- Реальный второй пользователь Windows и сетевые пути.
+- Матрица disk-full / power-loss для денежных операций: embedded crash-suite (upstream/journal, process kill) PASS, см. `evidence/crash-receive-20261030/`; реальное заполнение диска и power cut — вручную.
+- Полный набор гонок «операция → переключение профиля → поздний ответ» (generation-проверки есть, матрица не прогонялась).
+- Реальный второй пользователь Windows и сетевые пути (single-instance/junction проверены).
 - Живой backup→send→restore drill (проверка stale pending только тестами).

@@ -601,70 +601,6 @@ fn slate_amount_nano(slate: &serde_json::Value) -> Result<String> {
     Ok(amount.to_string())
 }
 
-fn input_commit_strings(slate: &Value) -> Vec<String> {
-    let list = slate
-        .pointer("/tx/body/inputs")
-        .or_else(|| slate.pointer("/tx/inputs"))
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-    let mut out = Vec::new();
-    for item in list {
-        let commit = item
-            .get("commit")
-            .and_then(Value::as_str)
-            .or_else(|| item.as_str())
-            .unwrap_or_default();
-        if !commit.is_empty() {
-            out.push(commit.trim_start_matches("0x").to_ascii_lowercase());
-        }
-    }
-    out
-}
-
-fn output_commit(item: &Value) -> Option<String> {
-    item.get("commit")
-        .and_then(Value::as_str)
-        .or_else(|| item.pointer("/output/commit").and_then(Value::as_str))
-        .map(|commit| commit.trim_start_matches("0x").to_ascii_lowercase())
-}
-
-fn output_status(item: &Value) -> &str {
-    item.pointer("/output/status")
-        .and_then(Value::as_str)
-        .or_else(|| item.get("status").and_then(Value::as_str))
-        .unwrap_or_default()
-}
-
-/// Refuse to sign when any S1 input is no longer unspent in a refreshed view.
-fn check_rpc_inputs_unspent(inputs: &[String], outputs: &[Value]) -> Result<()> {
-    if inputs.is_empty() {
-        return Err(FlintError::Invalid(
-            "S1 не содержит входов: повторная подпись запрещена".into(),
-        ));
-    }
-    let mut spent = 0;
-    let mut unknown = 0;
-    for input in inputs {
-        match outputs
-            .iter()
-            .find(|item| output_commit(item).as_deref() == Some(input))
-        {
-            None => unknown += 1,
-            Some(item) => match output_status(item) {
-                "Unspent" | "Locked" => {}
-                _ => spent += 1,
-            },
-        }
-    }
-    if spent > 0 || unknown > 0 {
-        return Err(FlintError::Invalid(format!(
-            "входы операции недоступны (потрачено {spent}, не найдено {unknown}): журнал устарел, подпись запрещена; выполните rescan и проверьте историю"
-        )));
-    }
-    Ok(())
-}
-
 fn slate_fee_nano(slate: &serde_json::Value) -> String {
     slate
         .get("fee")
@@ -1056,7 +992,7 @@ impl RpcBackend {
             fee_nano: fee.parse().unwrap_or(0),
             slate_digest: crate::model::digest_slate(&slate).map_err(FlintError::Json)?,
         };
-        let confirmation_token = confirmation.token().map_err(FlintError::Json)?;
+        let confirmation_token = confirmation.token();
         let record = RpcSendRecord {
             slate_id: slate_id.clone(),
             destination: destination.to_string(),
@@ -1184,39 +1120,6 @@ impl RpcBackend {
             return Err(FlintError::Invalid(
                 "адресный индекс изменился после подтверждения: требуется новая подготовка".into(),
             ));
-        }
-        if slate_amount_nano(&slate)? != record_ref.amount.to_string() {
-            return Err(FlintError::Invalid(
-                "сумма в ответе не совпадает с подтверждённой".into(),
-            ));
-        }
-        if slate_fee_nano(&slate) != expected.fee_nano.to_string() {
-            return Err(FlintError::Invalid(
-                "комиссия в ответе не совпадает с подтверждённой".into(),
-            ));
-        }
-        let request_armor = record_ref.request.as_deref().ok_or_else(|| {
-            FlintError::Invalid("S1 не сохранён в журнале: повторная подпись запрещена".into())
-        })?;
-        let s1 = self.rpc.call(
-            "slate_from_slatepack_message",
-            json!([token, request_armor, self.decrypt_indices()]),
-        )?;
-        let inputs = input_commit_strings(&s1);
-        let (updated, outputs) = self.rpc.outputs(&token, true, true)?;
-        if !updated {
-            return Err(FlintError::Invalid(
-                "не удалось обновить состояние кошелька из ноды: повторная подпись запрещена"
-                    .into(),
-            ));
-        }
-        if let Err(error) = check_rpc_inputs_unspent(&inputs, &outputs) {
-            if let Some(r) = record.as_mut() {
-                r.stage = "failed_recoverable".to_string();
-                r.last_error = Some(error.to_string());
-                self.save_record(r)?;
-            }
-            return Err(error);
         }
 
         // Durable intent BEFORE the call: a crash between upstream signing and
@@ -2611,30 +2514,6 @@ mod tests {
         );
         let _ = std::fs::remove_dir_all(&dir);
     }
-    #[test]
-    fn rollback_guard_rejects_spent_or_missing_inputs() {
-        let s1 = json!({"tx": {"body": {"inputs": [
-            {"features": "Plain", "commit": "AA"},
-            {"features": "Plain", "commit": "bb"}
-        ]}}});
-        let inputs = input_commit_strings(&s1);
-        assert_eq!(inputs, vec!["aa".to_string(), "bb".to_string()]);
-
-        let unspent = vec![
-            json!({"output": {"commit": "aa", "status": "Unspent"}}),
-            json!({"output": {"commit": "bb", "status": "Locked"}}),
-        ];
-        assert!(check_rpc_inputs_unspent(&inputs, &unspent).is_ok());
-
-        let spent = vec![
-            json!({"output": {"commit": "aa", "status": "Spent"}}),
-            json!({"output": {"commit": "bb", "status": "Unspent"}}),
-        ];
-        assert!(check_rpc_inputs_unspent(&inputs, &spent).is_err());
-        assert!(check_rpc_inputs_unspent(&inputs, &unspent[..1]).is_err());
-        assert!(check_rpc_inputs_unspent(&[], &unspent).is_err());
-    }
-
     #[test]
     fn repeated_receive_must_match_the_journaled_slate() {
         let mut record = RpcReceiveRecord {

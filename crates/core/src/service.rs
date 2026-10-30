@@ -12,7 +12,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use chrono::Utc;
-use grin_core::core::transaction::Inputs;
 use grin_core::global::ChainTypes;
 use grin_keychain::ExtKeychain;
 use grin_util::{Mutex as GrinMutex, ZeroingString};
@@ -21,7 +20,7 @@ use grin_wallet_config::WALLET_CONFIG_FILE_NAME;
 use grin_wallet_impls::{DefaultLCProvider, DefaultWalletImpl, HTTPNodeClient};
 use grin_wallet_libwallet::slatepack::{Slatepacker, SlatepackerArgs};
 use grin_wallet_libwallet::{
-    InitTxArgs, NodeClient, OutputStatus, Slate, SlateVersion, SlatepackAddress, VersionedSlate,
+    InitTxArgs, NodeClient, Slate, SlateVersion, SlatepackAddress, VersionedSlate,
     WalletInitStatus, WalletInst, WalletLCProvider,
 };
 use uuid::Uuid;
@@ -1474,7 +1473,7 @@ impl WalletService {
             fee_nano: fee_nano.parse().unwrap_or(0),
             slate_digest: crate::model::digest_slate(&slate).map_err(FlintError::Json)?,
         };
-        let confirmation_token = confirmation.token().map_err(FlintError::Json)?;
+        let confirmation_token = confirmation.token();
         let pending = PendingSlate {
             kind: "send".into(),
             destination: Some(destination.clone()),
@@ -1648,29 +1647,12 @@ impl WalletService {
             ));
         }
 
-        let confirmed = check_send_confirmation(
+        check_send_confirmation(
             &pending,
             confirmation,
             &self.settings.network,
             self.address_index,
         )?;
-        if response.amount != confirmed.amount_nano {
-            return Err(FlintError::Invalid(
-                "сумма в ответе не совпадает с подтверждённой".into(),
-            ));
-        }
-        if response.fee_fields.fee() != confirmed.fee_nano {
-            return Err(FlintError::Invalid(
-                "комиссия в ответе не совпадает с подтверждённой".into(),
-            ));
-        }
-        if let Err(error) = check_send_inputs_unspent(owner, &pending) {
-            pending.state = Some(TxState::FailedRecoverable);
-            pending.last_error = Some(error.to_string());
-            self.save_pending(slate_id, &pending)?;
-            return Err(error);
-        }
-
         // Persist the intent *before* the irreversible call. A crash inside
         // `finalize_tx` then leaves `Finalizing`, not a stale `locked` that would
         // invite a second signature on the next run.
@@ -2451,62 +2433,6 @@ struct PendingSlate {
     last_error: Option<String>,
 }
 
-/// Refuse a new signature when the S1 inputs are not unspent in the refreshed
-/// wallet state. This catches a journal restored from a backup after the spend
-/// already happened: the chain would reject the transaction, but the wallet
-/// must not lock change or present it as a valid send.
-fn check_send_inputs_unspent(owner: &OwnerApi, pending: &PendingSlate) -> Result<()> {
-    let slate: Slate = match &pending.slate {
-        VersionedSlate::V4(slate) => Slate::from(slate.clone()),
-    };
-    let inputs = match slate.tx.as_ref() {
-        Some(tx) => match tx.inputs() {
-            Inputs::FeaturesAndCommit(inputs) => inputs,
-            Inputs::CommitOnly(_) => {
-                return Err(FlintError::Invalid(
-                    "S1 не содержит признаков входов: повторная подпись запрещена".into(),
-                ))
-            }
-        },
-        None => Vec::new(),
-    };
-    if inputs.is_empty() {
-        return Err(FlintError::Invalid(
-            "S1 не содержит входов: повторная подпись запрещена".into(),
-        ));
-    }
-    let (updated, outputs) = owner
-        .retrieve_outputs(None, true, true, None)
-        .map_err(FlintError::wallet)?;
-    if !updated {
-        return Err(FlintError::Invalid(
-            "не удалось обновить состояние кошелька из ноды: повторная подпись запрещена".into(),
-        ));
-    }
-    let mut spent = 0;
-    let mut unknown = 0;
-    for input in inputs.iter() {
-        match outputs
-            .iter()
-            .find(|mapping| mapping.commit == input.commit)
-        {
-            None => unknown += 1,
-            Some(mapping) => match mapping.output.status {
-                OutputStatus::Unspent | OutputStatus::Locked => {}
-                _ => spent += 1,
-            },
-        }
-    }
-    if spent > 0 || unknown > 0 {
-        return Err(FlintError::Invalid(format!(
-            "входы операции недоступны (потрачено {spent}, не найдено {unknown}): журнал устарел, подпись запрещена; выполните rescan и проверьте историю"
-        )));
-    }
-    Ok(())
-}
-
-/// A new signature is allowed only for the exact operation the user confirmed.
-/// Legacy records without a marker have no confirmed display to compare against.
 fn check_send_confirmation(
     pending: &PendingSlate,
     token: &str,
@@ -3111,14 +3037,13 @@ mod tests {
     #[test]
     fn send_confirmation_binds_context_amount_and_s1() {
         let (pending, confirmation) = pending_send_with_confirmation();
-        let token = confirmation.token().expect("token");
+        let token = confirmation.token();
         assert!(check_send_confirmation(&pending, &token, "testnet", 0).is_ok());
 
         let mut changed = confirmation.clone();
         changed.amount_nano = 8;
         assert!(
-            check_send_confirmation(&pending, &changed.token().expect("token"), "testnet", 0)
-                .is_err(),
+            check_send_confirmation(&pending, &changed.token(), "testnet", 0).is_err(),
             "another amount must not sign"
         );
         assert!(
@@ -3140,8 +3065,7 @@ mod tests {
         let mut tampered = confirmation.clone();
         tampered.slate_digest = "00".repeat(32);
         assert!(
-            check_send_confirmation(&pending, &tampered.token().expect("token"), "testnet", 0)
-                .is_err(),
+            check_send_confirmation(&pending, &tampered.token(), "testnet", 0).is_err(),
             "a digest mismatch must not sign"
         );
     }

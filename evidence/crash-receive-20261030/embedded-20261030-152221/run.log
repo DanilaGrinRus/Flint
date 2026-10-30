@@ -1,0 +1,6 @@
+Preflight: chain=test, sync_status=no_sync, tip=3315279, backend=embedded
+[embedded/upstream] PASS: тот же S2, один журнал, один TxReceived, finalize/post выполнен
+[embedded/journal] PASS: тот же S2, один журнал, один TxReceived, finalize/post выполнен
+== F-04/C receive crash-suite passed: embedded ==
+Evidence: C:\DHW\.tmp\crash-receive\20261030-152221-embedded-16161c29
+Process kill/fault injection не заменяют физический disk-full/power-loss.
