@@ -26,3 +26,20 @@ NOT VERIFIED — проверки нет.
   `mklink /J` завершился; в процессах остался один.
 
 Полный workspace на момент разбора: 358 passed / 0 failed / 33 ignored.
+## NIP-42 live acceptance
+
+Проверено с текущим клиентом (kind 1059, только чтение):
+`relay.damus.io` присылает AUTH, но отвечает своей ошибкой
+`relay needs serviceUrl to be configured before AUTH can work`;
+`relay.snort.social`, `relay.primal.net`, `nos.lol` не требуют AUTH для
+анонимного фильтра; `relay.nostr.bg` — resolve timeout, `nostr21.com`,
+`relay.nostrcheck.me`, `relay.nostr.net`, `nostr.mom` — connect timeout.
+Публичный relay с рабочим AUTH в этом окружении не найден: live acceptance
+остаётся **NOT VERIFIED**, клиентская часть закрыта loopback-тестом.
+
+## Что не прогонялось
+
+- Матрица disk-full / power-loss для денежных операций.
+- Полный набор гонок «операция → переключение профиля → поздний ответ».
+- Реальный второй пользователь Windows и сетевые пути.
+- Живой backup→send→restore drill (проверка stale pending только тестами).

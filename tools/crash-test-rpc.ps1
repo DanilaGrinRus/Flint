@@ -1,4 +1,4 @@
-﻿# Crash tests for the RPC wallet backend, on a live testnet node.
+# Crash tests for the RPC wallet backend, on a live testnet node.
 #
 # Simulates two process deaths at journal boundaries and checks that the next
 # process resumes without signing twice:
@@ -113,6 +113,8 @@ $send = Run-Cli @("send", $DataA, $PassA, $Dest, "$Amount")
 Remove-Item Env:FLINT_CRASH_AFTER_SEND
 if ($send.Code -ne 9) { throw "expected crash exit 9 after send, got $($send.Code): $($send.Err)" }
 $id = ($send.Out -split "`n" | Where-Object { $_ -like "SLATE_ID=*" } | Select-Object -First 1) -replace "SLATE_ID=([^ ]+).*", '$1'
+$confirmation = ($send.Out -split "`n" | Where-Object { $_ -like "CONFIRMATION=*" } | Select-Object -First 1) -replace "CONFIRMATION=([^ ]+).*", '$1'
+if (-not $confirmation) { throw "send produced no confirmation token: $($send.Out)" }
 $slate = ($send.Out -split "`n" | Where-Object { $_ -like "BEGINSLATEPACK*" } | Select-Object -First 1)
 if (-not $id -or -not $slate) { throw "send produced no slate before crash: $($send.Out)" }
 Set-Content "$Work/slate1.txt" -Value $slate -NoNewline
@@ -134,7 +136,7 @@ if (-not $response) { throw "receiver produced no response: $($recv.Err)" }
 Set-Content "$Work/slate2.txt" -Value $response -NoNewline
 
 $env:FLINT_CRASH_AFTER_FINALIZE = "1"
-$finalize = Run-Cli @("finalize", $DataA, $PassA, $id, "$Work/slate2.txt")
+$finalize = Run-Cli @("finalize", $DataA, $PassA, $id, "$Work/slate2.txt", $confirmation)
 Remove-Item Env:FLINT_CRASH_AFTER_FINALIZE
 if ($finalize.Code -ne 9) { throw "expected crash exit 9 after finalize, got $($finalize.Code): $($finalize.Err)" }
 Stop-Wallets
@@ -148,7 +150,7 @@ Write-Output "2) crash after finalize: journal finalized_not_posted, tx not publ
 
 # --- next process publishes the stored transaction, no second signing --------
 Stop-Wallets
-$resume = Run-Cli @("finalize", $DataA, $PassA, $id, "$Work/slate2.txt")
+$resume = Run-Cli @("finalize", $DataA, $PassA, $id, "$Work/slate2.txt", $confirmation)
 Stop-Wallets
 if ($resume.Code -ne 0) { throw "resume after crash failed: $($resume.Err)" }
 $pending = (Run-Cli @("pending", $DataA, $PassA)).Out
@@ -159,7 +161,7 @@ if ($pending -notmatch "state=posted") {
 Write-Output "3) resume in a new process: posted from stored tx (no re-sign)"
 
 # --- second finalize must be a no-op -----------------------------------------
-$again = Run-Cli @("finalize", $DataA, $PassA, $id, "$Work/slate2.txt")
+$again = Run-Cli @("finalize", $DataA, $PassA, $id, "$Work/slate2.txt", $confirmation)
 Stop-Wallets
 if ($again.Code -ne 0) { throw "second finalize returned error: $($again.Err)" }
 Write-Output "4) repeated finalize is idempotent"
@@ -203,3 +205,4 @@ Write-Output "5) stored tx kernel confirmed on chain: height=$($confirmed.height
 
 Write-Output "== crash test passed =="
 Write-Output "A after (may lag until wallet refresh): $(Balance $DataA $PassA)"
+

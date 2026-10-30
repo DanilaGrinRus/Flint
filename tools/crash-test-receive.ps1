@@ -1,4 +1,4 @@
-﻿# F-04/C: process-death tests for embedded and RPC receive recovery.
+# F-04/C: process-death tests for embedded and RPC receive recovery.
 #
 # Requires a ready local testnet node, two funded disposable wallets and a
 # `.crash-test-ok` marker in BOTH data roots. The script never creates wallets,
@@ -205,6 +205,12 @@ function Get-SlateId([string]$Text) {
     return $match.Groups[1].Value
 }
 
+function Get-Confirmation([string]$Text) {
+    $match = [regex]::Match($Text, 'CONFIRMATION=(\S+)')
+    if (-not $match.Success) { throw "CLI не вернул CONFIRMATION: $Text" }
+    return $match.Groups[1].Value
+}
+
 function Save-Slatepack([string]$Text, [string]$Path) {
     $lines = @($Text -split "\r?\n" | Where-Object { $_ -like "BEGINSLATEPACK*" })
     if ($lines.Count -ne 1) { throw "Ожидался один Slatepack в stdout, получено: $($lines.Count)" }
@@ -331,7 +337,7 @@ function Invoke-DiskFullSimulation {
     $after = Get-ReceiveActivity
     Assert-OneNewReceive $before $after
 
-    $finalize = Invoke-Success "A" @("finalize", $id, $responseFile)
+    $finalize = Invoke-Success "A" @("finalize", $id, $responseFile, $confirmation)
     if ($finalize.Out -notmatch "posted") { throw "Finalize не подтвердил post: $($finalize.Out)" }
     if ($Backend -eq "embedded") {
         $stored = Invoke-Success "A" @("kernel", $id)
@@ -400,7 +406,7 @@ try {
         Assert-SinglePending $id "ResponseReceived|response_received|received"
         Assert-OneNewReceive $before (Get-ReceiveActivity)
 
-        $finalize = Invoke-Success "A" @("finalize", $id, $responseFile)
+        $finalize = Invoke-Success "A" @("finalize", $id, $responseFile, $confirmation)
         if ($finalize.Out -notmatch "posted") { throw "Finalize не подтвердил post: $($finalize.Out)" }
         Write-Output "[$Backend/$Stage] PASS: тот же S2, один журнал, один TxReceived, finalize/post выполнен"
     }
@@ -421,3 +427,4 @@ try {
     Remove-Item Env:FLINT_SIMULATE_RECEIVE_DISK_FULL -ErrorAction SilentlyContinue
     Remove-Item Env:FLINT_WALLET_PASS -ErrorAction SilentlyContinue
 }
+

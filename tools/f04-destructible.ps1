@@ -1,4 +1,4 @@
-﻿# F-04: подготовка и проверка восстановления на одноразовой Windows VM.
+# F-04: подготовка и проверка восстановления на одноразовой Windows VM.
 #
 # Скрипт НЕ создаёт/заполняет VHD и НЕ выключает VM. Disk-full и жёсткое
 # отключение выполняет оператор по docs/ACCEPTANCE.md между
@@ -305,6 +305,12 @@ function Get-SlateId([string]$Text) {
     return $match.Groups[1].Value
 }
 
+function Get-Confirmation([string]$Text) {
+    $match = [regex]::Match($Text, 'CONFIRMATION=(\S+)')
+    if (-not $match.Success) { throw "CLI не вернул CONFIRMATION: $Text" }
+    return $match.Groups[1].Value
+}
+
 function Save-Slatepack([string]$Text, [string]$Path) {
     $lines = @($Text -split "\r?\n" | Where-Object { $_ -like "BEGINSLATEPACK*" })
     if ($lines.Count -ne 1) { throw "Ожидался один Slatepack, получено: $($lines.Count)" }
@@ -527,7 +533,7 @@ function Complete-Recovery {
     if ((Get-SavedResponse $id) -cne $saved) { throw "Повторный receive вернул другой S2" }
     $after = Get-ReceiveActivity
     Assert-OneNewReceive @($script:State.before_activity) $after
-    $finalize = Invoke-Success "A" @("finalize", $id, $responseFile)
+    $finalize = Invoke-Success "A" @("finalize", $id, $responseFile, [string]$script:State.confirmation)
     if ($finalize.Out -notmatch "posted") { throw "Finalize не подтвердил post" }
     if ($Backend -eq "embedded") {
         $stored = Invoke-Success "A" @("kernel", $id)
@@ -585,6 +591,7 @@ try {
         $before = Get-ReceiveActivity
         $send = Invoke-Success "A" @("send", $DestB, "$Amount")
         $id = Get-SlateId $send.Out
+        $script:State.confirmation = Get-Confirmation $send.Out
         $slateFile = Join-Path $script:RunDir "slate1.txt"
         Save-Slatepack $send.Out $slateFile
         $script:State.slate_id = $id
@@ -694,3 +701,4 @@ try {
     Remove-Item Env:FLINT_PAUSE_EVIDENCE_DIR -ErrorAction SilentlyContinue
     Remove-Item Env:FLINT_WALLET_PASS -ErrorAction SilentlyContinue
 }
+
