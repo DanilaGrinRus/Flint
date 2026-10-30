@@ -652,3 +652,15 @@ msgstr "Automatic finalization only for slatepacks from saved contacts; the resp
 
 msgid "Экспорт запроса"
 msgstr "Export request"
+
+msgid "Транспорт: "
+msgstr "Transport: "
+
+msgid "Nostr-ключ (необязательно)"
+msgstr "Nostr key (optional)"
+
+msgid "Nostr-ключ контакта"
+msgstr "Contact Nostr key"
+
+msgid "64 hex символа"
+msgstr "64 hex characters"

@@ -1079,6 +1079,26 @@
       "ctx": "",
       "key": "Экспорт запроса",
       "en": "Export request"
+    },
+    {
+      "ctx": "",
+      "key": "Транспорт: ",
+      "en": "Transport: "
+    },
+    {
+      "ctx": "",
+      "key": "Nostr-ключ (необязательно)",
+      "en": "Nostr key (optional)"
+    },
+    {
+      "ctx": "",
+      "key": "Nostr-ключ контакта",
+      "en": "Contact Nostr key"
+    },
+    {
+      "ctx": "",
+      "key": "64 hex символа",
+      "en": "64 hex characters"
     }
   ],
   "dynamic": [
