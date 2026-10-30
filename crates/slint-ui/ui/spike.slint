@@ -44,7 +44,7 @@ export struct PendingRow {
 
 component ActionButton inherits Rectangle {
     in property <string> label;
-    in property <string> icon: "";
+    in property <image> icon;
     in property <string> kind: "secondary";
     in property <bool> enabled: true;
     in property <length> button-height: 42px;
@@ -71,12 +71,17 @@ component ActionButton inherits Rectangle {
         height: parent.height;
         spacing: 8px;
         alignment: center;
-        if root.icon != "": Text {
-            text: root.icon;
-            color: root.kind == "primary" ? Theme.bg
-                : root.kind == "ghost" ? Theme.muted-2 : Theme.accent;
-            font-size: 15px;
-            vertical-alignment: center;
+        if root.icon.width > 0 : Rectangle {
+            width: 16px;
+            Image {
+                width: 16px;
+                height: 16px;
+                y: (parent.height - self.height) / 2;
+                source: root.icon;
+                colorize: root.kind == "primary" ? Theme.bg
+                    : root.kind == "ghost" ? Theme.muted-2 : Theme.accent;
+                image-fit: contain;
+            }
         }
         Text {
             text: root.label;
@@ -459,16 +464,18 @@ callback settings-nostr-save-clicked(string);
             Text { text: @tr("Кошелёк открыт"); color: Theme.muted-2; font-size: 13px; height: 38px; vertical-alignment: center; }
             ActionButton {
                 label: @tr("Заблокировать");
+                    icon: @image-url("assets/icons/lock.png");
                 kind: "secondary";
                 button-height: 38px;
-                width: 132px;
+                width: 154px;
                 clicked => { root.lock-clicked(); }
             }
             ActionButton {
                 label: @tr("Обновить");
+                    icon: @image-url("assets/icons/refresh.png");
                 kind: "secondary";
                 button-height: 38px;
-                width: 104px;
+                width: 126px;
                 clicked => { root.refresh-clicked(); }
             }
         }
@@ -688,7 +695,7 @@ callback settings-nostr-save-clicked(string);
                                     spacing: 8px;
                                     ActionButton {
                                         label: @tr("Получить");
-                                        icon: "↓";
+                                        icon: @image-url("assets/icons/receive.png");
                                         kind: "primary";
                                         button-height: 44px;
                                         width: root.width < 1100px ? 116px : 180px;
@@ -696,7 +703,7 @@ callback settings-nostr-save-clicked(string);
                                     }
                                     ActionButton {
                                         label: @tr("Отправить");
-                                        icon: "↑";
+                                        icon: @image-url("assets/icons/send.png");
                                         kind: "secondary";
                                         button-height: 44px;
                                         width: root.width < 1100px ? 116px : 180px;
@@ -743,12 +750,14 @@ callback settings-nostr-save-clicked(string);
                                 }
                                 ActionButton {
                                     label: @tr("Копировать адрес");
+                                        icon: @image-url("assets/icons/copy.png");
                                     kind: "secondary";
                                     horizontal-stretch: 1;
                                     clicked => { root.copy-address-clicked(); }
                                 }
                                 ActionButton {
                                     label: @tr("Показать QR");
+                                        icon: @image-url("assets/icons/qr.png");
                                     kind: "secondary";
                                     horizontal-stretch: 1;
                                     clicked => { root.show-qr = true; }
@@ -794,9 +803,9 @@ callback settings-nostr-save-clicked(string);
                                 }
                                 ActionButton {
                                     label: root.node-running ? @tr("Остановить ноду") : @tr("Запустить ноду");
-                                    icon: root.node-running ? "■" : "▸";
+                                    icon: root.node-running ? @image-url("assets/icons/stop.png") : @image-url("assets/icons/play.png");
                                     kind: "secondary";
-                                    width: 166px;
+                                    width: 182px;
                                     enabled: !root.node-busy;
                                     clicked => { root.node-toggle-clicked(); }
                                 }
@@ -872,7 +881,10 @@ callback settings-nostr-save-clicked(string);
                             if root.activity.length == 0: VerticalLayout {
                                 spacing: 10px;
                                 alignment: center;
-                                Text { text: "✉"; color: Theme.muted; font-size: 44px; horizontal-alignment: center; }
+                                HorizontalLayout {
+                                    alignment: center;
+                                    Image { source: @image-url("assets/icons/envelope.png"); colorize: Theme.muted; width: 44px; height: 44px; image-fit: contain; }
+                                }
                                 Text { text: @tr("Здесь появятся ваши операции"); color: Theme.text; font-size: 18px; horizontal-alignment: center; }
                                 Text {
                                     text: @tr("Получите первый перевод, чтобы увидеть историю.");
@@ -883,7 +895,7 @@ callback settings-nostr-save-clicked(string);
                                 }
                                 ActionButton {
                                     label: @tr("Как получить GRIN");
-                                    icon: "→";
+                                    icon: @image-url("assets/icons/chevron-right.png");
                                     kind: "ghost";
                                     clicked => { root.show-receive = true; }
                                 }
@@ -2477,9 +2489,10 @@ callback settings-nostr-save-clicked(string);
                 }
                 ActionButton {
                     label: root.width < 1100px ? @tr("Входящие") : @tr("Проверить входящие");
+                        icon: @image-url("assets/icons/inbox.png");
                     kind: "secondary";
                     button-height: 38px;
-                    width: root.width < 1100px ? 116px : 180px;
+                    width: root.width < 1100px ? 134px : 198px;
                     enabled: !root.messenger-busy;
                     clicked => { root.messenger-inbox-clicked(); }
                 }
@@ -2572,7 +2585,10 @@ callback settings-nostr-save-clicked(string);
                         if root.messenger-contacts.length == 0: VerticalLayout {
                             spacing: 8px;
                             alignment: center;
-                            Text { text: "✉"; color: Theme.muted; font-size: 32px; horizontal-alignment: center; }
+                            HorizontalLayout {
+                                alignment: center;
+                                Image { source: @image-url("assets/icons/envelope.png"); colorize: Theme.muted; width: 32px; height: 32px; image-fit: contain; }
+                            }
                             Text { text: @tr("Контактов пока нет"); color: Theme.text; font-size: 15px; horizontal-alignment: center; }
                             Text {
                                 text: @tr("Сохраните имя и адрес для переписки.");
@@ -2744,9 +2760,10 @@ callback settings-nostr-save-clicked(string);
                             }
                             ActionButton {
                                 label: @tr("Обновить историю");
+                                    icon: @image-url("assets/icons/refresh.png");
                                 kind: "ghost";
                                 button-height: 32px;
-                                width: 156px;
+                                width: 172px;
                                 enabled: root.messenger-peer != "" && !root.messenger-busy;
                                 clicked => { root.messenger-history-clicked(root.messenger-peer); }
                             }
@@ -2763,7 +2780,10 @@ callback settings-nostr-save-clicked(string);
                             vertical-stretch: 1;
                             spacing: 8px;
                             alignment: center;
-                            Text { text: "✉"; color: Theme.muted; font-size: 38px; horizontal-alignment: center; }
+                            HorizontalLayout {
+                                alignment: center;
+                                Image { source: @image-url("assets/icons/envelope.png"); colorize: Theme.muted; width: 38px; height: 38px; image-fit: contain; }
+                            }
                             Text {
                                 text: root.messenger-selected-address != "" ? @tr("Сообщений пока нет") : @tr("Начните переписку");
                                 color: Theme.text;
@@ -2852,6 +2872,7 @@ callback settings-nostr-save-clicked(string);
                                 Rectangle { horizontal-stretch: 1; }
                                 ActionButton {
                                     label: @tr("Отправить");
+                                        icon: @image-url("assets/icons/send.png");
                                     kind: "primary";
                                     button-height: 44px;
                                     width: 150px;
@@ -3132,6 +3153,8 @@ callback settings-nostr-save-clicked(string);
         }
     }
 }
+
+
 
 
 
