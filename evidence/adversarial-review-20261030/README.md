@@ -14,7 +14,7 @@ NOT VERIFIED — проверки нет.
 | Несовместимый откат версии | PASS (защита новых версий) | `DATA_ROOT_CONFIG_VERSION`; битые pending не удаляются, а показываются (`broken_pending_files_are_reported_not_dropped`) | нет явной версии формата журнала/истории; поведение старого бинаря на новых данных не проверено |
 | Нода догоняет цепь | PASS (политика) | Headers/Blocks → только после явного чекбокса; `send_sync_gate` в core, RPC и UI; Starting/Unknown/NotRunning запрещены | нет живого окна с реально догоняющей нодой |
 | Прыжки системного времени | PASS | срок ограничен `MAX_TTL_SECS` от получения; будущий timestamp отправителя не продлевает хранение; тест `future_clock_cannot_extend_storage` | отдельного теста «часы назад» нет; дедуп по id остаётся |
-| Разные представления пути | PASS (single-instance) | mutex глобальный; проверено: второй процесс через junction завершился; ACL на данных | сетевой путь, другой пользователь, каноникализация AppPaths не проверены |
+| Разные представления пути | PASS (single-instance) | mutex глобальный; проверено: второй процесс через junction и UNC `\\localhost\C$` завершился; ACL на данных | другой пользователь и каноникализация AppPaths не проверены |
 | «Честный, но противоречивый» relay | PARTIAL | dedup/ack/replay, durable outbox; повторная доставка после ack не возвращается | нет теста «старый ответ после нового», «подтвердил и скрыл», «повтор старого конверта после restore» |
 | Показ vs подпись | PARTIAL | суммы — целые nano, `format::amount` и `parse_nano`, фиксированные 9 знаков; тест `nano_is_formatted_with_nine_decimals` | нет кнопки Max; запятая отклоняется; локали/округление комиссии не сопоставлены с подписанным значением |
 
@@ -42,6 +42,6 @@ NOT VERIFIED — проверки нет.
 
 - Матрица disk-full / power-loss: embedded crash-suite (upstream/journal, process kill) PASS и simulated disk-full PASS, см. `evidence/crash-receive-20261030/`; реальный power cut и физическое заполнение — вручную, NOT VERIFIED.
 - Полный набор гонок «операция → переключение профиля → поздний ответ» (generation-проверки есть, матрица не прогонялась).
-- Реальный второй пользователь Windows и сетевые пути (single-instance/junction проверены).
+- Реальный второй пользователь Windows; сетевой UNC-путь проверен для single-instance, но не для всей цепочки ACL/временных файлов.
 - RPC crash-набор: `grin-wallet init` в этом окружении требует recovery phrase/консольный handle; funded RPC-профили не подготовлены — нужен ручной стенд.
 - Живой backup→send→restore drill (проверка stale pending только тестами).
