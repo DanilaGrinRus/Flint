@@ -1769,51 +1769,58 @@ callback settings-nostr-save-clicked(string);
         background: Theme.bg;
         Rectangle {
             x: (parent.width - 620px) / 2;
-            y: (parent.height - Math.min(720px, parent.height - 32px)) / 2;
+            y: (parent.height - Math.min(760px, parent.height - 24px)) / 2;
             width: Math.min(620px, parent.width - 32px);
-            height: Math.min(720px, parent.height - 32px);
+            height: Math.min(760px, parent.height - 24px);
             background: Theme.surface;
             border-radius: Theme.radius-card;
             border-width: 1px;
             border-color: Theme.border;
             VerticalLayout {
                 padding: 20px;
-                spacing: 8px;
+                spacing: 10px;
                 Text { text: @tr("Получить GRIN"); color: Theme.text; font-size: 20px; font-weight: 700; }
-                Text {
-                    text: root.address-text;
-                    color: Theme.accent;
-                    font-size: 11px;
-                    font-family: "Cascadia Mono";
-                    wrap: word-wrap;
-                }
-                ActionButton {
-                    label: @tr("Новый адрес");
-                    kind: "secondary";
-                    button-height: 42px;
-                    min-button-width: 96px;
-                    clicked => {
-                        root.rotate-address-clicked();
-                    }
-                }
-                Text { text: @tr("Синхронизация ноды"); color: Theme.muted; font-size: 12px; }
-                Text {
-                    text: root.node-text;
-                    color: root.node-ready ? Theme.accent
-                        : root.node-starting ? Theme.warning : Theme.muted-2;
-                    font-size: 13px;
-                    wrap: word-wrap;
-                }
                 ScrollView {
+                    horizontal-stretch: 1;
+                    vertical-stretch: 1;
                     VerticalLayout {
-                        spacing: 8px;
+                        horizontal-stretch: 1;
+                        alignment: start;
+                        spacing: 10px;
+                        Text {
+                            text: root.address-text;
+                            color: Theme.accent;
+                            font-size: 11px;
+                            font-family: "Cascadia Mono";
+                            horizontal-stretch: 1;
+                            overflow: elide;
+                        }
+                        ActionButton {
+                            label: @tr("Новый адрес");
+                            kind: "secondary";
+                            button-height: 42px;
+                            min-button-width: 96px;
+                            clicked => {
+                                root.rotate-address-clicked();
+                            }
+                        }
+                        Text { text: @tr("Синхронизация ноды"); color: Theme.muted; font-size: 12px; }
+                        Text {
+                            text: root.node-text;
+                            color: root.node-ready ? Theme.accent
+                                : root.node-starting ? Theme.warning : Theme.muted-2;
+                            font-size: 13px;
+                            horizontal-stretch: 1;
+                            wrap: word-wrap;
+                        }
                         HorizontalLayout {
                             alignment: center;
                             Image {
                                 source: root.address-qr;
-                                width: 120px;
-                                height: 120px;
+                                width: 160px;
+                                height: 160px;
                                 image-fit: contain;
+                                image-rendering: pixelated;
                             }
                         }
                         Text { text: @tr("Входящий slatepack"); color: Theme.muted-2; font-size: 13px; }
@@ -1888,8 +1895,9 @@ callback settings-nostr-save-clicked(string);
                     ActionButton {
                         label: @tr("Закрыть");
                         kind: "ghost";
-                        button-height: 42px;
-                        min-button-width: 96px;
+                        button-height: 40px;
+                        width: 110px;
+                        min-button-width: 0px;
                         clicked => {
                             root.show-receive = false;
                         }
@@ -1897,8 +1905,9 @@ callback settings-nostr-save-clicked(string);
                     ActionButton {
                         label: @tr("Завершить приём");
                         kind: "primary";
-                        button-height: 42px;
-                        min-button-width: 96px;
+                        button-height: 40px;
+                        width: 180px;
+                        min-button-width: 0px;
                         enabled: !root.receive-busy && root.receive-slate-id != "";
                         clicked => {
                             root.receive-finalize-clicked(root.receive-slate-id);
@@ -2467,6 +2476,7 @@ callback settings-nostr-save-clicked(string);
                 padding: 24px;
                 spacing: 10px;
                 Text { text: @tr("Безопасность"); color: Theme.text; font-size: 20px; font-weight: 700; }
+                ScrollView {                     horizontal-stretch: 1;                     vertical-stretch: 1;                     VerticalLayout {                         horizontal-stretch: 1;                         alignment: start;                         spacing: 6px;
                 Text { text: @tr("Текущий пароль"); color: Theme.muted-2; font-size: 13px; }
                 LineEdit {
                     text <=> root.sec-old;
@@ -2597,8 +2607,9 @@ callback settings-nostr-save-clicked(string);
                 }
                 Text { text: root.sec-note; color: Theme.accent; font-size: 13px; }
                 Text { text: root.sec-error; color: Theme.danger; font-size: 13px; }
+                }
+                     }
                 Rectangle { height: 1px; background: Theme.border; }
-                Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
