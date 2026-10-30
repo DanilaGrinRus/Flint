@@ -568,30 +568,30 @@ callback settings-nostr-save-clicked(string);
                     }
                     Rectangle { height: 8px; }
                     NavButton {
-                        icon: "◈";
+                        icon: @image-url("assets/icons/wallet.png");
                         label: @tr("Кошелёк");
                         active: root.active-page == "wallet";
                         clicked => { root.active-page = "wallet"; }
                     }
                     NavButton {
-                        icon: "≡";
+                        icon: @image-url("assets/icons/history.png");
                         label: @tr("История");
                         clicked => { root.history-open-clicked(); }
                     }
                     Rectangle { height: 1px; background: Theme.border; }
                     NavButton {
-                        icon: "⇄";
+                        icon: @image-url("assets/icons/swap.png");
                         label: @tr("Свопы JANUS");
                         clicked => { root.swaps-open-clicked(); }
                     }
                     NavButton {
-                        icon: "✉";
+                        icon: @image-url("assets/icons/messages.png");
                         label: @tr("Сообщения");
                         clicked => { root.messenger-open-clicked(); }
                     }
                     Rectangle { height: 1px; background: Theme.border; }
                     NavButton {
-                        icon: "⚙";
+                        icon: @image-url("assets/icons/settings.png");
                         label: @tr("Настройки");
                         clicked => { root.settings-open-clicked(); }
                     }
@@ -3132,6 +3132,7 @@ callback settings-nostr-save-clicked(string);
         }
     }
 }
+
 
 
 

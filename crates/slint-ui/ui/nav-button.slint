@@ -3,7 +3,7 @@ import { Theme } from "theme.slint";
 
 export component NavButton inherits Rectangle {
     in property <string> label;
-    in property <string> icon: "◈";
+    in property <image> icon;
     in property <bool> active: false;
     callback clicked();
 
@@ -36,13 +36,12 @@ export component NavButton inherits Rectangle {
         height: parent.height;
         spacing: 10px;
 
-        Text {
-            text: root.icon;
-            color: root.active ? Theme.accent : Theme.muted;
-            font-size: 15px;
+        Image {
+            source: root.icon;
+            colorize: root.active ? Theme.accent : Theme.muted;
             width: 20px;
-            horizontal-alignment: center;
-            vertical-alignment: center;
+            height: 20px;
+            image-fit: contain;
         }
         Text {
             text: root.label;
@@ -57,3 +56,4 @@ export component NavButton inherits Rectangle {
         clicked => { root.clicked(); }
     }
 }
+
