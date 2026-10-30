@@ -75,6 +75,9 @@ pub struct WalletStatus {
     /// stop `Owner::scan`, so it always reports `false`.
     #[serde(default)]
     pub scan_cancellable: bool,
+    /// Set by the shell when the same wallet address is live in another copy.
+    #[serde(default)]
+    pub clone_warning: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

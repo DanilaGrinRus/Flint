@@ -221,6 +221,7 @@ export component AppWindow inherits Window {
     in-out property <string> traffic-warning: "";
     in-out property <string> pending-alert: "";
     in-out property <string> node-text: @tr("нода не подключена");
+    in-out property <string> clone-warning: "";
     in-out property <string> node-phase-label: @tr("нода не подключена");
     in-out property <string> node-height: "0";
     in-out property <string> node-version: "";
@@ -3534,6 +3535,7 @@ callback settings-nostr-save-clicked(string);
         }
     }
 }
+
 
 
 

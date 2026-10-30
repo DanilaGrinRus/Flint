@@ -19,6 +19,103 @@ use crate::rpc;
 use crate::scan::ScanView;
 use crate::WalletRuntime;
 
+/// Per-address exclusive file. Two copies of the same profile (same wallet
+/// address) on this Windows user conflict here even when they live in different
+/// directories. The OS releases it when the process dies.
+#[cfg(windows)]
+pub(crate) struct CloneGuard(isize);
+
+#[cfg(windows)]
+impl CloneGuard {
+    fn try_acquire(network: &str, address: &str) -> Result<Option<Self>, String> {
+        let Some(base) = std::env::var_os("LOCALAPPDATA") else {
+            // No per-user location to coordinate through: do not turn this into
+            // a false duplicate alert, but the data-root lock still applies.
+            return Ok(Some(Self(0)));
+        };
+        let dir = std::path::PathBuf::from(base).join("Flint").join("locks");
+        Self::try_acquire_at(&dir, network, address)
+    }
+
+    fn try_acquire_at(
+        dir: &std::path::Path,
+        network: &str,
+        address: &str,
+    ) -> Result<Option<Self>, String> {
+        use std::ffi::c_void;
+        use std::os::windows::ffi::OsStrExt;
+
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn CreateFileW(
+                name: *const u16,
+                access: u32,
+                share: u32,
+                security: *const c_void,
+                disposition: u32,
+                flags: u32,
+                template: *mut c_void,
+            ) -> *mut c_void;
+            fn GetLastError() -> u32;
+        }
+
+        std::fs::create_dir_all(dir)
+            .map_err(|error| format!("каталог locks недоступен: {error}"))?;
+        let safe: String = address
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .collect();
+        let path = dir.join(format!("{network}-{safe}.lock"));
+        let name: Vec<u16> = path
+            .as_os_str()
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let handle = unsafe {
+            CreateFileW(
+                name.as_ptr(),
+                0x4000_0000,
+                0,
+                std::ptr::null(),
+                4,
+                0x80,
+                std::ptr::null_mut(),
+            )
+        };
+        if handle as isize == -1 {
+            let code = unsafe { GetLastError() };
+            if code == 32 || code == 33 {
+                return Ok(None);
+            }
+            return Err(format!("не удалось занять lock профиля (код {code})"));
+        }
+        Ok(Some(Self(handle as isize)))
+    }
+}
+#[cfg(windows)]
+impl Drop for CloneGuard {
+    fn drop(&mut self) {
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn CloseHandle(handle: *mut std::ffi::c_void) -> i32;
+        }
+        if self.0 > 0 {
+            unsafe {
+                CloseHandle(self.0 as *mut std::ffi::c_void);
+            }
+        }
+    }
+}
+
+#[cfg(not(windows))]
+pub(crate) struct CloneGuard;
+
+#[cfg(not(windows))]
+impl CloneGuard {
+    fn try_acquire(_network: &str, _address: &str) -> Result<Option<Self>, String> {
+        Ok(Some(Self))
+    }
+}
 /// Result of `open`: the embedded backend can reconcile pending entries while
 /// opening; the RPC backend leaves that to its journal.
 #[derive(Clone, Debug)]
@@ -150,6 +247,7 @@ impl WalletRuntime {
             scan_state,
             scan_error,
             scan_cancellable,
+            clone_warning: None,
         })
     }
 
@@ -252,6 +350,77 @@ impl WalletRuntime {
             }
         }
         Ok(OpenOutcome { reconciled: 0 })
+    }
+
+    pub fn clone_warning(&self) -> Option<String> {
+        self.clone_warning
+            .lock()
+            .ok()
+            .and_then(|warning| warning.clone())
+    }
+
+    pub(crate) fn release_clone_guard(&self) {
+        if let Ok(mut lock) = self.clone_lock.lock() {
+            *lock = None;
+        }
+        if let Ok(mut warning) = self.clone_warning.lock() {
+            *warning = None;
+        }
+    }
+
+    fn install_clone_guard(&self) {
+        self.release_clone_guard();
+        let address = match self.wallet_address_for_clone_guard() {
+            Ok(address) => address,
+            Err(error) => {
+                if let Ok(mut warning) = self.clone_warning.lock() {
+                    *warning = Some(format!(
+                        "не удалось проверить вторую копию профиля: {error}; отправка заблокирована"
+                    ));
+                }
+                return;
+            }
+        };
+        let network = match self.wallet.lock() {
+            Ok(wallet) => wallet.settings().network.clone(),
+            Err(_) => return,
+        };
+        match CloneGuard::try_acquire(&network, &address) {
+            Ok(Some(guard)) => {
+                if let Ok(mut lock) = self.clone_lock.lock() {
+                    *lock = Some(guard);
+                }
+            }
+            Ok(None) => {
+                if let Ok(mut warning) = self.clone_warning.lock() {
+                    *warning = Some(
+                        "этот профиль уже открыт в другой копии Flint на этом компьютере: отправка и подпись заблокированы до её закрытия"
+                            .into(),
+                    );
+                }
+            }
+            Err(error) => {
+                if let Ok(mut warning) = self.clone_warning.lock() {
+                    *warning = Some(format!(
+                        "не удалось проверить вторую копию профиля: {error}; отправка заблокирована"
+                    ));
+                }
+            }
+        }
+    }
+
+    fn wallet_address_for_clone_guard(&self) -> Result<String, String> {
+        if self.is_rpc() {
+            return self.rpc.call(|backend| backend.address());
+        }
+        self.with_wallet(|wallet| wallet.address())
+    }
+
+    fn refuse_if_cloned(&self) -> Result<(), String> {
+        match self.clone_warning() {
+            Some(warning) => Err(format!("{warning}; отправка заблокирована")),
+            None => Ok(()),
+        }
     }
 
     pub fn lock(&self) -> Result<(), String> {
@@ -666,5 +835,35 @@ mod tests {
         assert!(!pending_action_allowed("failed_recoverable", true));
         assert!(!pending_action_allowed("response_received", true));
         assert!(!pending_action_allowed("unknown", false));
+    }
+}
+
+#[cfg(all(test, windows))]
+mod clone_guard_tests {
+    use super::CloneGuard;
+
+    #[test]
+    fn clone_guard_is_exclusive_per_address() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let dir = std::env::temp_dir().join(format!("flint-clone-{stamp}"));
+        let address = format!("tgrin1test{}{stamp}", std::process::id());
+        let first = CloneGuard::try_acquire_at(&dir, "testnet", &address).expect("first");
+        assert!(first.is_some(), "first copy must own the lock");
+        assert!(
+            CloneGuard::try_acquire_at(&dir, "testnet", &address)
+                .expect("second")
+                .is_none(),
+            "second copy must be detected"
+        );
+        drop(first);
+        assert!(
+            CloneGuard::try_acquire_at(&dir, "testnet", &address)
+                .expect("after drop")
+                .is_some(),
+            "lock must be released on drop"
+        );
     }
 }

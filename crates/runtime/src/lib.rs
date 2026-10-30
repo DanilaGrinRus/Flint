@@ -122,6 +122,8 @@ pub struct WalletRuntime {
     history_error: Arc<Mutex<Option<String>>>,
     messenger_op: Arc<Mutex<()>>,
     unlock_cache: Arc<Mutex<HashMap<String, CachedUnlock>>>,
+    clone_lock: Arc<Mutex<Option<crate::wallet::CloneGuard>>>,
+    clone_warning: Arc<Mutex<Option<String>>>,
 }
 
 struct CachedUnlock {
@@ -212,6 +214,8 @@ impl WalletRuntime {
             history_error: Arc::new(Mutex::new(None)),
             messenger_op: Arc::new(Mutex::new(())),
             unlock_cache: Arc::new(Mutex::new(HashMap::new())),
+            clone_lock: Arc::new(Mutex::new(None)),
+            clone_warning: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -248,6 +252,8 @@ impl WalletRuntime {
             history_error: Arc::new(Mutex::new(None)),
             messenger_op: Arc::new(Mutex::new(())),
             unlock_cache: Arc::new(Mutex::new(HashMap::new())),
+            clone_lock: Arc::new(Mutex::new(None)),
+            clone_warning: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -366,6 +372,7 @@ impl WalletRuntime {
     /// Stop every child process this runtime owns. Process exit does not run
     /// destructors for managed state, so shells call this explicitly.
     pub fn shutdown(&self) {
+        self.release_clone_guard();
         self.lock_history_key();
         // A worker may still hold a runtime clone; cancel its scan before the
         // RPC child/node disappears so the worker cannot finish against a

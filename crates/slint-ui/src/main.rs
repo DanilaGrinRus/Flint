@@ -987,7 +987,15 @@ pub(crate) fn apply_snapshot(app: &AppWindow, snapshot: Snapshot, error: Option<
         }
     };
     app.set_balance_state(balance_state.into());
-    app.set_send_enabled(send_enabled);
+    app.set_clone_warning(
+        snapshot
+            .status
+            .clone_warning
+            .clone()
+            .unwrap_or_default()
+            .into(),
+    );
+    app.set_send_enabled(send_enabled && snapshot.status.clone_warning.is_none());
     app.set_scan_state(
         scan_state_line(
             snapshot.status.scan_state,

@@ -464,6 +464,7 @@ impl WalletService {
             data_dir: self.paths.root().display().to_string(),
             scan_state: self.scan_state,
             scan_error: self.scan_error.clone(),
+            clone_warning: None,
             // The app overlays this with its in-process scan flag: embedded
             // scans are cancelled cooperatively between batches, RPC scans by
             // ending the child process.
