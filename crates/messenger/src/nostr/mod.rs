@@ -17,9 +17,11 @@ pub mod ws;
 pub use event::Event;
 pub use keys::NostrKeys;
 pub use relay::{MemoryRelay, Relay, RelayFilter};
-pub use transport::{Directory, NostrTransport};
+pub use transport::{ContactDirectory, Directory, NostrTransport};
 pub use wrap::{gift_wrap, unwrap, Rumor};
 pub use ws::WsRelay;
+
+use secp256k1::XOnlyPublicKey;
 
 use crate::error::{Error, Result};
 
@@ -74,4 +76,15 @@ pub(crate) fn random_bytes<const N: usize>() -> Result<[u8; N]> {
     getrandom::getrandom(&mut out)
         .map_err(|error| Error::Crypto(format!("nostr: rng: {error}")))?;
     Ok(out)
+}
+
+/// Parse an x-only transport public key in hex (64 characters).
+pub fn parse_public_hex(value: &str) -> Result<XOnlyPublicKey> {
+    let bytes = hex_decode(value.trim())?;
+    let array: [u8; 32] = bytes
+        .as_slice()
+        .try_into()
+        .map_err(|_| Error::Crypto("nostr: transport key must be 32 bytes".into()))?;
+    XOnlyPublicKey::from_byte_array(array)
+        .map_err(|_| Error::Crypto("nostr: invalid x-only transport key".into()))
 }

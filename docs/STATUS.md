@@ -77,7 +77,7 @@ Git baseline уборки bb4b7f3; изменения уборки закомм�
 BUILD-INFO не менялись; актуальные SHA-256 — в SHA256SUMS поставки, прежний архив
 сохранён вне дерева (`C:\DHW-backups\delivery-20261029\`).
 
-2026-10-30: заложен Nostr-транспорт messenger (ADR NOSTR-1, контракт в [MESSENGER.md](contracts/MESSENGER.md)): NIP-44 v2 с официальными векторами, события NIP-01/BIP-340, NIP-59 seal/gift wrap, отдельный transport key на профиль, Transport-обёртка с MemoryRelay; 14 новых тестов, lint-messenger 73/73. Зависимости secp256k1/chacha20/hmac, vendor пересобран, offline-резолв проверен. WebSocket-клиент relay добавлен (`WsRelay`, rustls+ring, таймауты, OK/REQ/EOSE): live-проба чтения на `wss://nos.lol` PASS, публичный relay damus отвечает `auth-required` (NIP-42 в v1 нет). В сборке не включён: настройка/UI, маппинг transport key в контактах и live-публикация; приёмка зависимостей открыта повторно.
+2026-10-30: заложен Nostr-транспорт messenger (ADR NOSTR-1, контракт в [MESSENGER.md](contracts/MESSENGER.md)): NIP-44 v2 с официальными векторами, события NIP-01/BIP-340, NIP-59 seal/gift wrap, отдельный transport key на профиль, Transport-обёртка с MemoryRelay; 14 новых тестов, lint-messenger 73/73. Зависимости secp256k1/chacha20/hmac, vendor пересобран, offline-резолв проверен. WebSocket-клиент relay добавлен (`WsRelay`, rustls+ring, таймауты, OK/REQ/EOSE): live-проба чтения на `wss://nos.lol` PASS, публичный relay damus отвечает `auth-required` (NIP-42 в v1 нет). Проводка: настройка `nostr_relay_url` (отдельно от `relay_url`), поле `nostr` у контакта, `AppTransport::Nostr` и поле статуса `transport`; 76 тестов messenger. UI-поля и live-публикация остаются; приёмка зависимостей открыта повторно.
 
 Повторный полный локальный CI на закоммиченном дереве (`64793c5`): PASS —
 324 passed, 0 failed, 32 ignored; i18n ok (216 static entries); Slint собран;
@@ -122,6 +122,7 @@ commit/build, команда или CI run, PASS/FAIL/NOT VERIFIED, ссылка
 свидетельство и предел вывода. Большие логи, переписка и промежуточные планы
 не копируются сюда. Удаление исходного evidence требует либо сохранённого
 эквивалента, либо явной пометки, что доступна только историческая запись.
+
 
 
 

@@ -29,6 +29,10 @@ pub struct Contact {
     pub name: String,
     pub created_at: u64,
     pub updated_at: u64,
+    /// Optional Nostr transport key (x-only hex) used by the Nostr transport.
+    /// Kept in the encrypted contact file, not in the address itself.
+    #[serde(default)]
+    pub nostr: Option<String>,
 }
 
 pub struct ContactBook {
@@ -235,6 +239,7 @@ impl ContactBook {
                 name: name.to_string(),
                 created_at: now,
                 updated_at: now,
+                nostr: None,
             };
             contacts.push(contact.clone());
             contact
@@ -242,6 +247,41 @@ impl ContactBook {
         sort(&mut contacts);
         self.store(&contacts)?;
         Ok(contact)
+    }
+
+    /// Save a contact and set (or clear) its Nostr transport key.
+    ///
+    /// `None` keeps the stored value, `Some("")` clears it and `Some(hex)` must
+    /// be a 64-character x-only public key.
+    pub fn save_with_nostr(
+        &self,
+        address: &str,
+        name: &str,
+        nostr: Option<&str>,
+    ) -> Result<Contact> {
+        let nostr = match nostr {
+            None => None,
+            Some(value) => Some(validate_nostr(value)?),
+        };
+        let contact = self.save(address, name)?;
+        let address = contact.address.clone();
+        let _file_lock = ContactFileLock::acquire(&self.root)?;
+        let _guard = self.guard()?;
+        let mut contacts = self.load()?;
+        let now = unix_now();
+        let updated = if let Some(existing) = contacts.iter_mut().find(|c| c.address == address) {
+            match nostr {
+                Some(value) => existing.nostr = value,
+                None => {}
+            }
+            existing.updated_at = now;
+            existing.clone()
+        } else {
+            contact
+        };
+        sort(&mut contacts);
+        self.store(&contacts)?;
+        Ok(updated)
     }
 
     pub fn delete(&self, address: &str) -> Result<bool> {
@@ -424,4 +464,13 @@ mod tests {
         assert!(path.exists(), "foreign lock was removed");
         let _ = std::fs::remove_dir_all(dir);
     }
+}
+
+fn validate_nostr(value: &str) -> Result<Option<String>> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+    let key = crate::nostr::parse_public_hex(trimmed)?;
+    Ok(Some(crate::nostr::hex_encode(&key.to_byte_array())))
 }

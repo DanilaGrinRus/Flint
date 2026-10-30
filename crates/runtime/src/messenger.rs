@@ -13,8 +13,9 @@ use chacha20poly1305::aead::{Aead, NewAead, Payload};
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use flint_core::WalletService;
 use flint_messenger::{
-    Address, ContactBook, DirectOnionTransport, Direction, Envelope, GatewayTransport, History,
-    Identity, MessageKind, MessageRecord, Messenger, Transport, DEFAULT_TTL_SECS,
+    Address, ContactBook, ContactDirectory, DirectOnionTransport, Direction, Envelope,
+    GatewayTransport, History, Identity, MessageKind, MessageRecord, Messenger, NostrKeys,
+    NostrTransport, Transport, WsRelay, DEFAULT_TTL_SECS,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -108,6 +109,16 @@ struct InboxEntry {
 enum AppTransport {
     Relay(GatewayTransport),
     Direct(DirectOnionTransport),
+    /// Explicitly configured Nostr transport; never a fallback for the others.
+    Nostr(NostrTransport<WsRelay, ContactDirectory>),
+}
+
+/// Everything the Nostr transport needs for one operation.
+#[derive(Clone)]
+struct NostrSetup {
+    url: String,
+    key_path: PathBuf,
+    contacts: ContactDirectory,
 }
 
 impl Transport for AppTransport {
@@ -115,6 +126,7 @@ impl Transport for AppTransport {
         match self {
             Self::Relay(transport) => transport.deliver(envelope),
             Self::Direct(transport) => transport.deliver(envelope),
+            Self::Nostr(transport) => transport.deliver(envelope),
         }
     }
 
@@ -127,6 +139,7 @@ impl Transport for AppTransport {
         match self {
             Self::Relay(transport) => transport.fetch(recipient, now, limit),
             Self::Direct(transport) => transport.fetch(recipient, now, limit),
+            Self::Nostr(transport) => transport.fetch(recipient, now, limit),
         }
     }
 
@@ -134,6 +147,7 @@ impl Transport for AppTransport {
         match self {
             Self::Relay(transport) => transport.ack(recipient, ids),
             Self::Direct(transport) => transport.ack(recipient, ids),
+            Self::Nostr(transport) => transport.ack(recipient, ids),
         }
     }
 
@@ -141,6 +155,7 @@ impl Transport for AppTransport {
         match self {
             Self::Relay(transport) => transport.ack_signed(recipient, ids),
             Self::Direct(transport) => transport.ack_signed(recipient, ids),
+            Self::Nostr(transport) => transport.ack_signed(recipient, ids),
         }
     }
 }
@@ -245,7 +260,19 @@ fn app_transport(
     relay: &str,
     direct: Option<(String, String)>,
     relay_socks: Option<String>,
+    nostr: Option<NostrSetup>,
 ) -> Result<AppTransport, String> {
+    // An explicitly configured Nostr relay selects that transport and nothing
+    // else: a failure here must not silently fall back to the Flint relay.
+    if let Some(setup) = nostr {
+        let keys = NostrKeys::load_or_create(&setup.key_path).map_err(err)?;
+        let relay = WsRelay::new(&setup.url).map_err(err)?;
+        return Ok(AppTransport::Nostr(NostrTransport::new(
+            relay,
+            keys,
+            setup.contacts,
+        )));
+    }
     if let Some((local, socks)) = direct {
         return DirectOnionTransport::new(&local, &socks)
             .map(AppTransport::Direct)
@@ -394,8 +421,40 @@ impl WalletRuntime {
         ))
     }
 
+    /// Resolve the Nostr transport configuration, if enabled.
+    ///
+    /// Empty `nostr_relay_url` means "off". The transport key is per profile and
+    /// network; peer keys come from the encrypted contact book, so an unknown
+    /// peer is an explicit delivery error instead of a guessed key.
+    fn nostr_setup(&self) -> Result<Option<NostrSetup>, String> {
+        let (url, contacts_dir, key_path) = {
+            let wallet = self
+                .wallet
+                .lock()
+                .map_err(|_| "кошелёк занят".to_string())?;
+            let url = wallet.settings().nostr_relay_url.trim().to_string();
+            if url.is_empty() {
+                return Ok(None);
+            }
+            (
+                url,
+                self.messenger_contacts_dir(&wallet),
+                self.messenger_profile_dir(&wallet, "nostr")
+                    .join("transport.key"),
+            )
+        };
+        let key = self.cached_history_key()?;
+        let book = ContactBook::open(contacts_dir, key).map_err(err)?;
+        let contacts = ContactDirectory::from_contacts(&book.list().map_err(err)?);
+        Ok(Some(NostrSetup {
+            url,
+            key_path,
+            contacts,
+        }))
+    }
+
     pub fn messenger_status(&self) -> Result<Value, String> {
-        let (network, relay) = {
+        let (network, relay, nostr_relay) = {
             let wallet = self
                 .wallet
                 .lock()
@@ -403,6 +462,7 @@ impl WalletRuntime {
             (
                 wallet.settings().network.clone(),
                 wallet.settings().relay_url.clone(),
+                wallet.settings().nostr_relay_url.clone(),
             )
         };
         let legacy_history = self.legacy_history_view().unwrap_or_default();
@@ -412,10 +472,19 @@ impl WalletRuntime {
         };
         let onion = self.tor().onion();
         let direct = onion.is_some() && relay.trim().is_empty();
+        let transport_kind = if !nostr_relay.trim().is_empty() {
+            "nostr"
+        } else if direct {
+            "direct"
+        } else {
+            "relay"
+        };
         Ok(json!({
             "address": address,
             "network": network,
             "relay_url": relay,
+            "nostr_relay_url": nostr_relay,
+            "transport": transport_kind,
             "onion": onion,
             "direct": direct,
             "history_key": self.history_key_ready(),
@@ -444,14 +513,15 @@ impl WalletRuntime {
         } else {
             None
         };
-        if relay.is_empty() && direct.is_none() {
+        let nostr = self.nostr_setup()?;
+        if relay.is_empty() && direct.is_none() && nostr.is_none() {
             return Err(
-                "relay не настроен: укажите gateway/relay или включите «Приём по Tor» для прямой доставки на onion получателя"
+                "relay не настроен: укажите gateway/relay, включите «Приём по Tor» или задайте Nostr relay"
                     .into(),
             );
         }
         let key = self.cached_history_key()?;
-        let transport = app_transport(&relay, direct, relay_socks)?;
+        let transport = app_transport(&relay, direct, relay_socks, nostr)?;
         let outbox_path = {
             let wallet = self
                 .wallet
@@ -551,15 +621,17 @@ impl WalletRuntime {
         } else {
             None
         };
-        if relay.is_empty() && direct.is_none() {
+        let nostr = self.nostr_setup()?;
+        if relay.is_empty() && direct.is_none() && nostr.is_none() {
             return Err(
-                "relay не настроен: укажите gateway/relay или включите «Приём по Tor» для прямой доставки"
+                "relay не настроен: укажите gateway/relay, включите «Приём по Tor» или задайте Nostr relay"
                     .into(),
             );
         }
         let key = self.cached_history_key()?;
-        let drain_transport = app_transport(&relay, direct.clone(), relay_socks.clone())?;
-        let transport = app_transport(&relay, direct, relay_socks)?;
+        let drain_transport =
+            app_transport(&relay, direct.clone(), relay_socks.clone(), nostr.clone())?;
+        let transport = app_transport(&relay, direct, relay_socks, nostr)?;
         let messenger = Messenger::new(transport);
         let batch = messenger
             .fetch_open_skipping(&identity, 20, &skip)
@@ -784,6 +856,49 @@ impl WalletRuntime {
         let key = self.cached_history_key()?;
         let book = ContactBook::open(dir, key).map_err(err)?;
         serde_json::to_value(book.save(address, name).map_err(err)?).map_err(err)
+    }
+
+    /// Own Nostr transport identity for the active profile.
+    ///
+    /// The key file is created on first call, so the UI can show the public key
+    /// before the transport is switched on.
+    pub fn messenger_nostr_identity(&self) -> Result<Value, String> {
+        let dir = {
+            let wallet = self
+                .wallet
+                .lock()
+                .map_err(|_| "кошелёк занят".to_string())?;
+            (
+                self.messenger_profile_dir(&wallet, "nostr")
+                    .join("transport.key"),
+                wallet.settings().nostr_relay_url.trim().to_string(),
+            )
+        };
+        let keys = NostrKeys::load_or_create(&dir.0).map_err(err)?;
+        Ok(json!({
+            "enabled": !dir.1.is_empty(),
+            "relay_url": dir.1,
+            "public_key": keys.public_hex(),
+        }))
+    }
+
+    /// Save a contact with its Nostr transport key (`Some("")` clears it).
+    pub fn messenger_contact_save_nostr(
+        &self,
+        address: &str,
+        name: &str,
+        nostr: Option<&str>,
+    ) -> Result<Value, String> {
+        let dir = {
+            let wallet = self
+                .wallet
+                .lock()
+                .map_err(|_| "кошелёк занят".to_string())?;
+            self.messenger_contacts_dir(&wallet)
+        };
+        let key = self.cached_history_key()?;
+        let book = ContactBook::open(dir, key).map_err(err)?;
+        serde_json::to_value(book.save_with_nostr(address, name, nostr).map_err(err)?).map_err(err)
     }
 
     pub fn messenger_contact_delete(&self, address: &str) -> Result<Value, String> {

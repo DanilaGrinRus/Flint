@@ -39,6 +39,10 @@ pub struct Settings {
     /// Optional messenger relay/gateway base URL (empty = not configured).
     #[serde(default)]
     pub relay_url: String,
+    /// Optional Nostr relay (`wss://`) for the Nostr transport; empty = disabled.
+    /// Separate from `relay_url`: that one is the Flint HTTP gateway.
+    #[serde(default)]
+    pub nostr_relay_url: String,
     pub model: String,
     pub base_url: String,
     pub api_key: Option<String>,
@@ -72,6 +76,7 @@ impl Default for Settings {
             auto_start_node: true,
             node_proxy: true,
             relay_url: String::new(),
+            nostr_relay_url: String::new(),
             model: "deepseek-chat".to_string(),
             base_url: "https://api.deepseek.com".to_string(),
             api_key: None,

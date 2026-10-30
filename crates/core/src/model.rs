@@ -169,6 +169,8 @@ pub struct SettingsView {
     pub node_binary_found: bool,
     pub auto_start_node: bool,
     pub relay_url: String,
+    /// Nostr relay for the optional Nostr transport (empty = disabled).
+    pub nostr_relay_url: String,
     pub min_confirmations: u64,
     pub data_dir: String,
     pub app_version: String,

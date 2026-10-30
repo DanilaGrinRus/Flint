@@ -37,6 +37,7 @@ pub use keywrap::{
     create as create_history_key, rewrap as rewrap_history_key, unwrap as unwrap_history_key,
     WrappedKey,
 };
+pub use nostr::{ContactDirectory, NostrKeys, NostrTransport, RelayFilter, WsRelay};
 pub use store::{FailedEnvelope, MemoryMailbox, Messenger, ReceiveBatch, Store, Transport};
 pub use transport::{DirectOnionTransport, GatewayTransport};
 

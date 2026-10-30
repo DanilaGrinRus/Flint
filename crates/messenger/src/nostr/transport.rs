@@ -12,6 +12,7 @@ use secp256k1::XOnlyPublicKey;
 use super::event::{Event, KIND_DELETE, KIND_GIFT_WRAP};
 use super::{gift_wrap, unwrap, NostrKeys, Relay, RelayFilter};
 use crate::address::Address;
+use crate::contacts::Contact;
 use crate::envelope::Envelope;
 use crate::error::{Error, Result};
 use crate::store::Transport;
@@ -30,6 +31,50 @@ pub struct NostrTransport<R: Relay, D: Directory> {
     ttl: u64,
     /// Flint envelope id → Nostr event id, for the best-effort NIP-09 ACK.
     received: Mutex<HashMap<String, String>>,
+}
+
+/// Directory assembled from the encrypted contact book: the peer's address maps
+/// to the Nostr transport key stored with that contact.
+#[derive(Clone, Debug, Default)]
+pub struct ContactDirectory {
+    entries: HashMap<String, XOnlyPublicKey>,
+}
+
+impl ContactDirectory {
+    /// Build from contacts; entries with an invalid or absent key are skipped.
+    pub fn from_contacts(contacts: &[Contact]) -> Self {
+        let mut entries = HashMap::new();
+        for contact in contacts {
+            let Some(hex) = contact.nostr.as_deref() else {
+                continue;
+            };
+            if let Ok(key) = super::parse_public_hex(hex) {
+                entries.insert(contact.address.clone(), key);
+            }
+        }
+        Self { entries }
+    }
+
+    /// Add or replace one entry, validating the key.
+    pub fn insert_hex(&mut self, address: &str, hex: &str) -> Result<()> {
+        let key = super::parse_public_hex(hex)?;
+        self.entries.insert(address.to_string(), key);
+        Ok(())
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+}
+
+impl Directory for ContactDirectory {
+    fn nostr_pubkey(&self, address: &Address) -> Option<XOnlyPublicKey> {
+        self.entries.get(&address.to_string()).copied()
+    }
 }
 
 impl<R: Relay, D: Directory> NostrTransport<R, D> {
@@ -230,6 +275,31 @@ mod tests {
             1
         );
         assert!(relay.stored().iter().any(|event| event.kind == KIND_DELETE));
+    }
+
+    #[test]
+    fn contact_directory_maps_saved_keys() {
+        use crate::envelope::Identity;
+        let keys =
+            NostrKeys::from_hex("0000000000000000000000000000000000000000000000000000000000000002")
+                .expect("keys");
+        let identity = Identity::from_seed([22u8; 32], "tgrin").expect("identity");
+        let address = identity.address().to_string();
+        let mut contact = Contact {
+            address: address.clone(),
+            name: "bob".into(),
+            created_at: 0,
+            updated_at: 0,
+            nostr: Some(keys.public_hex()),
+        };
+        let directory = ContactDirectory::from_contacts(&[contact.clone()]);
+        assert_eq!(directory.len(), 1);
+        assert!(directory
+            .nostr_pubkey(&address.parse().expect("address"))
+            .is_some());
+
+        contact.nostr = Some("zz".into());
+        assert!(ContactDirectory::from_contacts(&[contact]).is_empty());
     }
 
     #[test]

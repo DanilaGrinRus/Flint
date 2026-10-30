@@ -277,6 +277,7 @@ impl WalletService {
                 || crate::node::locate_binary().is_some(),
             auto_start_node: self.settings.auto_start_node,
             relay_url: self.settings.relay_url.clone(),
+            nostr_relay_url: self.settings.nostr_relay_url.clone(),
             min_confirmations: self.settings.min_confirmations,
             data_dir: self.paths.root().display().to_string(),
             app_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -285,6 +286,23 @@ impl WalletService {
                 .unwrap_or_default(),
             settings_warning: self.settings_warning.clone().unwrap_or_default(),
         }
+    }
+
+    /// Set or clear the Nostr relay (`wss://`, loopback `ws://` for tests).
+    ///
+    /// Separate from `update_settings`/`relay_url`: the Flint relay and the Nostr
+    /// transport must never silently substitute for each other.
+    pub fn update_nostr_relay(&mut self, url: Option<String>) -> Result<SettingsView> {
+        if let Some(value) = url {
+            let trimmed = value.trim().to_string();
+            if !trimmed.is_empty() {
+                flint_messenger::nostr::WsRelay::new(&trimmed)
+                    .map_err(|error| FlintError::Invalid(error.to_string()))?;
+            }
+            self.settings.nostr_relay_url = trimmed;
+            self.paths.save_settings(&self.settings)?;
+        }
+        Ok(self.settings_view())
     }
 
     /// Update persisted settings. Changing network or node drops the unlocked
