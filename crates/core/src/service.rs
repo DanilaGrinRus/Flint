@@ -296,7 +296,7 @@ impl WalletService {
         if let Some(value) = url {
             let trimmed = value.trim().to_string();
             if !trimmed.is_empty() {
-                flint_messenger::nostr::WsRelay::new(&trimmed)
+                flint_messenger::nostr::WsRelay::validate_url(&trimmed)
                     .map_err(|error| FlintError::Invalid(error.to_string()))?;
             }
             self.settings.nostr_relay_url = trimmed;

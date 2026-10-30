@@ -191,6 +191,23 @@ Nostr relay вместо HTTP gateway. Он не заменяет relay/direct �
 - Релей-адрес: один `wss://` URL в настройках (v1). `ws://` разрешён только для
   loopback в тестах. Пустой адрес — транспорт выключен.
 
+### Аутентификация relay (NIP-42)
+
+- Если relay присылает `["AUTH", challenge]`, клиент отвечает событием kind 22242,
+  подписанным транспортным ключом: теги `relay` (URL без завершающего `/`) и
+  `challenge`, пустой `content`, текущий `created_at`. Ответ — `["AUTH", event]`.
+- После `["OK", <id>, true, …]` для этого события клиент повторяет ожидающий
+  `EVENT`/`REQ`; при `false` — явная ошибка, без бесконечных повторов. Не более
+  двух challenge на операцию; relay, не запросивший AUTH, лишнего round-trip не
+  получает.
+- `CLOSED … auth-required` без challenge — явная ошибка «relay требует NIP-42,
+  но не прислал challenge», а не пустой результат.
+- Проверка: loopback-relay с обязательным AUTH (теги, подпись, повтор REQ) —
+  PASS; на реальном damus наш AUTH доходит, но relay отвечает собственной ошибкой
+  `relay needs serviceUrl to be configured before AUTH can work`; snort, primal
+  и nos.lol не требуют AUTH для анонимных DM-фильтров. Работоспособность AUTH на
+  публичном relay зависит от конкретного relay.
+
 ### Ограничения и угрозы
 
 - Размер события ≤ 64 КиБ; envelope сверх лимита отклоняется до публикации.
@@ -211,4 +228,5 @@ Nostr relay вместо HTTP gateway. Он не заменяет relay/direct �
   сборка и unit-тесты не означают доступность публичного relay.
 - Приёмка: сообщение, доставленное через Nostr, проверяется тем же Flint-envelope
   путём (подпись/дедуп/quarantine), а не «Nostr сказал ok».
+
 

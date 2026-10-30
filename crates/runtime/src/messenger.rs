@@ -266,7 +266,7 @@ fn app_transport(
     // else: a failure here must not silently fall back to the Flint relay.
     if let Some(setup) = nostr {
         let keys = NostrKeys::load_or_create(&setup.key_path).map_err(err)?;
-        let relay = WsRelay::new(&setup.url).map_err(err)?;
+        let relay = WsRelay::new(&setup.url, keys.clone()).map_err(err)?;
         return Ok(AppTransport::Nostr(NostrTransport::new(
             relay,
             keys,

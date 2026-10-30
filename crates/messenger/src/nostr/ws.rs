@@ -1,10 +1,16 @@
-//! Blocking WebSocket relay client for the Nostr transport (NIP-01 subset).
+//! Blocking WebSocket relay client for the Nostr transport (NIP-01 + NIP-42).
 //!
 //! The transport contract allows one `wss://` relay; plain `ws://` is accepted
 //! only for loopback tests. Publishing waits for the relay's `OK` for the exact
 //! event id, and a query stops at `EOSE` or on the read timeout — an absent EOSE
 //! never turns into an infinite wait.
+//!
+//! When a relay asks for authentication (`["AUTH", challenge]`) the client signs
+//! a kind-22242 event with the transport key, answers with `["AUTH", event]`,
+//! waits for its `OK`, and re-sends the pending `EVENT`/`REQ`. Relays that never
+//! ask need no extra round trip.
 
+use std::collections::HashSet;
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
 
@@ -13,6 +19,7 @@ use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{connect, Message, WebSocket};
 
 use super::event::Event;
+use super::keys::NostrKeys;
 use super::relay::{Relay, RelayFilter};
 use crate::error::{Error, Result};
 
@@ -22,6 +29,8 @@ const IO_TIMEOUT: Duration = Duration::from_secs(15);
 const PUBLISH_TIMEOUT: Duration = Duration::from_secs(15);
 /// How long a query waits for `EOSE` after the last event.
 const QUERY_TIMEOUT: Duration = Duration::from_secs(20);
+/// A relay may ask for authentication at most this many times per operation.
+const MAX_AUTH_ATTEMPTS: u8 = 2;
 
 fn store(message: impl Into<String>) -> Error {
     Error::Store(format!("nostr/ws: {}", message.into()))
@@ -30,11 +39,12 @@ fn store(message: impl Into<String>) -> Error {
 /// One relay endpoint. Connections are opened per operation and never pooled.
 pub struct WsRelay {
     url: String,
+    keys: NostrKeys,
 }
 
 impl WsRelay {
-    /// Accept `wss://`; `ws://` only for loopback (unit tests, local drills).
-    pub fn new(url: &str) -> Result<Self> {
+    /// Validate a relay URL without creating a client (settings, tests).
+    pub fn validate_url(url: &str) -> Result<()> {
         let trimmed = url.trim();
         if trimmed.is_empty() {
             return Err(store("empty relay URL"));
@@ -46,9 +56,37 @@ impl WsRelay {
         if !(lower.starts_with("wss://") || loopback) {
             return Err(store("relay URL must be wss:// (ws:// only for loopback)"));
         }
+        Ok(())
+    }
+
+    /// Accept `wss://`; `ws://` only for loopback (unit tests, local drills).
+    pub fn new(url: &str, keys: NostrKeys) -> Result<Self> {
+        Self::validate_url(url)?;
         Ok(Self {
-            url: trimmed.to_string(),
+            url: url.trim().to_string(),
+            keys,
         })
+    }
+
+    /// Signed NIP-42 authentication event for one challenge.
+    pub(crate) fn auth_event(&self, challenge: &str) -> Result<Event> {
+        let tags = vec![
+            vec!["relay".to_string(), self.relay_tag()],
+            vec!["challenge".to_string(), challenge.to_string()],
+        ];
+        Event::unsigned(
+            self.keys.public_hex(),
+            super::unix_now_secs(),
+            22242,
+            tags,
+            String::new(),
+        )
+        .sign(self.keys.secret())
+    }
+
+    /// Relay URL as used by the NIP-42 `relay` tag (no trailing slash).
+    fn relay_tag(&self) -> String {
+        self.url.trim_end_matches('/').to_string()
     }
 
     fn open(&self) -> Result<WebSocket<MaybeTlsStream<TcpStream>>> {
@@ -82,6 +120,18 @@ impl WsRelay {
         let _ = socket.close(None);
         let _ = socket.flush();
     }
+
+    /// Answer one challenge and register the pending `AUTH` event id.
+    fn answer_auth(
+        &self,
+        socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
+        challenge: &str,
+    ) -> Result<String> {
+        let event = self.auth_event(challenge)?;
+        let id = event.id.clone();
+        self.send(socket, auth_payload(&event))?;
+        Ok(id)
+    }
 }
 
 impl Relay for WsRelay {
@@ -89,6 +139,8 @@ impl Relay for WsRelay {
         let mut socket = self.open()?;
         self.send(&mut socket, publish_payload(event))?;
         let deadline = Instant::now() + PUBLISH_TIMEOUT;
+        let mut auth_attempts = 0u8;
+        let mut pending_auth: Option<String> = None;
         let outcome = loop {
             if Instant::now() > deadline {
                 break Err(store("timeout waiting for OK"));
@@ -103,11 +155,34 @@ impl Relay for WsRelay {
                 _ => continue,
             };
             match parse_message(&text) {
+                Ok(RelayMessage::Auth(challenge)) => {
+                    if auth_attempts >= MAX_AUTH_ATTEMPTS {
+                        break Err(store("relay asked for authentication too many times"));
+                    }
+                    auth_attempts += 1;
+                    match self.answer_auth(&mut socket, &challenge) {
+                        Ok(id) => pending_auth = Some(id),
+                        Err(error) => break Err(error),
+                    }
+                }
                 Ok(RelayMessage::Ok {
                     id,
                     accepted,
                     message,
                 }) => {
+                    if pending_auth.as_deref() == Some(id.as_str()) {
+                        if !accepted {
+                            break Err(store(format!("relay rejected AUTH: {message}")));
+                        }
+                        pending_auth = None;
+                        // The relay may have dropped the event while it wanted
+                        // authentication; one resend after a successful AUTH is
+                        // the NIP-42 pattern.
+                        if let Err(error) = self.send(&mut socket, publish_payload(event)) {
+                            break Err(error);
+                        }
+                        continue;
+                    }
                     if id != event.id {
                         continue;
                     }
@@ -121,6 +196,10 @@ impl Relay for WsRelay {
                     let _ = message;
                 }
                 Ok(RelayMessage::Closed { message, .. }) => {
+                    if pending_auth.is_some() {
+                        // Wait for the AUTH OK, then the resend decides.
+                        continue;
+                    }
                     break Err(store(format!("relay closed the subscription: {message}")));
                 }
                 Ok(_) => continue,
@@ -136,6 +215,9 @@ impl Relay for WsRelay {
         let subscription = format!("flint-{}", std::process::id());
         self.send(&mut socket, req_payload(filter, &subscription))?;
         let mut events = Vec::new();
+        let mut seen = HashSet::new();
+        let mut auth_attempts = 0u8;
+        let mut pending_auth: Option<String> = None;
         let deadline = Instant::now() + QUERY_TIMEOUT;
         loop {
             if Instant::now() > deadline {
@@ -153,21 +235,63 @@ impl Relay for WsRelay {
                 Message::Close(_) => break,
                 _ => continue,
             };
-            match parse_message(&text)? {
-                RelayMessage::Event(event) => {
-                    if events.len() < filter.limit.max(1) {
+            match parse_message(&text) {
+                Ok(RelayMessage::Auth(challenge)) => {
+                    if auth_attempts >= MAX_AUTH_ATTEMPTS {
+                        Self::close(socket);
+                        return Err(store("relay asked for authentication too many times"));
+                    }
+                    auth_attempts += 1;
+                    match self.answer_auth(&mut socket, &challenge) {
+                        Ok(id) => pending_auth = Some(id),
+                        Err(error) => {
+                            Self::close(socket);
+                            return Err(error);
+                        }
+                    }
+                }
+                Ok(RelayMessage::Ok {
+                    id,
+                    accepted,
+                    message,
+                }) if pending_auth.as_deref() == Some(id.as_str()) => {
+                    if !accepted {
+                        Self::close(socket);
+                        return Err(store(format!("relay rejected AUTH: {message}")));
+                    }
+                    pending_auth = None;
+                    // Re-issue the subscription now that the relay knows us.
+                    if let Err(error) = self.send(&mut socket, req_payload(filter, &subscription)) {
+                        Self::close(socket);
+                        return Err(error);
+                    }
+                }
+                Ok(RelayMessage::Event(event)) => {
+                    if seen.insert(event.id.clone()) && events.len() < filter.limit.max(1) {
                         events.push(event);
                     }
                 }
-                RelayMessage::Eose(id) if id == subscription => break,
-                RelayMessage::Closed {
+                Ok(RelayMessage::Eose(id)) if id == subscription => break,
+                Ok(RelayMessage::Closed {
                     subscription: id,
                     message,
-                } if id == subscription => {
+                }) if id == subscription => {
+                    if pending_auth.is_some() {
+                        continue;
+                    }
                     Self::close(socket);
+                    if message.contains("auth-required") && auth_attempts == 0 {
+                        return Err(store(
+                            "relay requires NIP-42 authentication but sent no AUTH challenge",
+                        ));
+                    }
                     return Err(store(format!("relay closed the subscription: {message}")));
                 }
-                _ => continue,
+                Ok(_) => continue,
+                Err(error) => {
+                    Self::close(socket);
+                    return Err(error);
+                }
             }
         }
         let _ = self.send(&mut socket, json!(["CLOSE", subscription]).to_string());
@@ -189,6 +313,11 @@ fn install_crypto_provider() {
 /// `["EVENT", event]` as sent by a client.
 fn publish_payload(event: &Event) -> String {
     json!(["EVENT", event]).to_string()
+}
+
+/// `["AUTH", event]` as sent by a client (NIP-42).
+fn auth_payload(event: &Event) -> String {
+    json!(["AUTH", event]).to_string()
 }
 
 /// `["REQ", subscription, filter]` with only the fields in use.
@@ -222,6 +351,8 @@ pub(crate) enum RelayMessage {
         subscription: String,
         message: String,
     },
+    /// NIP-42 challenge: the relay wants the client to authenticate.
+    Auth(String),
     Other,
 }
 
@@ -260,6 +391,7 @@ fn parse_message(text: &str) -> Result<RelayMessage> {
             subscription: string_at(1),
             message: string_at(2),
         },
+        "AUTH" => RelayMessage::Auth(string_at(1)),
         _ => RelayMessage::Other,
     })
 }
@@ -268,15 +400,34 @@ fn parse_message(text: &str) -> Result<RelayMessage> {
 mod tests {
     use super::*;
     use std::str::FromStr;
+    use std::sync::{Arc, Mutex};
+
+    fn test_keys() -> NostrKeys {
+        NostrKeys::from_hex("0000000000000000000000000000000000000000000000000000000000000001")
+            .expect("keys")
+    }
 
     #[test]
     fn url_policy() {
-        assert!(WsRelay::new("wss://relay.example.com").is_ok());
-        assert!(WsRelay::new("ws://127.0.0.1:8080").is_ok());
-        assert!(WsRelay::new("ws://localhost:7777").is_ok());
-        assert!(WsRelay::new("ws://relay.example.com").is_err());
-        assert!(WsRelay::new("https://relay.example.com").is_err());
-        assert!(WsRelay::new("").is_err());
+        let keys = test_keys;
+        assert!(WsRelay::new("wss://relay.example.com", keys()).is_ok());
+        assert!(WsRelay::new("ws://127.0.0.1:8080", keys()).is_ok());
+        assert!(WsRelay::new("ws://localhost:7777", keys()).is_ok());
+        assert!(WsRelay::new("ws://relay.example.com", keys()).is_err());
+        assert!(WsRelay::new("https://relay.example.com", keys()).is_err());
+        assert!(WsRelay::new("", keys()).is_err());
+    }
+
+    #[test]
+    fn auth_event_carries_relay_and_challenge() {
+        let relay = WsRelay::new("wss://relay.example.com/", test_keys()).expect("relay");
+        let event = relay.auth_event("challenge-1").expect("auth event");
+        assert_eq!(event.kind, 22242);
+        assert_eq!(event.content, "");
+        assert_eq!(event.tags[0], vec!["relay", "wss://relay.example.com"]);
+        assert_eq!(event.tags[1], vec!["challenge", "challenge-1"]);
+        let public = event.verify().expect("auth event signature");
+        assert_eq!(public, relay.keys.public());
     }
 
     #[test]
@@ -329,17 +480,136 @@ mod tests {
             parse_message(r#"["NOTICE","slow down"]"#).expect("notice"),
             RelayMessage::Notice(_)
         ));
+        assert!(matches!(
+            parse_message(r#"["AUTH","challenge"]"#).expect("auth"),
+            RelayMessage::Auth(challenge) if challenge == "challenge"
+        ));
         let wrapped = json!(["EVENT", "sub", serde_json::to_value(&event).expect("value")]);
         assert!(matches!(
             parse_message(&wrapped.to_string()).expect("event"),
             RelayMessage::Event(parsed) if parsed.id == event.id
         ));
-        assert!(matches!(
-            parse_message(r#"["AUTH","challenge"]"#).expect("other"),
-            RelayMessage::Other
-        ));
         assert!(parse_message("not json").is_err());
         assert!(parse_message("{}").is_err());
+    }
+
+    /// Loopback relay that demands NIP-42: the query must authenticate first,
+    /// then the re-issued REQ gets EOSE.
+    #[test]
+    fn query_answers_auth_challenge_and_retries() {
+        use std::net::TcpListener;
+        use tungstenite::accept;
+
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let address = listener.local_addr().expect("addr");
+        let seen: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+        let server_seen = seen.clone();
+        std::thread::spawn(move || {
+            for stream in listener.incoming() {
+                let Ok(stream) = stream else { break };
+                let Ok(mut socket) = accept(stream) else {
+                    break;
+                };
+                let _ = socket.send(tungstenite::Message::Text(
+                    r#"["AUTH","chal-loopback"]"#.to_string().into(),
+                ));
+                let mut authed = false;
+                loop {
+                    let Ok(message) = socket.read() else { break };
+                    let tungstenite::Message::Text(text) = message else {
+                        continue;
+                    };
+                    let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) else {
+                        continue;
+                    };
+                    let Some(array) = value.as_array() else {
+                        continue;
+                    };
+                    match array.first().and_then(|v| v.as_str()) {
+                        Some("AUTH") => {
+                            let Some(raw) = array.get(1).cloned() else {
+                                continue;
+                            };
+                            let Ok(event) = serde_json::from_value::<Event>(raw) else {
+                                continue;
+                            };
+                            let tags = event.tags.clone();
+                            let challenge_ok = tags.iter().any(|tag| {
+                                tag == &vec!["challenge".to_string(), "chal-loopback".to_string()]
+                            });
+                            let relay_ok = tags.iter().any(|tag| {
+                                tag.first().map(String::as_str) == Some("relay")
+                                    && tag.get(1).map(String::as_str)
+                                        == Some(&format!("ws://{address}"))
+                            });
+                            let signed = event.verify().is_ok();
+                            server_seen
+                                .lock()
+                                .expect("seen")
+                                .push(format!("AUTH kind={} challenge={challenge_ok} relay={relay_ok} signed={signed}", event.kind));
+                            if signed && challenge_ok && relay_ok {
+                                authed = true;
+                                let _ = socket.send(tungstenite::Message::Text(
+                                    json!(["OK", event.id, true, ""]).to_string().into(),
+                                ));
+                            } else {
+                                let _ = socket.send(tungstenite::Message::Text(
+                                    json!(["OK", event.id, false, "invalid auth"])
+                                        .to_string()
+                                        .into(),
+                                ));
+                            }
+                        }
+                        Some("REQ") => {
+                            let subscription = array
+                                .get(1)
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("sub")
+                                .to_string();
+                            server_seen
+                                .lock()
+                                .expect("seen")
+                                .push(format!("REQ authed={authed}"));
+                            if authed {
+                                let _ = socket.send(tungstenite::Message::Text(
+                                    json!(["EOSE", subscription]).to_string().into(),
+                                ));
+                            } else {
+                                let _ = socket.send(tungstenite::Message::Text(
+                                    json!(["CLOSED", subscription, "auth-required"])
+                                        .to_string()
+                                        .into(),
+                                ));
+                            }
+                        }
+                        Some("CLOSE") => break,
+                        _ => {}
+                    }
+                }
+            }
+        });
+
+        let url = format!("ws://{address}");
+        let relay = WsRelay::new(&url, test_keys()).expect("relay");
+        let filter = RelayFilter {
+            kinds: vec![1],
+            recipient: None,
+            since: super::super::unix_now_secs().saturating_sub(60),
+            limit: 2,
+        };
+        let events = relay.query(&filter).expect("query after auth");
+        assert!(events.is_empty());
+        let seen = seen.lock().expect("seen").clone();
+        assert!(
+            seen.iter().any(|line| line.starts_with("AUTH kind=22242",)
+                && line.contains("challenge=true")
+                && line.contains("signed=true")),
+            "relay must receive a valid AUTH event: {seen:?}"
+        );
+        assert!(
+            seen.iter().any(|line| line == "REQ authed=true"),
+            "the request must be retried after authentication: {seen:?}"
+        );
     }
 
     /// Read-only network probe: REQ → EOSE on a live relay. Not run by default.
@@ -350,18 +620,20 @@ mod tests {
         let Ok(url) = std::env::var("FLINT_NOSTR_LIVE_RELAY") else {
             panic!("FLINT_NOSTR_LIVE_RELAY must be set for the live relay probe");
         };
-        // The probe verifies TLS, WebSocket, REQ and EOSE. Kind 1 (public notes)
-        // is used by default because many relays answer kind 1059 filters with
-        // `CLOSED auth-required` (NIP-42), which v1 does not implement. Set
-        // FLINT_NOSTR_LIVE_RELAY_KIND=1059 to observe that behaviour instead.
+        // The probe verifies TLS, WebSocket, AUTH (when asked), REQ and EOSE.
+        // Kind 1 is the default; kind 1059 now also works on relays that gate DM
+        // filters behind NIP-42.
         let kind = std::env::var("FLINT_NOSTR_LIVE_RELAY_KIND")
             .ok()
             .and_then(|value| value.parse().ok())
             .unwrap_or(1u32);
-        let relay = WsRelay::new(&url).expect("relay url");
+        let relay = WsRelay::new(&url, NostrKeys::generate().expect("keys")).expect("relay url");
+        let recipient = std::env::var("FLINT_NOSTR_LIVE_RECIPIENT")
+            .ok()
+            .filter(|value| !value.is_empty());
         let filter = RelayFilter {
             kinds: vec![kind],
-            recipient: None,
+            recipient,
             since: super::super::unix_now_secs().saturating_sub(600),
             limit: 3,
         };

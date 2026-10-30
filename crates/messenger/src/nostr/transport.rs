@@ -471,12 +471,15 @@ mod tests {
 
         let url = format!("ws://{}", address);
         let alice_transport = NostrTransport::new(
-            WsRelay::new(&url).expect("relay"),
+            WsRelay::new(&url, alice_keys.clone()).expect("relay"),
             alice_keys,
             directory.clone(),
         );
-        let bob_transport =
-            NostrTransport::new(WsRelay::new(&url).expect("relay"), bob_keys, directory);
+        let bob_transport = NostrTransport::new(
+            WsRelay::new(&url, bob_keys.clone()).expect("relay"),
+            bob_keys,
+            directory,
+        );
 
         let envelope = Envelope::seal_default(
             &alice,
