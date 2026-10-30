@@ -11,18 +11,23 @@
 //! ask need no extra round trip.
 
 use std::collections::HashSet;
-use std::net::TcpStream;
+use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
+use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 use serde_json::{json, Value};
+use tungstenite::protocol::WebSocketConfig;
 use tungstenite::stream::MaybeTlsStream;
-use tungstenite::{connect, Message, WebSocket};
+use tungstenite::{client_tls_with_config, Message, WebSocket};
+use url::{Host, Url};
 
 use super::event::Event;
 use super::keys::NostrKeys;
 use super::relay::{Relay, RelayFilter};
 use crate::error::{Error, Result};
 
+/// Budget for DNS, TCP and the WebSocket/TLS handshake together.
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 /// Read/write budget for one relay operation after the handshake.
 const IO_TIMEOUT: Duration = Duration::from_secs(15);
 /// How long a publish waits for the matching `OK`.
@@ -31,6 +36,14 @@ const PUBLISH_TIMEOUT: Duration = Duration::from_secs(15);
 const QUERY_TIMEOUT: Duration = Duration::from_secs(20);
 /// A relay may ask for authentication at most this many times per operation.
 const MAX_AUTH_ATTEMPTS: u8 = 2;
+/// One relay message above this is a protocol/resource violation, not an event.
+const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
+/// Frame cap keeps a single fragmented message from allocating unbounded memory.
+const MAX_FRAME_BYTES: usize = 256 * 1024;
+/// A query asks for at most a handful of events; anything beyond these caps is a
+/// flood, and the query fails instead of silently truncating or growing memory.
+const MAX_QUERY_EVENTS: usize = 4096;
+const MAX_QUERY_BYTES: usize = 8 * 1024 * 1024;
 
 fn store(message: impl Into<String>) -> Error {
     Error::Store(format!("nostr/ws: {}", message.into()))
@@ -43,20 +56,33 @@ pub struct WsRelay {
 }
 
 impl WsRelay {
-    /// Validate a relay URL without creating a client (settings, tests).
-    pub fn validate_url(url: &str) -> Result<()> {
+    /// Parse and enforce the relay URL policy. The host is compared as a parsed
+    /// host, not as a string prefix: `ws://localhost.attacker.invalid` is remote.
+    fn parse_url(url: &str) -> Result<Url> {
         let trimmed = url.trim();
         if trimmed.is_empty() {
             return Err(store("empty relay URL"));
         }
-        let lower = trimmed.to_ascii_lowercase();
-        let loopback = lower.starts_with("ws://127.0.0.1")
-            || lower.starts_with("ws://localhost")
-            || lower.starts_with("ws://[::1]");
-        if !(lower.starts_with("wss://") || loopback) {
-            return Err(store("relay URL must be wss:// (ws:// only for loopback)"));
+        let parsed =
+            Url::parse(trimmed).map_err(|error| store(format!("invalid relay URL: {error}")))?;
+        match parsed.scheme() {
+            "wss" => {}
+            "ws" => {
+                let loopback = matches!(parsed.host(), Some(Host::Domain(host)) if host.eq_ignore_ascii_case("localhost"))
+                    || matches!(parsed.host(), Some(Host::Ipv4(ip)) if ip.is_loopback())
+                    || matches!(parsed.host(), Some(Host::Ipv6(ip)) if ip.is_loopback());
+                if !loopback {
+                    return Err(store("relay URL must be wss:// (ws:// only for loopback)"));
+                }
+            }
+            _ => return Err(store("relay URL must be wss:// (ws:// only for loopback)")),
         }
-        Ok(())
+        Ok(parsed)
+    }
+
+    /// Validate a relay URL without creating a client (settings, tests).
+    pub fn validate_url(url: &str) -> Result<()> {
+        Self::parse_url(url).map(|_| ())
     }
 
     /// Accept `wss://`; `ws://` only for loopback (unit tests, local drills).
@@ -89,10 +115,81 @@ impl WsRelay {
         self.url.trim_end_matches('/').to_string()
     }
 
+    /// Resolve with the caller's deadline. The OS resolver is blocking, so the
+    /// lookup runs on a helper thread; the connection attempt itself still fails
+    /// when the budget expires instead of pinning the transport worker.
+    fn resolve_with_budget(host: &str, port: u16, deadline: Instant) -> Result<Vec<SocketAddr>> {
+        let host = host.to_string();
+        let (tx, rx) = mpsc::channel();
+        std::thread::spawn(move || {
+            let result = (host.as_str(), port)
+                .to_socket_addrs()
+                .map(|addrs| addrs.collect::<Vec<_>>());
+            let _ = tx.send(result);
+        });
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            return Err(store("resolve deadline exceeded"));
+        }
+        match rx.recv_timeout(remaining) {
+            Ok(Ok(addrs)) if !addrs.is_empty() => Ok(addrs),
+            Ok(Ok(_)) => Err(store("relay host has no address")),
+            Ok(Err(error)) => Err(store(format!("resolve: {error}"))),
+            Err(_) => Err(store("resolve deadline exceeded")),
+        }
+    }
+
     fn open(&self) -> Result<WebSocket<MaybeTlsStream<TcpStream>>> {
         install_crypto_provider();
-        let (socket, _response) =
-            connect(self.url.as_str()).map_err(|error| store(format!("connect: {error}")))?;
+        let parsed = Self::parse_url(&self.url)?;
+        let host = match parsed.host() {
+            Some(Host::Domain(host)) => host.to_string(),
+            Some(Host::Ipv4(ip)) => ip.to_string(),
+            Some(Host::Ipv6(ip)) => ip.to_string(),
+            None => return Err(store("relay URL has no host")),
+        };
+        let port = parsed
+            .port_or_known_default()
+            .ok_or_else(|| store("relay URL has no port"))?;
+        let deadline = Instant::now() + CONNECT_TIMEOUT;
+        let addrs = Self::resolve_with_budget(&host, port, deadline)?;
+        let mut last_error = None;
+        let mut socket = None;
+        for addr in addrs {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                break;
+            }
+            match TcpStream::connect_timeout(&addr, remaining) {
+                Ok(stream) => {
+                    let _ = stream.set_nodelay(true);
+                    // Bound TLS and WebSocket handshake I/O by the same budget.
+                    let _ = stream.set_read_timeout(Some(CONNECT_TIMEOUT));
+                    let _ = stream.set_write_timeout(Some(CONNECT_TIMEOUT));
+                    let mut config = WebSocketConfig::default();
+                    config.max_message_size = Some(MAX_MESSAGE_BYTES);
+                    config.max_frame_size = Some(MAX_FRAME_BYTES);
+                    match client_tls_with_config(self.url.as_str(), stream, Some(config), None) {
+                        Ok((ws, _response)) => {
+                            socket = Some(ws);
+                            break;
+                        }
+                        Err(error) => {
+                            return Err(store(format!("handshake: {error}")));
+                        }
+                    }
+                }
+                Err(error) => last_error = Some(error),
+            }
+        }
+        let socket = socket.ok_or_else(|| {
+            store(format!(
+                "connect deadline exceeded: {}",
+                last_error
+                    .map(|e| e.to_string())
+                    .unwrap_or_else(|| "no address".into())
+            ))
+        })?;
         match socket.get_ref() {
             MaybeTlsStream::Plain(stream) => {
                 let _ = stream.set_read_timeout(Some(IO_TIMEOUT));
@@ -216,6 +313,8 @@ impl Relay for WsRelay {
         self.send(&mut socket, req_payload(filter, &subscription))?;
         let mut events = Vec::new();
         let mut seen = HashSet::new();
+        let mut received = 0usize;
+        let mut received_bytes = 0usize;
         let mut auth_attempts = 0u8;
         let mut pending_auth: Option<String> = None;
         let deadline = Instant::now() + QUERY_TIMEOUT;
@@ -235,6 +334,12 @@ impl Relay for WsRelay {
                 Message::Close(_) => break,
                 _ => continue,
             };
+            received += 1;
+            received_bytes = received_bytes.saturating_add(text.len());
+            if received > MAX_QUERY_EVENTS || received_bytes > MAX_QUERY_BYTES {
+                Self::close(socket);
+                return Err(store("query budget exceeded: relay sent too many messages"));
+            }
             match parse_message(&text) {
                 Ok(RelayMessage::Auth(challenge)) => {
                     if auth_attempts >= MAX_AUTH_ATTEMPTS {
@@ -416,6 +521,13 @@ mod tests {
         assert!(WsRelay::new("ws://relay.example.com", keys()).is_err());
         assert!(WsRelay::new("https://relay.example.com", keys()).is_err());
         assert!(WsRelay::new("", keys()).is_err());
+        // Prefix tricks must not pass as loopback.
+        assert!(WsRelay::new("ws://localhost.attacker.invalid", keys()).is_err());
+        assert!(WsRelay::new("ws://127.0.0.1.attacker.invalid", keys()).is_err());
+        assert!(WsRelay::new("ws://localhostattacker.invalid", keys()).is_err());
+        assert!(WsRelay::validate_url("ws://localhost.attacker.invalid").is_err());
+        assert!(WsRelay::validate_url("ws://localhost:7777").is_ok());
+        assert!(WsRelay::validate_url("wss://localhost.attacker.invalid").is_ok());
     }
 
     #[test]

@@ -1,0 +1,431 @@
+warning: unexpected `cfg` condition value: `clippy`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:56:1
+   |
+56 | impl_array_newtype!(ChainCode, u8, 32);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+   = note: this warning originates in the macro `impl_array_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `serde`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:58:1
+   |
+58 | impl_array_newtype_encodable!(ChainCode, u8, 32);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype_encodable` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: this warning originates in the macro `impl_array_newtype_encodable` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `clippy`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:62:1
+   |
+62 | impl_array_newtype!(Fingerprint, u8, 4);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: this warning originates in the macro `impl_array_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `serde`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:64:1
+   |
+64 | impl_array_newtype_encodable!(Fingerprint, u8, 4);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype_encodable` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: this warning originates in the macro `impl_array_newtype_encodable` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `grin_keychain` (lib) generated 6 warnings (2 duplicates)
+warning: use of deprecated module `std::u64`: all constants in this module replaced by associated constants on the type
+  --> third_party\grin-wallet\grin\core\src\core\pmmr\pmmr.rs:15:37
+   |
+15 | use std::{iter, marker, ops::Range, u64};
+   |                                     ^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated constant `std::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\grin\core\src\core\pmmr\pmmr.rs:498:28
+    |
+498 | const ALL_ONES: u64 = u64::MAX;
+    |                            ^^^
+
+warning: use of deprecated module `std::u64`: all constants in this module replaced by associated constants on the type
+  --> third_party\grin-wallet\grin\core\src\pow\types.rs:26:10
+   |
+26 | use std::u64;
+   |          ^^^
+
+warning: use of deprecated constant `std::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\grin\core\src\ser.rs:355:33
+    |
+355 |     pub const MAX: u32 = std::u32::MAX;
+    |                                    ^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+  --> third_party\grin-wallet\grin\core\src\pow\cuckatoo.rs:48:24
+   |
+48 |         if max_edges >= u64::max_value() / 2 {
+   |                              ^^^^^^^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+  --> third_party\grin-wallet\grin\core\src\pow\cuckatoo.rs:61:14
+   |
+61 |             nil: u64::max_value(),
+   |                       ^^^^^^^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+  --> third_party\grin-wallet\grin\core\src\pow\cuckatoo.rs:68:29
+   |
+68 |         self.adj_list = vec![u64::max_value(); 2 * self.max_nodes as usize];
+   |                                   ^^^^^^^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\grin\core\src\pow\types.rs:419:20
+    |
+419 |         min(diff, <u64>::max_value() as u128) as u64
+    |                          ^^^^^^^^^
+
+warning: struct `Edge` is never constructed
+  --> third_party\grin-wallet\grin\core\src\pow\common.rs:34:12
+   |
+34 | pub struct Edge {
+   |            ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `grin_core` (lib) generated 9 warnings
+warning: unnecessary parentheses around closure body
+   --> third_party\grin-wallet\grin\chain\src\txhashset\bitmap_accumulator.rs:242:25
+    |
+242 |             .map(move |(idx, _)| (idx as u32 + idx_offset as u32))
+    |                                  ^                              ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+242 -             .map(move |(idx, _)| (idx as u32 + idx_offset as u32))
+242 +             .map(move |(idx, _)| idx as u32 + idx_offset as u32)
+    |
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\bitmap_accumulator.rs:190:23
+    |
+190 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<BitmapChunk, VecBackend<BitmapChunk>> {
+    |                          ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                          |
+    |                          the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+190 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<'_, BitmapChunk, VecBackend<BitmapChunk>> {
+    |                                                 +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> third_party\grin-wallet\grin\chain\src\txhashset\rewindable_kernel_view.rs:72:23
+   |
+72 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<TxKernel, PMMRBackend<TxKernel>> {
+   |                          ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                          |
+   |                          the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+72 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<'_, TxKernel, PMMRBackend<TxKernel>> {
+   |                                                 +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:390:3
+    |
+390 |         &self,
+    |         ^^^^^ the lifetime is elided here
+391 |         header: &BlockHeader,
+392 |     ) -> ReadonlyPMMR<TxKernel, PMMRBackend<TxKernel>> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+392 |     ) -> ReadonlyPMMR<'_, TxKernel, PMMRBackend<TxKernel>> {
+    |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:398:3
+    |
+398 |         &self,
+    |         ^^^^^ the lifetime is elided here
+399 |         header: &BlockHeader,
+400 |     ) -> ReadonlyPMMR<OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+400 |     ) -> ReadonlyPMMR<'_, OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+    |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:406:3
+    |
+406 |         &self,
+    |         ^^^^^ the lifetime is elided here
+407 |         header: &BlockHeader,
+408 |     ) -> ReadonlyPMMR<RangeProof, PMMRBackend<RangeProof>> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+408 |     ) -> ReadonlyPMMR<'_, RangeProof, PMMRBackend<RangeProof>> {
+    |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+    --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:1209:3
+     |
+1209 |         &self,
+     |         ^^^^^ the lifetime is elided here
+1210 |     ) -> ReadonlyPMMR<OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+     |
+     = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+     |
+1210 |     ) -> ReadonlyPMMR<'_, OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+     |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+    --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:1220:30
+     |
+1220 |     pub fn bitmap_readonly_pmmr(&self) -> ReadonlyPMMR<BitmapChunk, VecBackend<BitmapChunk>> {
+     |                                 ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+     |                                 |
+     |                                 the lifetime is elided here
+     |
+     = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+     |
+1220 |     pub fn bitmap_readonly_pmmr(&self) -> ReadonlyPMMR<'_, BitmapChunk, VecBackend<BitmapChunk>> {
+     |                                                        +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+    --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:1225:30
+     |
+1225 |     pub fn rproof_readonly_pmmr(&self) -> ReadonlyPMMR<RangeProof, PMMRBackend<RangeProof>> {
+     |                                 ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+     |                                 |
+     |                                 the lifetime is elided here
+     |
+     = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+     |
+1225 |     pub fn rproof_readonly_pmmr(&self) -> ReadonlyPMMR<'_, RangeProof, PMMRBackend<RangeProof>> {
+     |                                                        +++
+
+warning: `grin_chain` (lib) generated 9 warnings (run `cargo fix --lib -p grin_chain` to apply 9 suggestions)
+warning: trailing semicolon in macro used in expression position
+   --> third_party\grin-wallet\grin\p2p\src\types.rs:153:13
+    |
+153 |             let ip = try_iter_map_vec!(0..8, |_| reader.read_u16());
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #79813 <https://github.com/rust-lang/rust/issues/79813>
+    = note: `#[warn(semicolon_in_expressions_from_non_local_macros)]` (part of `#[warn(future_incompatible)]`) on by default
+    = note: this warning originates in the macro `try_iter_map_vec` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `grin_p2p` (lib) generated 1 warning
+warning: use of deprecated constant `std::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\libwallet\src\slatepack\types.rs:573:30
+    |
+573 |             if len as u16 > std::u16::MAX {
+    |                                       ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: `grin_wallet_libwallet` (lib) generated 1 warning
+   Compiling flint-messenger v0.1.69 (C:\DHW\crates\messenger)
+warning: unused `#[macro_use]` import
+  --> crates\grin-wallet-rpc\..\..\third_party\grin-wallet\src\lib.rs:16:1
+   |
+16 | #[macro_use]
+   | ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::cmd::wallet_args::ClapCompat`
+  --> crates\grin-wallet-rpc\..\..\third_party\grin-wallet\src\cmd\wallet.rs:16:5
+   |
+16 | use crate::cmd::wallet_args::ClapCompat;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> crates\grin-wallet-rpc\..\..\third_party\grin-wallet\src\cli\cli.rs:149:6
+    |
+149 |     let mut app = crate::cli::yaml_command(yml).version(env!("CARGO_PKG_VERSION"));
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `grin_wallet` (lib) generated 3 warnings (run `cargo fix --lib -p grin_wallet` to apply 2 suggestions)
+warning: `grin_wallet` (lib test) generated 3 warnings (3 duplicates)
+warning: unused `#[macro_use]` import
+  --> crates\grin-wallet-rpc\..\..\third_party\grin-wallet\src\bin\grin-wallet.rs:17:1
+   |
+17 | #[macro_use]
+   | ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: flint-slint@0.1.69: warning: Component is neither used nor exported
+warning: flint-slint@0.1.69:    --> C:\DHW\crates\slint-ui\ui\spike.slint:111:1
+warning: flint-slint@0.1.69:     |
+warning: flint-slint@0.1.69: 111 | / component ProfileChip inherits Rectangle {
+warning: flint-slint@0.1.69: 112 | |     in property <string> profile;
+warning: flint-slint@0.1.69: 113 | |     in property <bool> selected: false;
+warning: flint-slint@0.1.69: 114 | |     callback clicked();
+warning: flint-slint@0.1.69: ...   |
+warning: flint-slint@0.1.69: 133 | | }
+warning: flint-slint@0.1.69:     | |_^
+warning: flint-slint@0.1.69:     |
+warning: flint-slint@0.1.69: warning: Component is neither used nor exported
+warning: flint-slint@0.1.69:    --> C:\DHW\crates\slint-ui\ui\spike.slint:135:1
+warning: flint-slint@0.1.69:     |
+warning: flint-slint@0.1.69: 135 | / component ProfileTile inherits Rectangle {
+warning: flint-slint@0.1.69: 136 | |     in property <string> profile;
+warning: flint-slint@0.1.69: 137 | |     in property <bool> selected: false;
+warning: flint-slint@0.1.69: 138 | |     in property <length> tile-width: 68px;
+warning: flint-slint@0.1.69: ...   |
+warning: flint-slint@0.1.69: 184 | | }
+warning: flint-slint@0.1.69:     | |_^
+warning: flint-slint@0.1.69: warning: The binding for the property 'width' is part of a binding loop (root.layoutinfo-h -> width -> layoutinfo-h -> layoutinfo-h -> root.layoutinfo-h).
+warning: flint-slint@0.1.69:          This was allowed in previous version of Slint, but is deprecated and may cause panic at runtime
+warning: flint-slint@0.1.69:    --> C:\DHW\crates\slint-ui\ui\spike.slint:511:24
+warning: flint-slint@0.1.69:     |
+warning: flint-slint@0.1.69: 511 |                 width: root.width < 1100px ? 210px : 250px;
+warning: flint-slint@0.1.69:     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+warning: flint-slint@0.1.69: warning: The binding for the property 'layoutinfo-h' is part of a binding loop (root.layoutinfo-h -> width -> layoutinfo-h -> layoutinfo-h -> root.layoutinfo-h).
+warning: flint-slint@0.1.69:          This was allowed in previous version of Slint, but is deprecated and may cause panic at runtime
+warning: flint-slint@0.1.69:    --> C:\DHW\crates\slint-ui\ui\spike.slint:505:9
+warning: flint-slint@0.1.69:     |
+warning: flint-slint@0.1.69: 505 |         HorizontalLayout {
+warning: flint-slint@0.1.69:     |         ^^^^^^^^^^^^^^^^^
+warning: flint-slint@0.1.69: warning: The binding for the property 'layoutinfo-h' is part of a binding loop (root.layoutinfo-h -> width -> layoutinfo-h -> layoutinfo-h -> root.layoutinfo-h).
+warning: flint-slint@0.1.69:          This was allowed in previous version of Slint, but is deprecated and may cause panic at runtime
+warning: flint-slint@0.1.69:    --> C:\DHW\crates\slint-ui\ui\spike.slint:444:5
+warning: flint-slint@0.1.69:     |
+warning: flint-slint@0.1.69: 444 |     VerticalLayout {
+warning: flint-slint@0.1.69:     |     ^^^^^^^^^^^^^^^
+warning: flint-slint@0.1.69: warning: The binding for the property 'layoutinfo-h' is part of a binding loop (root.layoutinfo-h -> width -> layoutinfo-h -> layoutinfo-h -> root.layoutinfo-h).
+warning: flint-slint@0.1.69:          This was allowed in previous version of Slint, but is deprecated and may cause panic at runtime
+warning: flint-slint@0.1.69:    --> C:\DHW\crates\slint-ui\ui\spike.slint:186:37
+warning: flint-slint@0.1.69:     |
+warning: flint-slint@0.1.69: 186 | export component AppWindow inherits Window {
+warning: flint-slint@0.1.69:     |                                     ^^^^^^^
+warning: `grin_wallet` (bin "grin-wallet" test) generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_messenger-3hy1u5wamcyka\s-hnop5xjx44-18whgjq-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_messenger-27vy1kzebbmap\s-hnop5xl2y2-0phibdf-working`
+
+   Compiling flint-core v0.1.69 (C:\DHW\crates\core)
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_core-33r9gs5rhsf0b\s-hnop5xxyge-1y1rl7c-working`
+
+warning: `flint-messenger` (lib test) generated 1 warning
+warning: `flint-messenger` (lib) generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\rewrap_key-1r64zlgyp6pnq\s-hnop5ywq7i-1j6946v-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\relay_live-13bcuj280fw1j\s-hnop5ywhjk-1ggpcrx-working`
+
+   Compiling flint-janus v0.1.69 (C:\DHW\crates\janus)
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_janus-152u0sgps0dft\s-hnop5z096p-04bbn01-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_core-3ii3lwf2zw3t8\s-hnop5ywlwx-0z0az7y-working`
+
+   Compiling flint-runtime v0.1.69 (C:\DHW\crates\runtime)
+warning: `flint-messenger` (example "rewrap-key") generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_runtime-1jl75x4qw7m3v\s-hnop5zgtn1-09twm0n-working`
+
+warning: `flint-messenger` (test "relay_live") generated 1 warning
+warning: `flint-janus` (lib) generated 1 warning
+warning: `flint-core` (lib) generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\proxy_probe-007h82xtinb01\s-hnop60e8ge-1kvmyu3-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_relay-2f3sfcxn9rbdj\s-hnop60fcmf-1u97c0g-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\wallet_rpc_seedless-3c7nul6bbbqcl\s-hnop60f32s-1l0ui81-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\node_manager-337d1l6p8jjp5\s-hnop60e46z-1lto3ns-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\wallet_rpc_envelope-0i0k4drl3p3dw\s-hnop60ey05-0jtzh7n-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_relay-0uor114c11n7v\s-hnop60fo72-1gy060t-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\embedded_cli-1uzmjkafnttoi\s-hnop60f393-19eyn0w-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\tor_host-1wodfx78hxtc7\s-hnop60emy7-1qcazp9-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\lifecycle-2dfc932cnf1f4\s-hnop60ggh9-1mm10lm-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\live_embedded_scan_cancel-143oup1vwiq68\s-hnop60ezfm-1fkp7x8-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\tor_hidden_service-2ezfbkqwvkhsa\s-hnop60gkrp-0pu5qyq-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\onion_host-1ddiv0c30y8rt\s-hnop60gezm-1stau99-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_runtime-2p7s71ftymxe8\s-hnop60fnxh-1lobpxu-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_janus-3jp9sd6p7rvta\s-hnop60f6q1-1cclrv4-working`
+
+warning: `flint-runtime` (lib) generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\multiwallet-1me44t81sgb28\s-hnop60ryep-0xmwbxg-working`
+
+warning: `flint-core` (bin "flint-relay" test) generated 1 warning
+warning: `flint-core` (example "proxy_probe") generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\flint_selftest-2m8m1udpm786e\s-hnop64bxn6-18ft17n-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\transaction_lifecycle-3gl4ta40j18wz\s-hnop64eflf-0fv10sn-working`
+
+error: linking with `link.exe` failed: exit code: 1104
+  |
+  = note: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\link.exe" "/NOLOGO" "C:\\DHW\\target\\debug\\deps\\rustcxxY4bm\\symbols.o" "<41 object files omitted>" "<sysroot>\\lib\\rustlib\\x86_64-pc-windows-msvc\\lib/{libtest-*,libgetopts-*,librustc_std_workspace_std-*}.rlib" "C:\\DHW\\target\\debug\\deps/{libflint_core-a3b0f5a0ab754c7e,libreqwest-314ee4c6351e67b6,libbase64-74ef578ef43f83b1,libserde_urlencoded-54c20d13d2276d36,libgrin_wallet_api-75daf3a4770af7b1,libgrin_wallet_impls-b1cdcd4dafda5276,libsysinfo-fda8b8c9bd16bfa1,libtor_hsrproxy-ccd68f053858ecd6,libfutures_copy-f36142223e5be397,librangemap-81416a26c5e8fe33,libfslock_guard-3684dcb51b73362e,libarti_client-5a8d6cfaeac58fcb,libtor_hsservice-099fa988cf778928,libgrowable_bloom_filter-44e431d94603555c,libserde_bytes-8d485a6f8aa1bb52,libxxhash_rust-b1f18b6a2cee5656,libk12-23c2defd131c085b,libtor_ptmgr-87aed9fee78eaf2e,libtor_hsclient-e418e6c4099727e0,libtor_keymgr-e6088a975f27cf64,libglob_match-433f88e83581bccb,libinventory-f029c85003b78f32,libtor_config_path-952de225ac48b5f3,libshellexpand-fb68163aa82d3bf6,libos_str_bytes-1aa972f575fc4fba,libbstr-2a7693d1bfef1eb8,libdirectories-9a531653fd043a58,libtor_dirmgr-4d0cf89fe632760c,libmemmap2-d39d35bc99eeb25e,libevent_listener-7e3dc9182bceebb6,libparking-43cc1fcfce30f501,libtor_consdiff-e3afab1243ac57f0,libimara_diff-da48c3360756449d,libhashbrown-a9a1bb062dca9c38,libfoldhash-b9c35af9d34c93ee,librusqlite-be201fb02cdc938f,libhashlink-88138e569f9ab332,libhashbrown-2b0f99c096c0c706,liballocator_api2-6c0b0d5fc4e63384,liblibsqlite3_sys-f10f05dacdb2a460,libfallible_streaming_iterator-66502f23b6d118fc,libfallible_iterator-ee4d8c92e5192512,libtor_dirclient-f43a4b62e52b21e3,libasync_compression-4ca5a3c9b7f89949,libcompression_codecs-e480654f5c092f39,libzstd-568e77b2ff9612b5,libzstd_safe-3dee0eb295ba38a0,libzstd_sys-13f9d33990597580,libliblzma-6612dedc252d9191,libliblzma_sys-dc79077db4bd70a4,libcompression_core-89448e1e5c4b4774,libtor_circmgr-fa2a322d5035d62f,libtor_guardmgr-6f6fd695d6bb770f,libtor_relay_selection-2ae47e0ac901f278,libtor_persist-75904807ee542276,libfiletime-19936be74e200af3,libsanitize_filename-d117e50e77410386,libfslock_guard-b6caed49dac30597,libtor_dircommon-0767aee8d87f8863,libtor_chanmgr-b62cc1c4b38e409f,libtor_netdir-95f3cc4cae0617da,libnum_enum-d76edb75cedaf654,libtyped_index_collections-a6ee9d564aa7a75c,libtor_netdoc-9ba63ff81ea3e846,libhostname_validator-d4699a7d9c7d1e64,libphf-f7c33063032e20a9,libphf_shared-58b7d6cf93306a3b,libsiphasher-4464c3878c637034,libenumset-2d73e0800312110a,libtime-8c6b8f22029fd7da,libpowerfmt-50dfbdcce36e0ff4,libnum_conv-a6fd38b6d4bec1f8,libderanged-2286b6d2551d9973,libtime_core-3025bdb161d1aac5,libsaturating_time-522ab165cf70c4b8,libtor_socksproto-b4172f411938c704,libtor_proto-4be296737cdaddca,libnonany-93c1e38a266a048e,libbitvec-140a8f8d306f2b84,libwyz-559fd3a5c6830362,libtap-740f3e36bbc69ce7,libradium-1019291e1a75df0a,libfunty-d10f021658e83459,libtor_cell-03874e399b9e0448,libtor_linkspec-6077527fc7d5f635,libtor_protover-c75683e8ad856151,libserde_with-a343de19c88f4ad0,libby_address-c12141142196be78,libtor_hscrypto-e9286cfd83a422ab,libtor_units-466e8050da9735f6,libtor_memquota-8aa604ebf2e358cd,libsysinfo-7642890e59f3037b,libntapi-0d32f11ee6683afc,libwindows-70c3a2201c3e5423,libwindows_numerics-8a8b8db228aae376,libwindows_core-3fb442954afceead,libtor_log_ratelim-23986a71bdbe0395,libtor_config-2670640ce3cd12b5,libtoml-e0b231978afdb8d0,libtoml_writer-bf7fbd3725d2f279,libtoml_parser-41f8db38fc0e4b09,libwinnow-370e41b8fb4760c1,libserde_spanned-d9e112b110df9ac8,libtoml_datetime-5028076a87937062,libfs_mistrust-315793e7ffbe5548,libdirs-86911419fd18c157,libdirs_sys-4994a4dfe039e241,liboption_ext-92be8c7664b714e8,libserde_ignored-cc142f1535085382,libnotify-a4ead94199762797,libwindows_sys-6184cdc69b7ece15,libwindows_targets-d3ee3611905ed390,libnotify_types-a687946f25e6409e,libtor_rtcompat-fe7a3cf6b5ab1712,libcoarsetime-450bd7ccc68031af,libasync_native_tls-5b6b21741978d4e8,libasync_executors-3597e70dd6059f3f,libamplify-e935d83901b2a563,libascii-dbdb6a5da2f9467b,libamplify_num-c8a90c7a8ffb57d9,libasynchronous_codec-77bab1ec42b5ff6a,libtor_general_addr-4013eb6281e86667,libhumantime_serde-f628608825e59f80,libfigment-034dea4389c4718a,libtoml-c4f841cb0c696b3f,libuncased-0f2ce76c9d70f84e,libtor_async_utils-aeb2ea7894fc35f5,libpostage-33ed885ced8287eb,libatomic-1a7562dc5a228de8,liboneshot_fused_workaround-810f97171be0906f,libslotmap_careful-dffa6244802e6f9c,libslotmap-0c2e1868584f7c0b,libdyn_clone-d710e66b0682e613,libtor_key_forge-09e698f50e987905,libdowncast_rs-b01f30fa5b53af3e,libssh_key_fork_arti-b234a27f1ba6fe6b,libssh_cipher_fork_arti-40ba09eb7548be54,libsec1-5a12f200a791b3d2,libbase16ct-d1e64635cddc41ab,libssh_encoding_fork_arti-d61c74451b0875b4,libtor_cert-3a542de9e13937de,libderive_builder_fork_arti-31dababddafecce8,libcaret-7998d5182feb4ef6,libtor_checkable-b15b0b4d20f6fc5b,libtor_bytes-ff6080e519db51fa,libtor_llcrypto-4afdc8ffdfb26468,librand_jitter-44faef68ede96955,libwindows_sys-ca03a6cc08e46451,libwindows_targets-2da2aa1106057f53,librdrand-d66425fc6943197a,libsafelog-ad2c84f728e79e88,libfluid_let-e5ba84de9ccf9414,libaes-69c9cbe1cf97f86b,libctr-97bdf074d5a86e42,libreseeding_rng-b4d3b3cef311f204,libder_parser-0da116e9ead56d3f,libasn1_rs-0d4d60d4cfd3142a,librusticata_macros-71c86dbdb6474abc,librsa-6d4ae72b578aa18b,libpkcs1-d6c349cbaed013d8,libpkcs8-95f04e66883a918e,libspki-4c93aa970762ebb4,libder-524880bc74db3f41,libpem_rfc7468-851e8438e8acded1,libnum_bigint_dig-88b7c7afbd8b26bc,liblibm-e34f049d4cdaa560,libtor_memquota_cost-ca71117290a9a3a1,libderive_deftly-101c06db9c307aa7,libheck-0f8de0d8a1edf3b1,libsha1-03b8e86cae063edd,libtor_error-04b599455949336f,libvoid-e13534fc640f7e1a,libretry_error-f8393664a31e4096,libstatic_assertions-4ff5b8c2d2850efc,libweb_time_compat-335d64348a64db69,libstrum-4ae338f51d356277,libtor_basic_utils-63ab1ca3d4be4b9d,libhex-73a9feb0ead69998,libweak_table-bc177ff0cb047664,libitertools-018b94219c744e4e,librand_chacha-37d7c35e30c38468,libreqwest-6c7a95b6326e3429,libhyper_tls-32931a769cb80fd3,libtokio_native_tls-2e5126b2ebe196f6,libmime-3572fd522456460c,libencoding_rs-0036773a25941277,libsimdutf8-ce868c1a518113ab,libcore_detect-0ffa3b4b9083a8c7,libtower_http-e0a6bb57b378f289,libtower-72598644a4daa237,libtower_layer-2d7dc18d2de0a5fc,libnative_tls-60fc36f6b493fa44,libsync_wrapper-3d60e928939d0ac9,libgrin_wallet_libwallet-7ec556edd962b76a,libbs58-a4050f77de4805a3,libcurve25519_dalek-e9a70ac81b3ce691,libage-848e244cd4e3a70c,libi18n_embed-20c752f252aebcda,libfluent-04fab5c750d3f293,libfluent_bundle-cda562caef79139c,libintl_pluralrules-fb1c26ba079bce69,libself_cell-1e1d96d9b78ad673,libself_cell-9a04b5834ed75fd5,libintl_memoizer-4c036228ea35791d,libtype_map-ca1e13128d678219,librustc_hash-1e01cfb9b8a0bed6,libfluent_syntax-27cfbfc31259bef9,librustc_hash-3222c2e4af291379,libfluent_langneg-c4362b6619f57d3e,libunic_langid-30340e66638969eb,libunic_langid_impl-defb485a0dfa6667,librust_embed-6ce92af32e35bd2a,librust_embed_utils-fcf0a1d2f097fab4,libsha2-b9b2326368cd1f26,libbech32-56fad7fe08531528,libpin_project-82c528855f79e3eb,libscrypt-63ec5b89ae39b64b,libsalsa20-5e15f65b6898a680,libpbkdf2-47d9415fca47565c,libage_core-1d0d19231a0c51c4,libchacha20poly1305-96107cb9f736af49,libchacha20-e4ae16692e580172,libpoly1305-cdff82795cb18b5d,libuniversal_hash-2ba416aef2900d97,libaead-5edf5c4aeb1dacad,libcipher-2f8b728a3373ac97,libinout-d4956f8d2a6063df,libio_tee-3134a35a94facf3d,libcookie_factory-a9becc35c895c7fd,libnom-239c66189929de3b,librand-446e6136bf92ae33,librand_chacha-067c2729aab28675,libsecrecy-c73e42edc5bb97b0,libbase64-cc3f9cad40dc77a4,libsafemem-02cd4a01c0f2382b,librayon-48397aec67dd67d8,librayon_core-225841d894c641d7,libcrossbeam_deque-18c78f501e2d33ce,libcrossbeam_epoch-dd9bbff6d4191193,libeither-d897c31ab27b89d5,libgrin_wallet_config-de106f197c09adad,libdirs-5975cd3575680a0e,libdirs_sys-6702807642c19961,libcfg_if-8688b1f96588f10b,libtoml_edit-b1118be030b404ce,libserde_spanned-c7d0da8c0a4d6f2a,libwinnow-37bfec1d8241c314,libtoml_write-32e4e6adf03336e6,libtoml_datetime-06f87881192e51be,libtoml-259e6fbd94a2fb4a,libstrum-b83f6c4a2ec9cd2b,libgrin_api-51ffe006bfa15b8e,libhyper_rustls-ccaa647ceb292044,librustls_native_certs-cf186b4fdef5642a,libschannel-3daae4ace63b07ee,libtokio_rustls-159a86d9cd69aa65,librustls_pemfile-fb279c73be6a54d5,libbase64-582d969cad59f553,libeasy_jsonrpc_mw-51071ab9960afd7d,libjsonrpc_core-d6db78e2def82602,libfutures-773ed30f54e1e3ad,libhyper_timeout-5d4574a0c8829229,libhyper_util-173b60c4d8fdcab3,libwindows_registry-331d3704cf1639f7,libwindows_strings-a831acec1f6bf471,libwindows_result-46d01611d77a0efb,libbase64-a8b47bf9241c6b14,libipnet-795ac247fd479d31,libtower_service-8af97838eb1494de,libhyper-fac2086bd747b152,libwant-6b6781a2c5d8dcd3,libtry_lock-e0d56e45a045c66a,libh2-f9aabe1397d03970,libtracing-90a0ef111a43e7ea,libtracing_core-9a8641a428fbc0e6,libtokio_util-bfd9406f0d445cdd,libtokio-867797c996fc53b3,libsocket2-a8a949abd1b3f171,libmio-57fc7d362fda728f,libhttpdate-0bd55ada222c8418,libatomic_waker-bb64d63d93bcedad,libhttp_body_util-e7fe8cdbccb25d53,libhttp_body-76b5b084dfd7930b,libfutures-b48db5343a38c2a6,libfutures_executor-0f2dc2c3b201175c,libfutures_util-05f4f163018c111e,libfutures_io-7e454d72a20aefd1,libslab-2798ae19c65ceeb1,libfutures_channel-26591da97f7c182d,libpin_project_lite-eaf2fe6b888cd340,libfutures_sink-a76fd21232f2941e,libfutures_task-db9a031a25b308e8,libfutures_core-4d137df331ebb959,libgrin_pool-c29d622754ba6860,libgrin_p2p-54ce64372a6c7cf1,liblru_cache-718843cede1d6d19,liblinked_hash_map-63725d6ef7b62a8c,libgrin_chain-5992d72a4af0ab29,libbit_vec-4ad58a1c8a12dd99,libgrin_store-f9d9a106edf2a58c,libmemmap-d0eb7c33ff66851d,libtempfile-4c9caa9521b9c0fc,libfastrand-622e0cb8febcad31,libonce_cell-648b2123d9a372fc,libportable_atomic-cb88c28c8d092e18,libheed-a333a0a0855706f6,liburl-9e7e9ad708c1d9e2,libidna-3c6c67e7e436d9bf,libidna_adapter-e9cd16e660a8f892,libicu_properties-7e71a369eacf2713,libicu_properties_data-28b0a0da102439d6,libicu_normalizer-12f3848e5373173f,libicu_normalizer_data-74a0247b00889b46,libicu_collections-9491b6a011c48647,libutf8_iter-cba42f4103e33813,libpotential_utf-e4098bc9285c2535,libicu_provider-e44035709d725b93,libicu_locale_core-8dd03a4f41868d6e,libtinystr-29bc98bc2e63455a,liblitemap-9fd6741e28b968a0,libwriteable-717a5dfdd5aa9532,libzerovec-71d9c1e648ed8101,libzerotrie-907a13ae7e38a5c8,libyoke-4a8731dcb5adb8ad,libstable_deref_trait-0e9a500e13dc348c,libzerofrom-c161d2c21abea55f,libform_urlencoded-b948df67d072a532,libpercent_encoding-1f6bdf28ae1e91aa,libpage_size-25cc3d3d7cf928b6,libheed_types-2cf14801ca885b95,libbincode-33ca339c5d709922,libbitflags-2b676cb308c1cd41,liblmdb_master_sys-befcde27a6fec3c5,libsynchronoise-24307f814fad4ff6,libcrossbeam_queue-d15a4121fa9be045,libcrossbeam_utils-61c9af2ce1f7dee6,libheed_traits-ef9d505604dec265,libgrin_core-5795c04be881f63e,libbytes-6fbbef9cd057e053,libnum-94f8da3cfd51da7e,libnum_rational-ab5e3c25bf1e943d,libnum_iter-a291a758ae3eaff9,libnum_complex-1072fbe4223db944,libnum_bigint-055303345d51756d,libnum_integer-570986736a56f686,libcroaring-bb460b65245a4ec5,libcroaring_sys-242006dd56088c6e,libsiphasher-a03133411d6b28ec,libenum_primitive-5555e50cea4c9ed8,libnum_traits-f4f88d64a46afef2,libbitflags-872f48ba714b4838,libtimer-2391eba549a2b1aa,libregex-f5ca299e09b436c5,libregex_automata-78652a6828f41335,libaho_corasick-6cd889cf7f24d095,libregex_syntax-71104eaa9bb902b2,libflint_messenger-e1b14f792de74bda,libtungstenite-7a00d231e0690d68,libwebpki_roots-d592c3d9a4c3487c,libwebpki_roots-10ca5736212e5278,librand-f03137984bcd2acd,libchacha20-41f4aa10cef755dc,librustls-3fd4b5e90047e31a,libwebpki-d46c256dd07a32e0,librustls_pki_types-5db07366de8301c1,libsha1-5c0a32498a20954b,libcpufeatures-653829d179e313a9,libdigest-ad601300a327c98a,libconst_oid-a0ac8e7a3f6eafe8,libcrypto_common-de14e7364d8fbefd,libblock_buffer-6dc67124844cd5e4,libhybrid_array-6bddaa6a970c5e77,libhttparse-a838bf6ceabfd3d5,libhttp-59d4a490a60d64a5,libbytes-fa5d58efded3ebde,libsecp256k1-d429072d98fa27d7,libsecp256k1_sys-c5bfa1258ff632bf,libring-adb607c3f316c3aa,libuntrusted-1321260fcfb60ff6,libargon2-d7a03a616a5f87a4,libblake2-e2b3db059c4a5c30,libpassword_hash-b04c654572acaf56,libbase64-45e95bd02e412e61,libuuid-56b167c2be68bfc7,libx25519_dalek-c682542bee951411,libhkdf-d9bbc2a8251ed287,libhmac-0995242eb240eaed,libchacha20poly1305-fa7f7f6b329b1db1,libchacha20-dab2e538cbfacfa3,libpoly1305-9a4768b4015747c5,libuniversal_hash-871495b56b7009de,libaead-5e774723ce5fe86e,libcipher-f2da4a8080b8f339,libsha3-8ddb4335609a3a5a,libgrin_keychain-b03ff1099c997739,libpbkdf2-302d49e58ed4300a,libpassword_hash-0b459aca86b77db3,libbase64ct-22468113d7fcad06,libripemd160-07c8ee0d9852425d,libhmac-31e9b39e23c769ac,libcrypto_mac-fe489504ca26290c,libsha2-8360bf12f87f641e,libopaque_debug-5c7584fec1d09f2e,libblock_buffer-9acfa82351e65e24,libdigest-41998638032981cb,libblake2_rfc-47e70c27e65ca2d9,libconstant_time_eq-0c60920cce59e650,libarrayvec-03ba561b0d07a5ac,libnodrop-549ce9a855ca58a4,libgrin_wallet_util-9d047db0803bb1b5,libthiserror-3bec9a12207acede,libsha3-aa347378f30549ae,libdigest-3053e777d813a0dc,libopaque_debug-37775b788fd678d3,libblock_buffer-97b5f19e924dc8b0,libgeneric_array-166ce0a958a15b3e,libblock_padding-51008abff01e6ba3,libbyte_tools-717c2f690d671777,libgrin_util-1366fb16f6e368a0,libbase64-c50245d826ec6947,libzip-7aa98a2b9c320e1e,libgetrandom-6e47b9a9a6e23a64,librand_core-33ed512445e3dc55,libtyped_path-5aca004cff6ebb05,libwalkdir-8faf6dade8102652,libsame_file-73abe1e3fab8f9d1,libwinapi_util-6350cc9f7bcb0fbf,librand-e63b5ac321dbb1db,librand_xorshift-ae4de3e76d4ef51f,librand_pcg-344ba126465758c1,librand_hc-7fdebd258129b101,librand_chacha-170265f5f966ee5b,librand_isaac-84760ab2854abc16,librand_os-572be9dffd472007,librand_jitter-227ee56b943506e7,liblog4rs-06ff82c987769b27,liblog_mdc-ed2f955ee3340a64,libthread_id-c80782de30367a80,libwindows_sys-46614cbe5e995244,libhumantime-cac46fea7b642326,libserde_yaml-083972c95ae9d930,libryu-008e42b8ec7f4568,libindexmap-3e1c7c0531c247f3,libequivalent-013e9fdf31393c48,libhashbrown-93b73d4d57903fe4,libfoldhash-70691ef5b8173cdc,libunsafe_libyaml-2ee724a7051518b2,libunicode_segmentation-0118d3e49e6e65f5,libtypemap_ors-327edfee67b2f98b,libunsafe_any_ors-d57a1279377a135c,libdestructure_traitobject-61d8efbcc6625b01,libthiserror-3a212a13f0e8c0a2,librand-9c97dec588e0bec4,librand_chacha-2ee988636a0c8481,libppv_lite86-3f0a451a7810f99b,libzerocopy-fd161f5fc4f9437f,librand_core-dee2192b1092713f,libgetrandom-42278dcf90131288,libflate2-89286b429c8fd33e,libminiz_oxide-2b06c22123668d97,libsimd_adler32-3d9c4ee6d1240fd5,libcrc32fast-1d3d64e750ca1b83,libanyhow-02a4387328b937bc,libchrono-9d3ba7691c6765db,libderive_more-ad4c87665ee47cf6,libserde_value-52cdc70b4cde69bd,libordered_float-4b37964237ccba5c,libnum_traits-93dbdfb3ac260dd2,libfnv-5dce49059ce39c75,libarc_swap-7b36aa63f6cfa484,libbacktrace-a187d577aaf198fb,librustc_demangle-6d1302eb72aef389,libsecp256k1zkp-5ccee0ce4efab0b0,librand-9224cbe042d88125,libwinapi-d23dccf268f2b8a5,librand_core-2e68e95a44af213d,librand_core-00e8679086418b02,liblibc-962fc9353bec0cd7,libserde_json-8bfd27fb6b04331f,libmemchr-76ecbd175d3c9a92,libitoa-22f7ce9df5986a34,libzmij-36e986662ff4df2c,libserde-ccb700ac27817875,libarrayvec-7f3aa992cc0af92d,libparking_lot-2ed8490cd4d6bdeb,libparking_lot_core-695adca03d46b072,libwindows_link-3f619cd22a41dcd7,libsmallvec-5b47aa7fc83c3014,liblock_api-e19279868fce8c52,libscopeguard-248b4053c9647ebc,liblazy_static-9eabddcd616174d5,libspin-0ab08fb7293e72e6,liblog-35b68ce83b31fe5f,libserde_core-52e9b97c0ea3eb8b,libed25519_dalek-815358c30f1e7e87,libsha2-ed748211ae8e8818,libmerlin-6eb4fe7ac1f40162,libbyteorder-554b1dd988c10860,libkeccak-ac2b7432e9773bc4,libcurve25519_dalek-6bad7a3332eb2fde,libcpufeatures-6775f3743f5579f4,libzeroize-fb28aa9f2ae441af,libed25519-e1436470090dff3d,libsignature-470cd9a8c6fe5ccd,librand_core-93e0198f05a54167,libgetrandom-fce83a462d00296c,libcfg_if-63b37676ffc4e9d4,libdigest-afdd3fd0157dae1f,libsubtle-462a5117f9c02c9d,libconst_oid-e75c37fc79400d21,libblock_buffer-e40c3e12f35b5812,libcrypto_common-943043090853a73c,libgeneric_array-b5a16d78378095f2,libtypenum-a04c9359e3b0ad24,libdata_encoding-36e139415ee953c6,libbech32-b221f0cbb3dace3c}.rlib" "<sysroot>\\lib\\rustlib\\x86_64-pc-windows-msvc\\lib/{libstd-*,libpanic_unwind-*,libcfg_if-*,libwindows_link-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libunwind-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "kernel32.lib" "kernel32.lib" "ntdll.lib" "C:\\DHW\\vendor\\windows_x86_64_msvc-0.53.1\\lib\\windows.0.53.0.lib" "C:\\DHW\\vendor\\windows_x86_64_msvc-0.52.6\\lib\\windows.0.52.0.lib" "advapi32.lib" "advapi32.lib" "cfgmgr32.lib" "credui.lib" "gdi32.lib" "iphlpapi.lib" "kernel32.lib" "msimg32.lib" "netapi32.lib" "ole32.lib" "oleaut32.lib" "opengl32.lib" "pdh.lib" "powrprof.lib" "psapi.lib" "secur32.lib" "shell32.lib" "shlwapi.lib" "synchronization.lib" "user32.lib" "winspool.lib" "ws2_32.lib" "legacy_stdio_definitions.lib" "bcrypt.lib" "advapi32.lib" "kernel32.lib" "kernel32.lib" "kernel32.lib" "ntdll.lib" "userenv.lib" "ws2_32.lib" "dbghelp.lib" "/defaultlib:msvcrt" "/NXCOMPAT" "/LIBPATH:C:\\DHW\\target\\debug\\build\\ring-37e417e3d5127b72\\out" "/LIBPATH:C:\\DHW\\target\\debug\\build\\secp256k1-sys-37b5aa238c904a46\\out" "/LIBPATH:C:\\DHW\\target\\debug\\build\\croaring-sys-8643364c4c641e07\\out" "/LIBPATH:C:\\DHW\\target\\debug\\build\\grin_secp256k1zkp-b508be9c97091a83\\out" "/LIBPATH:C:\\DHW\\target\\debug\\build\\libsqlite3-sys-96d0e98f6b00a630\\out" "/LIBPATH:C:\\DHW\\target\\debug\\build\\liblzma-sys-ece33a7216ad1c7c\\out" "/LIBPATH:C:\\DHW\\target\\debug\\build\\zstd-sys-b5f8f4a945eafd02\\out" "/LIBPATH:C:\\DHW\\target\\debug\\build\\lmdb-master-sys-3808af7fda72eb7c\\out" "/LIBPATH:C:\\DHW\\vendor\\windows_x86_64_msvc-0.52.6\\lib" "/LIBPATH:C:\\DHW\\vendor\\windows_x86_64_msvc-0.53.1\\lib" "/OUT:C:\\DHW\\target\\debug\\deps\\node_manager-cddec49087ca3b33.exe" "/OPT:REF,NOICF" "/DEBUG" "/PDBALTPATH:%_PDB%" "/NATVIS:<sysroot>\\lib\\rustlib\\etc\\intrinsic.natvis" "/NATVIS:<sysroot>\\lib\\rustlib\\etc\\liballoc.natvis" "/NATVIS:<sysroot>\\lib\\rustlib\\etc\\libcore.natvis" "/NATVIS:<sysroot>\\lib\\rustlib\\etc\\libstd.natvis" "/NATVIS:C:\\DHW\\target\\debug\\deps\\rustcxxY4bm\\node_manager-0.natvis" "/NATVIS:C:\\DHW\\target\\debug\\deps\\rustcxxY4bm\\node_manager-1.natvis" "/NATVIS:C:\\DHW\\target\\debug\\deps\\rustcxxY4bm\\node_manager-2.natvis"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: LINK : fatal error LNK1104: не удается открыть файл "C:\DHW\target\debug\deps\node_manager-cddec49087ca3b33.exe"
+          
+
+warning: `flint-core` (example "tor_host") generated 1 warning
+warning: `flint-core` (test "node_manager") generated 1 warning
+error: could not compile `flint-core` (test "node_manager") due to 1 previous error; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `flint-core` (example "onion_host") generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\C:\DHW\target\debug\incremental\seed_create_concurrency-38l4uzt74iqdj\s-hnop64vklh-000lxlz-working`
+
+warning: `flint-core` (example "embedded_cli") generated 1 warning
+warning: `flint-core` (test "wallet_rpc_envelope") generated 1 warning
+warning: `flint-core` (test "wallet_rpc_seedless") generated 1 warning
+warning: `flint-core` (test "tor_hidden_service") generated 1 warning
+warning: `flint-core` (bin "flint-relay") generated 1 warning
+warning: `flint-core` (test "lifecycle") generated 1 warning
+warning: `flint-janus` (lib test) generated 1 warning
+warning: `flint-runtime` (test "multiwallet") generated 1 warning
+warning: `flint-core` (test "live_embedded_scan_cancel") generated 1 warning
+warning: `flint-runtime` (lib test) generated 1 warning
+warning: `flint-runtime` (test "seed_create_concurrency") generated 1 warning
+warning: `flint-runtime` (test "transaction_lifecycle") generated 1 warning
+warning: `flint-core` (lib test) generated 1 warning
+warning: `flint-runtime` (bin "flint-selftest") generated 1 warning

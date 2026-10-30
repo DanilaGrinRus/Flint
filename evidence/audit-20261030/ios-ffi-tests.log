@@ -1,0 +1,31 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.65s
+     Running tests\ffi_memory.rs (C:\DHW\mobile\GrinFlint\ffi\grin-wallet-ffi\target\debug\deps\ffi_memory-c3a106a7e7983450.exe)
+
+running 4 tests
+test last_error_is_stable_and_not_freed ... ok
+test freeing_null_is_noop ... ok
+test strings_are_owned_across_threads ... ok
+test repeated_lifecycle_keeps_strings_valid ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 51.34s
+
+     Running tests\roundtrip.rs (C:\DHW\mobile\GrinFlint\ffi\grin-wallet-ffi\target\debug\deps\roundtrip-3f53266566a72667.exe)
+
+running 14 tests
+test amount_parse_is_exact ... ok
+test ffi_rejects_null_handles_and_arguments ... ok
+test contract_fixtures_are_shared ... ok
+test transfer_state_follows_shared_contract ... ok
+test chain_genesis_is_strict ... ok
+test chain_type_is_strict ... ok
+test restore_height_requires_mnemonic ... ok
+test errors_do_not_echo_secrets ... ok
+test cancel_rejects_bad_uuid ... ok
+test calls_before_open_fail_cleanly ... ok
+test wallet_open_on_another_thread ... ok
+test restore_from_12_words ... ok
+test wallet_lifecycle_offline ... ok
+test send_rejects_zero_and_insufficient ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.13s
+

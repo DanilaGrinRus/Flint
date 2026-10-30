@@ -470,24 +470,31 @@ impl WalletService {
         }
     }
 
-    /// Secret for the managed node's API: settings may be empty, in which case
-    /// the file the supervisor created is used.
+    /// Secret for the node API: an explicit setting wins, otherwise the managed
+    /// node's file is used **only when the configured endpoint is loopback**.
+    /// A local `.api_secret` is a bearer credential and must never travel to an
+    /// external node just because the URL happens to be configured.
     fn node_api_secret(&self) -> Option<String> {
-        self.settings
+        let explicit = self
+            .settings
             .node_api_secret
             .clone()
             .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .or_else(|| {
-                fs::read_to_string(
-                    self.paths
-                        .node_dir(&self.settings.network)
-                        .join(".api_secret"),
-                )
-                .ok()
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty())
-            })
+            .filter(|s| !s.is_empty());
+        if explicit.is_some() {
+            return explicit;
+        }
+        if !crate::node::is_loopback_node_url(&self.settings.node_url) {
+            return None;
+        }
+        fs::read_to_string(
+            self.paths
+                .node_dir(&self.settings.network)
+                .join(".api_secret"),
+        )
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
     }
 
     fn node_client(&self) -> Result<HTTPNodeClient> {
@@ -1438,6 +1445,7 @@ impl WalletService {
             amount: amount_nano,
             slate: VersionedSlate::into_version(slate.clone(), SlateVersion::V4)
                 .map_err(FlintError::wallet)?,
+            request: None,
             state: Some(TxState::Prepared),
             attempts: 0,
             last_error: None,
@@ -1822,32 +1830,39 @@ impl WalletService {
         }
 
         let slate_id = slate.id.to_string();
+        let request = serde_json::to_value(&slate).map_err(FlintError::Json)?;
         // Idempotent receive: a completed response can be re-armored. An
-        // ambiguous attempt must never call `receive_tx` again.
+        // ambiguous attempt must never call `receive_tx` again; a request that
+        // reuses the slate id with different contents is not a repeat.
         match self.load_pending(&slate_id) {
-            Ok(existing) => match existing.resolved_state() {
-                TxState::ResponseReceived => {
-                    if let Some(reply) = self.resume_receive(&slate_id)? {
-                        return Ok(reply);
-                    }
+            Ok(existing) => {
+                if existing.kind == "receive" {
+                    check_receive_repeat(&existing, &request)?;
                 }
-                TxState::ResponseLost => {
-                    return Err(FlintError::Invalid(
+                match existing.resolved_state() {
+                    TxState::ResponseReceived => {
+                        if let Some(reply) = self.resume_receive(&slate_id)? {
+                            return Ok(reply);
+                        }
+                    }
+                    TxState::ResponseLost => {
+                        return Err(FlintError::Invalid(
                         "входящая сделка уже принята, но ответ был потерян; повторный receive запрещён"
                             .into(),
                     ));
+                    }
+                    TxState::ReceiveIntent => {
+                        // Повторяем тот же S1: patched upstream либо вернёт тот же
+                        // S2 из atomic recovery, либо выполнит первый commit. Старый
+                        // TxReceived без recovery станет ResponseLost, без подписи.
+                    }
+                    other => {
+                        return Err(FlintError::Invalid(format!(
+                            "запись receive уже существует в состоянии {other:?}"
+                        )));
+                    }
                 }
-                TxState::ReceiveIntent => {
-                    // Повторяем тот же S1: patched upstream либо вернёт тот же
-                    // S2 из atomic recovery, либо выполнит первый commit. Старый
-                    // TxReceived без recovery станет ResponseLost, без подписи.
-                }
-                other => {
-                    return Err(FlintError::Invalid(format!(
-                        "запись receive уже существует в состоянии {other:?}"
-                    )));
-                }
-            },
+            }
             Err(FlintError::UnknownSlate(_)) => {}
             Err(error) => return Err(error),
         }
@@ -1862,6 +1877,7 @@ impl WalletService {
             amount,
             slate: VersionedSlate::into_version(slate.clone(), SlateVersion::V4)
                 .map_err(FlintError::wallet)?,
+            request: Some(request.clone()),
             state: Some(TxState::ReceiveIntent),
             attempts: 0,
             last_error: None,
@@ -1904,6 +1920,7 @@ impl WalletService {
             amount,
             slate: VersionedSlate::into_version(response.clone(), SlateVersion::V4)
                 .map_err(FlintError::wallet)?,
+            request: Some(request.clone()),
             state: Some(TxState::ResponseReceived),
             attempts: 0,
             last_error: None,
@@ -2322,6 +2339,11 @@ struct PendingSlate {
     created_at: i64,
     amount: u64,
     slate: VersionedSlate,
+    /// Canonical JSON of the incoming S1 for receive records. `slate` is
+    /// replaced with S2 when the receive succeeds, so it cannot prove that a
+    /// repeated request carries the same transaction; this fingerprint can.
+    #[serde(default)]
+    request: Option<serde_json::Value>,
     /// `None` in records written before the journal existed; `resolved_state`
     /// reconstructs the only plausible value from `kind`.
     #[serde(default)]
@@ -2332,6 +2354,21 @@ struct PendingSlate {
     attempts: u32,
     #[serde(default)]
     last_error: Option<String>,
+}
+
+/// A repeated receive must carry the same S1 that produced the stored response.
+/// Records written before the fingerprint existed have `None`: refusing the
+/// repeat is safer than reusing an S2 for a transaction we cannot identify.
+fn check_receive_repeat(existing: &PendingSlate, request: &serde_json::Value) -> Result<()> {
+    let expected = existing.request.as_ref().ok_or_else(|| {
+        FlintError::Invalid("журнал receive без отпечатка исходного S1: повтор запрещён".into())
+    })?;
+    if expected != request {
+        return Err(FlintError::Invalid(
+            "повтор receive с тем же slate id, но другим содержимым отклонён".into(),
+        ));
+    }
+    Ok(())
 }
 
 impl PendingSlate {
@@ -2606,6 +2643,7 @@ mod tests {
             amount,
             slate: VersionedSlate::into_version(Slate::blank(2, false), SlateVersion::V4)
                 .expect("blank slate is versionable"),
+            request: None,
             state: Some(TxState::Locked),
             attempts: 0,
             last_error: None,
@@ -2727,6 +2765,51 @@ mod tests {
             mark_receive_failed(&mut record, error.into());
             assert_eq!(record.resolved_state(), TxState::ResponseLost, "{error}");
         }
+    }
+
+    #[test]
+    fn local_node_secret_never_goes_to_an_external_node() {
+        let root = fresh_root("node-secret");
+        let paths = AppPaths::at(&root);
+        std::fs::create_dir_all(paths.node_dir("testnet")).expect("node dir");
+        std::fs::write(paths.node_dir("testnet").join(".api_secret"), "local-only")
+            .expect("write secret");
+        let mut service = WalletService::open_at(paths);
+
+        service.settings.node_url = "https://node.example.com:13413".into();
+        assert!(
+            service.node_api_secret().is_none(),
+            "a remote node must not receive the managed node's local secret"
+        );
+
+        service.settings.node_api_secret = Some("explicit-remote".into());
+        assert_eq!(
+            service.node_api_secret().as_deref(),
+            Some("explicit-remote")
+        );
+
+        service.settings.node_url = "http://127.0.0.1:13413".into();
+        service.settings.node_api_secret = None;
+        assert_eq!(service.node_api_secret().as_deref(), Some("local-only"));
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn repeated_receive_must_match_the_original_request() {
+        let original = serde_json::json!({"id": "same", "amount": 1});
+        let changed = serde_json::json!({"id": "same", "amount": 2});
+        let mut record = pending("receive", 1);
+        assert!(
+            check_receive_repeat(&record, &original).is_err(),
+            "legacy record without a fingerprint must refuse replay"
+        );
+        record.request = Some(original.clone());
+        assert!(check_receive_repeat(&record, &original).is_ok());
+        assert!(
+            check_receive_repeat(&record, &changed).is_err(),
+            "same slate id with other contents is not a repeat"
+        );
     }
 
     #[test]

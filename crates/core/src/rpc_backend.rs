@@ -138,14 +138,16 @@ impl WalletProcess {
         // Without an explicit secret (external node or the managed node has not
         // written its file yet) keep pointing at the managed secret path: it may
         // appear after the node starts.
+        let loopback_node = crate::node::is_loopback_node_url(&node.url);
         if node
             .secret
             .as_deref()
             .map(str::trim)
             .filter(|s| !s.is_empty())
             .is_none()
+            && loopback_node
         {
-            patch_node_secret(&wallet_config, &paths.node_dir(network).join(".api_secret"));
+            patch_node_secret(&wallet_config, &paths.node_dir(network).join(".api_secret"))?;
         }
         patch_node_config(
             &wallet_config,
@@ -153,7 +155,17 @@ impl WalletProcess {
             node.secret.as_deref(),
             dir.as_path(),
         )?;
-        patch_wallet_paths(&wallet_config, &dir);
+        if node
+            .secret
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .is_none()
+            && !loopback_node
+        {
+            clear_node_secret(&wallet_config)?;
+        }
+        patch_wallet_paths(&wallet_config, &dir)?;
 
         let port = free_port()?;
         let log = File::create(dir.join("owner.log"))?;
@@ -343,10 +355,8 @@ fn hex_bytes(hex: &str) -> Option<Vec<u8>> {
         .collect()
 }
 
-fn set_toml_string(config: &std::path::Path, key: &str, value: &str) {
-    let Ok(text) = fs::read_to_string(config) else {
-        return;
-    };
+fn set_toml_string(config: &std::path::Path, key: &str, value: &str) -> Result<()> {
+    let text = fs::read_to_string(config)?;
     let escaped = value.replace('\\', "\\\\").replace('"', "\\\"");
     let line = format!("{key} = \"{escaped}\"");
     let mut out = String::new();
@@ -371,15 +381,37 @@ fn set_toml_string(config: &std::path::Path, key: &str, value: &str) {
             out.insert_str(0, &format!("{line}\n"));
         }
     }
-    let _ = fs::write(config, out);
+    fs::write(config, out)?;
+    Ok(())
 }
 
-fn set_toml_path(config: &std::path::Path, key: &str, value: &std::path::Path) {
-    set_toml_string(config, key, &value.display().to_string());
+fn set_toml_path(config: &std::path::Path, key: &str, value: &std::path::Path) -> Result<()> {
+    set_toml_string(config, key, &value.display().to_string())
 }
 
-pub fn patch_node_secret(config: &std::path::Path, secret: &std::path::Path) {
-    set_toml_path(config, "node_api_secret_path", secret);
+pub fn patch_node_secret(config: &std::path::Path, secret: &std::path::Path) -> Result<()> {
+    set_toml_path(config, "node_api_secret_path", secret)
+}
+
+/// Remove `node_api_secret_path` from the wallet config. Used when an external
+/// node is configured without an explicit secret: a stale line would otherwise
+/// keep sending the managed node's local bearer credential to that endpoint.
+fn clear_node_secret(config: &std::path::Path) -> Result<()> {
+    let text = fs::read_to_string(config)?;
+    let mut out = String::new();
+    let mut changed = false;
+    for line in text.lines() {
+        if line.trim_start().starts_with("node_api_secret_path") {
+            changed = true;
+        } else {
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    if changed {
+        fs::write(config, out)?;
+    }
+    Ok(())
 }
 
 /// The wallet process must talk to the same node the readiness check asks.
@@ -394,7 +426,7 @@ fn patch_node_config(
     secret: Option<&str>,
     wallet_dir: &std::path::Path,
 ) -> Result<()> {
-    set_toml_string(config, "check_node_api_http_addr", url);
+    set_toml_string(config, "check_node_api_http_addr", url)?;
     let Some(secret) = secret.map(str::trim).filter(|s| !s.is_empty()) else {
         return Ok(());
     };
@@ -402,17 +434,17 @@ fn patch_node_config(
     // A node API secret is a bearer credential; do not leave it under the
     // inherited profile ACL, including the temporary plaintext.
     crate::win_acl::write_private_atomic(&path, secret.as_bytes())?;
-    patch_node_secret(config, &path);
+    patch_node_secret(config, &path)?;
     Ok(())
 }
 
 /// `grin-wallet init` writes absolute paths into `grin-wallet.toml`. A portable
 /// folder may be moved or unzipped elsewhere, so rewrite them from the actual
 /// directory before every launch.
-pub fn patch_wallet_paths(config: &std::path::Path, dir: &std::path::Path) {
-    set_toml_path(config, "data_file_dir", &dir.join("wallet_data"));
-    set_toml_path(config, "api_secret_path", &dir.join(".owner_api_secret"));
-    set_toml_path(config, "send_config_dir", dir);
+pub fn patch_wallet_paths(config: &std::path::Path, dir: &std::path::Path) -> Result<()> {
+    set_toml_path(config, "data_file_dir", &dir.join("wallet_data"))?;
+    set_toml_path(config, "api_secret_path", &dir.join(".owner_api_secret"))?;
+    set_toml_path(config, "send_config_dir", dir)
 }
 
 pub fn wallet_dir(paths: &AppPaths, network: &str, profile: Option<&str>) -> PathBuf {
@@ -434,6 +466,10 @@ pub struct RpcReceiveRecord {
     pub amount: u64,
     /// `Null` while the durable receive intent exists but no response was saved.
     pub response: Value,
+    /// Canonical S1 returned by `slate_from_slatepack_message` for the first
+    /// attempt. A repeated request with the same slate id must match it.
+    #[serde(default)]
+    pub request: Option<Value>,
     /// Sender address from the incoming slatepack, so a resent answer can be
     /// encrypted to them again.
     #[serde(default)]
@@ -446,6 +482,20 @@ pub struct RpcReceiveRecord {
 
 fn default_receive_state() -> String {
     "received".to_string()
+}
+
+/// A repeated receive must carry the same S1 the journal was built for; a
+/// missing fingerprint (legacy record) refuses the replay instead of trusting id.
+fn check_receive_request(record: &RpcReceiveRecord, slate: &Value) -> Result<()> {
+    let expected = record.request.as_ref().ok_or_else(|| {
+        FlintError::Wallet("receive journal без отпечатка исходного S1: повтор запрещён".into())
+    })?;
+    if expected != slate {
+        return Err(FlintError::Wallet(
+            "повтор receive с тем же slate id, но другим содержимым отклонён".into(),
+        ));
+    }
+    Ok(())
 }
 
 fn receive_recovery_capability(version: &Value) -> Result<()> {
@@ -1597,6 +1647,7 @@ impl RpcBackend {
             .unwrap_or_default()
             .to_string();
         let amount = slate_amount_nano(&slate)?;
+        let request = Some(slate.clone());
 
         // Encrypt the answer to the sender when their address is present.
         let sender = self.slatepack_sender(slatepack);
@@ -1609,6 +1660,9 @@ impl RpcBackend {
         // A previous attempt may already have built (and saved) the response:
         // return it instead of asking the wallet to receive the slate twice.
         if let Some(record) = self.load_receive(&slate_id)? {
+            if matches!(record.state.as_str(), "received" | "intent") {
+                check_receive_request(&record, &slate)?;
+            }
             match record.state.as_str() {
                 "lost" => {
                     return Err(FlintError::Wallet(
@@ -1647,6 +1701,7 @@ impl RpcBackend {
                 slate_id: slate_id.clone(),
                 amount: amount.parse().unwrap_or(0),
                 response: Value::Null,
+                request: request.clone(),
                 sender: sender.clone(),
                 state: "intent".to_string(),
                 created_at: chrono::Utc::now().timestamp_millis(),
@@ -1695,6 +1750,7 @@ impl RpcBackend {
             slate_id: slate_id.clone(),
             amount: amount.parse().unwrap_or(0),
             response: response.clone(),
+            request: request.clone(),
             sender: sender.clone(),
             state: "received".to_string(),
             created_at: chrono::Utc::now().timestamp_millis(),
@@ -2074,6 +2130,7 @@ mod tests {
             slate_id: "00000000-0000-0000-0000-000000000000".into(),
             amount: 1,
             response: json!({"old": true}),
+            request: None,
             sender: None,
             state: "intent".into(),
             created_at: 0,
@@ -2355,7 +2412,7 @@ mod tests {
         )
         .unwrap();
         let secret = std::path::PathBuf::from("C:\\data\\node\\.api_secret");
-        patch_node_secret(&config, &secret);
+        patch_node_secret(&config, &secret).expect("patch secret");
         let text = std::fs::read_to_string(&config).unwrap();
         assert!(text.contains("node_api_secret_path"));
         assert!(

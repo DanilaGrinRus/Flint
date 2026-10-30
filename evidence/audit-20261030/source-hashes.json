@@ -1,0 +1,18 @@
+[
+  {
+    "Path": "C:\\DHW\\crates\\core\\src\\service.rs",
+    "Hash": "798543FEF1E3B56C6E5B5C7431CE7A00D91CC064BA96CDBD9252596608040FBC"
+  },
+  {
+    "Path": "C:\\DHW\\crates\\core\\src\\rpc_backend.rs",
+    "Hash": "6655558D6785FABE2B385BC9CB49F9001F729F9FA48EF9EAB8C67FBC4A2F26CC"
+  },
+  {
+    "Path": "C:\\DHW\\crates\\messenger\\src\\nostr\\ws.rs",
+    "Hash": "6B3204D2C6A702C86B842F6A0423DDD13C334C19EE43598F0A1A5F8744A7ADEE"
+  },
+  {
+    "Path": "C:\\DHW\\mobile\\GrinFlint\\ffi\\grin-wallet-ffi\\src\\lib.rs",
+    "Hash": "63B5B380D541C57B53B17C6C6A34F415C7F90C5685EE154ACB5FA2F7EC6D06D8"
+  }
+]

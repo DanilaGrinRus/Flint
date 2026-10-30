@@ -1,0 +1,6 @@
+non_loopback_plaintext_accepted ws://127.0.0.1.attacker.invalid/ true
+non_loopback_plaintext_accepted ws://localhost.attacker.invalid/ true
+non_loopback_plaintext_accepted ws://127.0.0.1@attacker.invalid/ true
+external_endpoint_inherits_local_secret true
+persisted_plain_http_preserved true
+synthetic_test_data C:\DHW\.tmp\flint-audit-synthetic-10760

@@ -24,6 +24,38 @@ pub fn default_api_port(network: &str) -> u16 {
     }
 }
 
+/// True only for a literal loopback endpoint (`localhost`, 127.0.0.0/8, ::1).
+///
+/// A managed node's `.api_secret` is a local bearer credential; it must never be
+/// attached to an endpoint that merely starts with a loopback string such as
+/// `localhost.attacker.invalid`.
+pub fn is_loopback_node_url(raw: &str) -> bool {
+    let Ok(url) = reqwest::Url::parse(raw.trim()) else {
+        return false;
+    };
+    let host = url.host_str().unwrap_or_default().trim();
+    let host = host.trim_start_matches('[').trim_end_matches(']');
+    host.eq_ignore_ascii_case("localhost")
+        || host
+            .parse::<std::net::IpAddr>()
+            .map(|ip| ip.is_loopback())
+            .unwrap_or(false)
+}
+
+/// A persisted node URL is usable only over TLS, or over plain HTTP to a literal
+/// loopback host. This closes the "hand-edited settings.json" path that skipped
+/// the interactive `update_settings` validation.
+pub fn node_url_allowed(raw: &str) -> bool {
+    let Ok(url) = reqwest::Url::parse(raw.trim()) else {
+        return false;
+    };
+    match url.scheme() {
+        "https" => url.host_str().is_some(),
+        "http" => is_loopback_node_url(raw),
+        _ => false,
+    }
+}
+
 pub fn default_node_url(network: &str) -> String {
     format!("http://127.0.0.1:{}", default_api_port(network))
 }

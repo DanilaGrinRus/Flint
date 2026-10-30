@@ -1,0 +1,574 @@
+warning: unexpected `cfg` condition value: `clippy`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:56:1
+   |
+56 | impl_array_newtype!(ChainCode, u8, 32);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+   = note: this warning originates in the macro `impl_array_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `serde`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:58:1
+   |
+58 | impl_array_newtype_encodable!(ChainCode, u8, 32);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype_encodable` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: this warning originates in the macro `impl_array_newtype_encodable` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `clippy`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:62:1
+   |
+62 | impl_array_newtype!(Fingerprint, u8, 4);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: this warning originates in the macro `impl_array_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `serde`
+  --> third_party\grin-wallet\grin\keychain\src\extkey_bip32.rs:64:1
+   |
+64 | impl_array_newtype_encodable!(Fingerprint, u8, 4);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: no expected values for `feature`
+   = note: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `impl_array_newtype_encodable` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: this warning originates in the macro `impl_array_newtype_encodable` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `grin_keychain` (lib) generated 6 warnings (2 duplicates)
+warning: use of deprecated module `std::u64`: all constants in this module replaced by associated constants on the type
+  --> third_party\grin-wallet\grin\core\src\core\pmmr\pmmr.rs:15:37
+   |
+15 | use std::{iter, marker, ops::Range, u64};
+   |                                     ^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated constant `std::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\grin\core\src\core\pmmr\pmmr.rs:498:28
+    |
+498 | const ALL_ONES: u64 = u64::MAX;
+    |                            ^^^
+
+warning: use of deprecated module `std::u64`: all constants in this module replaced by associated constants on the type
+  --> third_party\grin-wallet\grin\core\src\pow\types.rs:26:10
+   |
+26 | use std::u64;
+   |          ^^^
+
+warning: use of deprecated constant `std::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\grin\core\src\ser.rs:355:33
+    |
+355 |     pub const MAX: u32 = std::u32::MAX;
+    |                                    ^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+  --> third_party\grin-wallet\grin\core\src\pow\cuckatoo.rs:48:24
+   |
+48 |         if max_edges >= u64::max_value() / 2 {
+   |                              ^^^^^^^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+  --> third_party\grin-wallet\grin\core\src\pow\cuckatoo.rs:61:14
+   |
+61 |             nil: u64::max_value(),
+   |                       ^^^^^^^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+  --> third_party\grin-wallet\grin\core\src\pow\cuckatoo.rs:68:29
+   |
+68 |         self.adj_list = vec![u64::max_value(); 2 * self.max_nodes as usize];
+   |                                   ^^^^^^^^^
+
+warning: use of deprecated associated function `core::num::<impl u64>::max_value`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\grin\core\src\pow\types.rs:419:20
+    |
+419 |         min(diff, <u64>::max_value() as u128) as u64
+    |                          ^^^^^^^^^
+
+warning: struct `Edge` is never constructed
+  --> third_party\grin-wallet\grin\core\src\pow\common.rs:34:12
+   |
+34 | pub struct Edge {
+   |            ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `grin_core` (lib) generated 9 warnings
+warning: unnecessary parentheses around closure body
+   --> third_party\grin-wallet\grin\chain\src\txhashset\bitmap_accumulator.rs:242:25
+    |
+242 |             .map(move |(idx, _)| (idx as u32 + idx_offset as u32))
+    |                                  ^                              ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+242 -             .map(move |(idx, _)| (idx as u32 + idx_offset as u32))
+242 +             .map(move |(idx, _)| idx as u32 + idx_offset as u32)
+    |
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\bitmap_accumulator.rs:190:23
+    |
+190 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<BitmapChunk, VecBackend<BitmapChunk>> {
+    |                          ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                          |
+    |                          the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+190 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<'_, BitmapChunk, VecBackend<BitmapChunk>> {
+    |                                                 +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> third_party\grin-wallet\grin\chain\src\txhashset\rewindable_kernel_view.rs:72:23
+   |
+72 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<TxKernel, PMMRBackend<TxKernel>> {
+   |                          ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                          |
+   |                          the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+72 |     pub fn readonly_pmmr(&self) -> ReadonlyPMMR<'_, TxKernel, PMMRBackend<TxKernel>> {
+   |                                                 +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:390:3
+    |
+390 |         &self,
+    |         ^^^^^ the lifetime is elided here
+391 |         header: &BlockHeader,
+392 |     ) -> ReadonlyPMMR<TxKernel, PMMRBackend<TxKernel>> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+392 |     ) -> ReadonlyPMMR<'_, TxKernel, PMMRBackend<TxKernel>> {
+    |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:398:3
+    |
+398 |         &self,
+    |         ^^^^^ the lifetime is elided here
+399 |         header: &BlockHeader,
+400 |     ) -> ReadonlyPMMR<OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+400 |     ) -> ReadonlyPMMR<'_, OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+    |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:406:3
+    |
+406 |         &self,
+    |         ^^^^^ the lifetime is elided here
+407 |         header: &BlockHeader,
+408 |     ) -> ReadonlyPMMR<RangeProof, PMMRBackend<RangeProof>> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+408 |     ) -> ReadonlyPMMR<'_, RangeProof, PMMRBackend<RangeProof>> {
+    |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+    --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:1209:3
+     |
+1209 |         &self,
+     |         ^^^^^ the lifetime is elided here
+1210 |     ) -> ReadonlyPMMR<OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+     |
+     = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+     |
+1210 |     ) -> ReadonlyPMMR<'_, OutputIdentifier, PMMRBackend<OutputIdentifier>> {
+     |                       +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+    --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:1220:30
+     |
+1220 |     pub fn bitmap_readonly_pmmr(&self) -> ReadonlyPMMR<BitmapChunk, VecBackend<BitmapChunk>> {
+     |                                 ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+     |                                 |
+     |                                 the lifetime is elided here
+     |
+     = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+     |
+1220 |     pub fn bitmap_readonly_pmmr(&self) -> ReadonlyPMMR<'_, BitmapChunk, VecBackend<BitmapChunk>> {
+     |                                                        +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+    --> third_party\grin-wallet\grin\chain\src\txhashset\txhashset.rs:1225:30
+     |
+1225 |     pub fn rproof_readonly_pmmr(&self) -> ReadonlyPMMR<RangeProof, PMMRBackend<RangeProof>> {
+     |                                 ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+     |                                 |
+     |                                 the lifetime is elided here
+     |
+     = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+     |
+1225 |     pub fn rproof_readonly_pmmr(&self) -> ReadonlyPMMR<'_, RangeProof, PMMRBackend<RangeProof>> {
+     |                                                        +++
+
+warning: `grin_chain` (lib) generated 9 warnings (run `cargo fix --lib -p grin_chain` to apply 9 suggestions)
+warning: trailing semicolon in macro used in expression position
+   --> third_party\grin-wallet\grin\p2p\src\types.rs:153:13
+    |
+153 |             let ip = try_iter_map_vec!(0..8, |_| reader.read_u16());
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #79813 <https://github.com/rust-lang/rust/issues/79813>
+    = note: `#[warn(semicolon_in_expressions_from_non_local_macros)]` (part of `#[warn(future_incompatible)]`) on by default
+    = note: this warning originates in the macro `try_iter_map_vec` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `grin_p2p` (lib) generated 1 warning
+warning: use of deprecated constant `std::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> third_party\grin-wallet\libwallet\src\slatepack\types.rs:573:30
+    |
+573 |             if len as u16 > std::u16::MAX {
+    |                                       ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+   Compiling flint-transfer-contract v1.0.0 (C:\DHW\crates\transfer-contract)
+warning: `grin_wallet_libwallet` (lib) generated 1 warning
+   Compiling flint-messenger v0.1.69 (C:\DHW\crates\messenger)
+   Compiling flint-core v0.1.69 (C:\DHW\crates\core)
+   Compiling flint-janus v0.1.69 (C:\DHW\crates\janus)
+   Compiling flint-runtime v0.1.69 (C:\DHW\crates\runtime)
+    Finished `test` profile [unoptimized] target(s) in 7.98s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running unittests src\lib.rs (target\debug\deps\flint_core-af54f1307c6a0039.exe)
+
+running 189 tests
+test address::tests::address_gives_the_same_onion_as_upstream ... ok
+test address::tests::onion_roundtrips_to_the_same_key ... ok
+test config::tests::legacy_dir_stays_the_default_profile ... ok
+test address::tests::junk_is_rejected ... ok
+test config::tests::portable_root_uses_data_dir_next_to_exe ... ok
+test config::tests::old_settings_default_to_proxy_on ... ok
+test error::tests::only_mutation_or_recovery_failures_forbid_receive_retry ... ok
+test config::tests::corrupt_data_root_override_is_not_silently_ignored ... ok
+test config::tests::data_root_override_rejects_relative_paths_and_files ... ok
+test config::tests::a_corrupt_state_file_means_unknown_balance ... ok
+test config::tests::old_wallet_state_defaults_to_not_started ... ok
+test config::tests::rpc_profiles_are_listed_from_their_own_directories ... ok
+test config::tests::listing_sees_only_dirs_with_a_seed ... ok
+test config::tests::a_running_scan_is_interrupted_after_a_restart ... ok
+test gateway::tests::per_ip_post_rate_is_bounded_and_independent ... ok
+test gateway::tests::per_recipient_post_rate_is_bounded ... ok
+test gateway::tests::proxy_forwards_only_foreign_api ... ok
+test gateway::tests::degraded_storage_returns_500_and_keeps_the_message_invisible ... ok
+test gateway::tests::ack_rejects_non_uuid_and_traversal_ids ... ok
+test gateway::tests::junk_addresses_and_oversized_payloads_are_rejected ... ok
+test gateway::tests::quotas_are_enforced_per_recipient ... ok
+test gateway::tests::ack_requires_the_same_recipient ... ok
+test gateway::tests::require_pow_rejects_an_envelope_without_a_proof ... ok
+test gateway::tests::direct_transport_derives_recipient_onion_and_uses_local_mailbox ... ok
+test node::auth_tests::a_wrong_secret_is_reported_as_an_auth_error ... ok
+test gateway::tests::relay_sees_only_recipient_and_opaque_payload ... ok
+test node::auth_tests::status_sends_basic_auth_when_a_secret_is_configured ... ok
+test node::auth_tests::status_without_secret_is_rejected_by_a_secured_node ... ok
+test node::tests::a_tip_far_behind_the_peers_is_not_ready ... ok
+test node::tests::body_sync_family_maps_to_blocks_not_unknown ... ok
+test node::tests::no_peers_means_not_ready ... ok
+test node::tests::node_identity_must_match_network ... ok
+test node::tests::phase_comes_from_the_native_status_only ... ok
+test node::tests::ports_follow_network ... ok
+test node::tests::quiet_log_with_stale_height_is_not_ready ... ok
+test gateway::tests::gateway_waits_for_a_request_split_across_packets ... ok
+test node::tests::sync_stats_prefers_the_log_we_own ... ok
+test foreign_proxy::tests::forwards_only_post_to_foreign_api ... ok
+test gateway::tests::relay_store_survives_a_process_restart ... ok
+test onion::tests::different_keys_give_different_onions ... ok
+test onion::tests::onion_is_stable_for_the_same_key ... ok
+test rpc_backend::tests::every_finalize_error_is_recoverable_and_not_retryable ... ok
+test rpc_backend::tests::finalize_is_whitelisted_before_signing ... ok
+test rpc_backend::tests::hex_secret_is_parsed_strictly ... ok
+test gateway::tests::restart_keeps_the_persisted_post_quota ... ok
+test rpc_backend::tests::missing_journal_path_is_an_error_not_a_noop ... ok
+test gateway::tests::sdk_transport_exchanges_messages_through_gateway ... ok
+test rpc_backend::tests::old_lost_receive_record_stays_lost ... ok
+test rpc_backend::tests::old_receive_record_defaults_to_received ... ok
+test rpc_backend::tests::receive_errors_preserve_intent_unless_mutation_is_proven ... ok
+test rpc_backend::tests::receive_recovery_capability_is_explicit_and_fail_closed ... ok
+test rpc_backend::tests::retry_post_is_whitelisted_before_any_network_call ... ok
+test rpc_backend::tests::secret_hex_accepts_all_owner_api_shapes ... ok
+test rpc_backend::tests::slate_amount_requires_nonzero_amt ... ok
+test rpc_backend::tests::slate_fee_accepts_string_and_numeric_json ... ok
+test rpc_backend::tests::stored_transaction_rejects_compact_slate_signature_loss ... ok
+test rpc_backend::tests::wallet_config_gets_the_node_secret_path ... ok
+test gateway::tests::relay_mode_has_no_wallet_and_requires_signed_acks ... ok
+test seed::envelope::tests::absurd_kdf_parameters_are_refused_before_allocating ... ok
+test seed::envelope::tests::address_and_network_are_checked ... ok
+test rpc_backend::tests::wallet_config_paths_are_rewritten_for_a_moved_folder ... ok
+test gateway::tests::sdk_transport_works_through_a_socks_proxy ... ok
+test seed::envelope::tests::empty_legacy_blob_is_refused_at_seal_time ... ok
+test node_proxy::tests::strips_cors_and_forwards_node_api ... ok
+test gateway::tests::connection_flood_is_shed_with_503 ... ok
+test node_proxy::tests::preflight_and_foreign_paths_are_controlled ... ok
+test seed::envelope::tests::argon2id_matches_reference_vector ... ok
+test seed::envelope::tests::envelope_json_is_strict ... ok
+test node::auth_tests::hanging_node_status_is_bounded_by_the_timeout ... ok
+test seed::envelope::tests::envelope_never_contains_the_plain_seed ... ok
+test seed::envelope::tests::envelope_keeps_the_legacy_blob_byte_exact ... ok
+test seed::envelope::tests::envelope_round_trip ... ok
+test seed::legacy::tests::durable_rename_replaces_a_file ... ok
+test seed::legacy::tests::legacy_accepts_all_grin_entropy_sizes ... ok
+test seed::envelope::tests::envelope_aad_binds_every_header_field ... ok
+test seed::legacy::tests::legacy_rejects_malformed_json_and_hex ... ok
+test seed::envelope::tests::wrong_password_is_refused ... ok
+test seed::legacy::tests::legacy_round_trip ... ok
+test seed::legacy::tests::legacy_writes_bytes_no_plaintext_seed ... ok
+test seed::legacy::tests::legacy_wrong_password_fails ... ok
+test seed::envelope::tests::seed_length_is_recorded_and_checked ... ok
+test seed::envelope::tests::rewrap_changes_salt_and_password ... ok
+test seed::envelope::tests::all_seed_lengths_round_trip_and_tampering_is_rejected ... ok
+test gateway::tests::a_full_queue_response_stays_below_the_client_limit ... ok
+test gateway::tests::expired_messages_are_not_delivered ... ok
+test seed::envelope::tests::envelope_file_round_trip_and_size_limit ... ok
+test seed::legacy::tests::legacy_file_round_trip_and_removal ... ok
+test seed::store::tests::envelope_from_another_network_is_refused_before_writing ... ok
+test config::tests::failed_settings_save_keeps_the_previous_file ... ok
+test rpc_backend::tests::node_config_gets_the_settings_endpoint_and_per_wallet_secret ... ok
+test config::tests::corrupt_settings_without_backup_are_preserved_and_reported ... ok
+test seed::store::tests::concurrent_seed_rewrite_is_refused ... ok
+test seed::store::tests::mainnet_does_not_open_a_legacy_seed ... ok
+test seed::store::tests::errors_do_not_echo_the_password ... ok
+test config::tests::data_root_override_round_trip_and_reset ... ok
+test seed::store::tests::migration_refuses_wrong_password_without_touching_files ... ok
+test seed::store::tests::missing_legacy_and_envelope_are_distinguished ... ok
+test seed::store::tests::migration_copies_the_wallet_into_an_envelope ... ok
+test seed::store::tests::migration_is_idempotent ... ok
+test rpc_backend::tests::legacy_journal_import_only_matches_tx_log ... ok
+test seed::store::tests::mainnet_refuses_to_disable_the_envelope ... ok
+test seed::store::tests::interrupted_migration_recovers_on_the_next_unlock ... ok
+test seed::store::tests::legacy_seed_is_restored_when_the_envelope_does_not_match ... ok
+test seed::store::tests::reveal_mnemonic_round_trips_and_rejects_wrong_password ... ok
+test seed::store::tests::change_password_rewraps_the_envelope_only ... ok
+test seed::store::tests::repair_does_not_quarantine_a_readable_envelope ... ok
+test service::tests::a_failed_scan_keeps_the_balance_unknown ... ok
+test service::tests::a_late_batch_cancel_does_not_overwrite_completed ... ok
+test seed::store::tests::migration_needs_consent_for_backup_copies ... ok
+test seed::store::tests::readable_envelope_can_be_quarantined_and_materialized_as_legacy ... ok
+test seed::store::tests::wrong_password_writes_nothing ... ok
+test seed::store::tests::stale_cleanup_cannot_delete_a_concurrent_disable_legacy_seed ... ok
+test seed::store::tests::lock_does_not_delete_an_unmarked_legacy_seed ... ok
+test service::tests::address_index_rotates_and_persists ... ok
+test node::tests::start_creates_api_secrets_and_config_paths ... ok
+test service::tests::cancelling_a_completed_scan_does_not_overwrite_it ... ok
+test service::tests::cancelling_a_running_scan_marks_it_failed_and_keeps_pending_scan ... ok
+test service::tests::chain_amount_must_match_the_journal ... ok
+test seed::store::tests::unreadable_envelope_is_quarantined_and_legacy_seed_stays ... ok
+test service::tests::broken_pending_files_are_reported_not_dropped ... ok
+test seed::store::tests::rollback_without_password_change_is_byte_exact ... ok
+test service::tests::a_lookalike_chain_is_not_ready ... ok
+test service::tests::a_node_error_is_not_treated_as_a_synced_chain ... ok
+test service::tests::a_partial_scan_cannot_finish_a_restore ... ok
+test seed::store::tests::unlock_without_consent_keeps_weak_backups ... ok
+test seed::store::tests::rollback_writes_the_legacy_seed_back ... ok
+test service::tests::fresh_or_finished_slates_do_not_alert ... ok
+test config::tests::corrupt_settings_are_recovered_from_backup ... ok
+test service::tests::failed_publish_attempts_are_visible_in_the_journal ... ok
+test seed::store::tests::unlock_materializes_and_removes_the_seed_file ... ok
+test service::tests::no_finalize_error_text_is_treated_as_a_signature ... ok
+test service::tests::failed_recoverable_records_stay_visible ... ok
+test seed::store::tests::unlock_blocks_disable_until_commit ... ok
+test service::tests::password_policy_rejects_weak_and_accepts_strong ... ok
+test service::tests::pending_access_rejects_traversal_before_touching_disk ... ok
+test service::tests::pending_alerts_sort_critical_first_and_warn_only_after_30_minutes ... ok
+test service::tests::pending_directory_read_error_is_not_an_empty_queue ... ok
+test service::tests::pending_ids_must_be_canonical_uuids ... ok
+test service::tests::pending_paths_stay_inside_the_pending_dir ... ok
+test service::tests::a_failed_pending_write_leaves_the_previous_record_intact ... ok
+test service::tests::failed_recoverable_cannot_be_finalized ... ok
+test service::tests::receive_errors_preserve_retry_unless_mutation_is_proven ... ok
+test service::tests::finalizing_an_already_signed_transaction_resumes_at_the_broadcast ... ok
+test service::tests::finish_scan_applies_cooperative_outcomes ... ok
+test service::tests::node_snapshot_is_one_view_of_the_settings ... ok
+test service::tests::remote_plain_http_node_url_is_rejected ... ok
+test service::tests::new_and_restored_wallets_skip_upstream_full_scan ... ok
+test service::tests::restore_rejects_an_invalid_phrase_without_leaving_files ... ok
+test service::tests::restore_requires_an_empty_wallet_directory ... ok
+test service::tests::finished_records_are_archived_not_deleted ... ok
+test service::tests::incoming_slates_cannot_be_cancelled ... ok
+test service::tests::scan_state_is_explicit_and_survives_restarts ... ok
+test service::tests::flapping_node_loses_synced_state ... ok
+test service::tests::posted_records_stay_until_the_chain_confirms_them ... ok
+test service::tests::receives_are_reconciled_only_with_an_unlocked_wallet ... ok
+test service::tests::finalizing_records_fail_closed_without_publish ... ok
+test service::tests::node_info_is_not_synced_when_the_node_is_unreachable ... ok
+test socks::tests::decodes_chunked_responses ... ok
+test tor_listener::tests::bridges_are_read_from_the_data_dir ... ok
+test socks::tests::posts_json_through_socks ... ok
+test tor_listener::tests::missing_lyrebird_is_an_error ... ok
+test tor_listener::tests::plain_bridge_needs_no_pluggable_transport ... ok
+test tor_listener::tests::published_gateway_requires_signed_acks_and_p2p_limits ... ok
+test tor_listener::tests::snowflake_uses_lyrebird ... ok
+test tor_listener::tests::snowflake_without_lyrebird_is_an_error ... ok
+test tor_listener::tests::torrc_paths_are_quoted ... ok
+test tor_listener::tests::torrc_quotes_unicode_and_spaces ... ok
+test tor_listener::tests::unreadable_bridge_file_is_an_error ... ok
+test tor_listener::tests::unicode_data_dir_uses_an_ascii_short_path ... ok
+test wallet_rpc::tests::nonce_is_fresh_and_wrong_key_fails ... ok
+test wallet_rpc::tests::seal_open_roundtrip ... ok
+test service::tests::resume_receive_does_not_hide_journal_errors ... ok
+test tor_listener::tests::webtunnel_uses_lyrebird ... ok
+test win_acl::tests::final_acl_failure_is_reported_without_deleting_the_new_file ... ok
+test win_acl::tests::initial_acl_failure_preserves_the_old_file_and_writes_no_secret ... ok
+test service::tests::receive_intent_is_not_mistaken_for_a_saved_response ... ok
+test service::tests::reconcile_is_a_noop_while_locked ... ok
+test service::tests::restore_recovers_the_same_address_as_the_original_wallet ... ok
+test service::tests::legacy_records_get_a_state_from_their_kind ... ok
+test service::tests::pending_survives_an_atomic_round_trip ... ok
+test service::tests::wallet_names_are_validated_and_persisted ... ok
+test seed::store::tests::envelope_store_round_trips_all_seed_lengths_and_rejects_wrong_password ... ok
+test win_acl::tests::restrict_removes_a_pre_existing_explicit_everyone_ace ... ok
+test service::tests::scan_is_blocked_without_a_ready_node ... ok
+test service::tests::sending_is_blocked_until_the_node_reports_ready ... ok
+test service::tests::address_index_is_isolated_per_profile ... ok
+test service::tests::signed_transactions_cannot_be_cancelled_or_blank_retried ... ok
+test service::tests::cancel_refuses_signed_or_ambiguous_send_states ... ok
+test service::tests::service_surfaces_a_settings_backup_warning ... ok
+
+test result: ok. 189 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.18s
+
+     Running unittests src\lib.rs (target\debug\deps\flint_messenger-f8983bc5d042fd34.exe)
+
+running 80 tests
+test address::tests::junk_and_foreign_prefixes_are_rejected ... ok
+test address::tests::key_length_is_enforced ... ok
+test address::tests::address_roundtrips ... ok
+test address::tests::onion_matches_the_upstream_v3_vector ... ok
+test ack::tests::signs_and_verifies_the_recipient ... ok
+test envelope::tests::default_ttl_is_26_hours ... ok
+test ack::tests::wrong_recipient_id_timestamp_or_signature_is_rejected ... ok
+test envelope::tests::known_address_vector ... ok
+test crypto::tests::other_key_cannot_open ... ok
+test crypto::tests::box_roundtrips_and_is_bound_to_aad ... ok
+test envelope::tests::forged_sender_signature_is_rejected ... ok
+test contacts::tests::invalid_names_and_addresses_are_rejected ... ok
+test contacts::tests::fresh_lock_is_not_treated_as_stale ... ok
+test contacts::tests::old_holder_does_not_delete_a_replaced_lock ... ok
+test envelope::tests::proof_of_work_is_mined_and_checked ... ok
+test history::tests::contains_is_the_persistent_dedup_marker ... ok
+test contacts::tests::file_contains_no_addresses_or_names ... ok
+test history::tests::delete_and_uuid_validation ... ok
+test contacts::tests::stale_lock_is_recovered ... ok
+test contacts::tests::wrong_key_and_tamper_fail ... ok
+test filestore::tests::ack_and_duplicate_delivery ... ok
+test envelope::tests::roundtrip_hides_sender_and_body_from_the_relay ... ok
+test keywrap::tests::absurd_kdf_parameters_are_rejected_before_allocation ... ok
+test contacts::tests::parallel_books_do_not_lose_contacts ... ok
+test history::tests::expired_records_are_removed_but_legacy_records_stay ... ok
+test filestore::tests::expired_messages_are_not_returned ... ok
+test envelope::tests::encrypted_slatepack_is_accepted_plaintext_is_not ... ok
+test filestore::tests::quota_ttl_and_uuid_are_enforced ... ok
+test history::tests::wrong_key_and_tamper_fail ... ok
+test history::tests::roundtrip_ordered_and_encrypted_at_rest ... ok
+test contacts::tests::saves_updates_lists_and_deletes ... ok
+test nostr::event::tests::sign_and_verify_roundtrip ... ok
+test nostr::event::tests::tampering_is_rejected ... ok
+test envelope::tests::tampering_is_rejected ... ok
+test envelope::tests::wrong_recipient_cannot_open ... ok
+test nostr::keys::tests::invalid_hex_is_rejected ... ok
+test history::tests::quota_prunes_oldest ... ok
+test nostr::nip44::tests::padding_buckets ... ok
+test nostr::nip44::tests::roundtrip_and_rejections ... ok
+test filestore::tests::persists_across_reopen_and_never_writes_plaintext ... ok
+test nostr::keys::tests::generate_public_and_roundtrip ... ok
+test nostr::nip44::tests::official_vector_a ... ok
+test nostr::transport::tests::contact_directory_maps_saved_keys ... ok
+test nostr::relay::tests::publish_query_and_delete ... ok
+test nostr::transport::tests::foreign_wrap_is_skipped ... ok
+test nostr::wrap::tests::wrap_unwrap_roundtrip ... ok
+test nostr::ws::tests::auth_event_carries_relay_and_challenge ... ok
+test nostr::ws::tests::live_relay_req_returns_eose ... ignored, network: requires FLINT_NOSTR_LIVE_RELAY
+test nostr::transport::tests::deliver_fetch_ack ... ok
+test history::tests::list_returns_the_newest_page ... ok
+test nostr::ws::tests::payloads_and_messages ... ok
+test envelope::tests::expired_and_bad_ttl_are_rejected ... ok
+test nostr::ws::tests::query_answers_auth_challenge_and_retries ... ok
+test nostr::ws::tests::url_policy ... ok
+test nostr::wrap::tests::wrong_recipient_and_tampering_are_rejected ... ok
+test store::tests::default_ttl_is_26h ... ok
+test nostr::nip44::tests::extended_prefix_roundtrip ... ok
+test store::tests::duplicate_ids_are_idempotent ... ok
+test store::tests::expired_messages_are_not_stored_or_fetched ... ok
+test store::tests::failed_envelope_can_be_acked_after_the_decision ... ok
+test store::tests::fixed_time_is_only_used_in_tests ... ok
+test nostr::transport::tests::unknown_recipient_is_explicit ... ok
+test store::tests::many_broken_envelopes_do_not_hide_the_good_one ... ok
+test nostr::transport::tests::transport_roundtrip_over_loopback_relay ... ok
+test store::tests::messenger_roundtrip_acks_delivered_messages ... ok
+test store::tests::ttl_bounds_are_checked_by_the_store ... ok
+test store::tests::replay_after_ack_is_not_returned_twice ... ok
+test store::tests::bad_envelope_does_not_block_the_rest_of_the_batch ... ok
+test store::tests::store_fetch_ack_roundtrip ... ok
+test store::tests::oversized_messages_are_rejected ... ok
+test store::tests::queue_quota_is_enforced ... ok
+test store::tests::a_restarted_messenger_skips_durable_quarantine_ids ... ok
+test keywrap::tests::empty_password_is_refused ... ok
+test keywrap::tests::short_nonce_is_an_error_not_a_panic ... ok
+test keywrap::tests::version_is_checked ... ok
+test keywrap::tests::each_wrap_has_fresh_salt_and_nonce ... ok
+test keywrap::tests::wrong_password_and_tamper_fail ... ok
+test keywrap::tests::v1_fixture_opens_and_upgrades ... ok
+test keywrap::tests::v2_roundtrip_and_rewrap ... ok
+test history::tests::large_history_is_bounded_and_lists_newest_first ... ok
+
+test result: ok. 79 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.35s
+
+     Running unittests src\lib.rs (target\debug\deps\flint_runtime-811c84d3cb0a09e7.exe)
+
+running 10 tests
+test wallet::tests::pending_actions_match_the_state_machine ... ok
+test redaction_tests::diagnostics_url_redaction_removes_credentials_and_query ... ok
+test messenger::tests::completed_reply_is_not_requeued_without_its_envelope ... ok
+test history::tests::history_without_a_key_is_refused ... ok
+test messenger::tests::quarantine_is_written_atomically_and_read_back ... ok
+test messenger::tests::inbound_queue_survives_restart_without_losing_armor ... ok
+test messenger::tests::outbox_round_trips_the_same_sealed_envelope ... ok
+test history::tests::each_profile_gets_its_own_key ... ok
+test history::tests::legacy_shared_key_is_migrated_once ... ok
+test history::tests::pending_next_wrapper_is_promoted ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.84s
+
+     Running unittests src\lib.rs (target\debug\deps\flint_transfer_contract-37a54089fa512214.exe)
+
+running 3 tests
+test tests::delivery_is_not_confirmation ... ok
+test tests::amounts_are_exact_and_checked ... ok
+test tests::fixture_round_trips_without_private_material ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

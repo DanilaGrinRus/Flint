@@ -1,0 +1,235 @@
+Building for debugging...
+[Pre-planning 1 / 95]
+[Planning deferred tasks]
+[31 / 51] GrinFlintCore
+[41 / 56] GrinFlintCoreTests-product
+[45 / 56] GrinFlintCoreTests-product
+C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\windows\WinSDK.swiftmodule\x86_64-unknown-windows-msvc.swiftmodule:1:1: warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+1 | _Builtin_stddef.wchar_t
+
+  | |- warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+  | |- note: the type was expected to be found in module '_Builtin_stddef' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Toolchains\6.4.1+Asserts\usr\lib\swift\clang\include\module.modulemap'
+
+  | |- note: the type was actually found in module 'SwiftShims' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\shims\module.modulemap'
+
+  | `- note: declarations in the clang module '_Builtin_stddef' may be hidden by clang preprocessor macros
+
+<unknown>:0: note: attempting to recover from the previous modularization issue
+
+
+[45 / 56] GrinFlintCore
+C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\windows\WinSDK.swiftmodule\x86_64-unknown-windows-msvc.swiftmodule:1:1: warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+1 | _Builtin_stddef.wchar_t
+
+  | |- warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+  | |- note: the type was expected to be found in module '_Builtin_stddef' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Toolchains\6.4.1+Asserts\usr\lib\swift\clang\include\module.modulemap'
+
+  | |- note: the type was actually found in module 'SwiftShims' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\shims\module.modulemap'
+
+  | `- note: declarations in the clang module '_Builtin_stddef' may be hidden by clang preprocessor macros
+
+<unknown>:0: note: attempting to recover from the previous modularization issue
+
+
+C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\windows\WinSDK.swiftmodule\x86_64-unknown-windows-msvc.swiftmodule:1:1: warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+1 | _Builtin_stddef.wchar_t
+
+  | |- warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+  | |- note: the type was expected to be found in module '_Builtin_stddef' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Toolchains\6.4.1+Asserts\usr\lib\swift\clang\include\module.modulemap'
+
+  | |- note: the type was actually found in module 'SwiftShims' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\shims\module.modulemap'
+
+  | `- note: declarations in the clang module '_Builtin_stddef' may be hidden by clang preprocessor macros
+
+<unknown>:0: note: attempting to recover from the previous modularization issue
+
+
+C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\windows\WinSDK.swiftmodule\x86_64-unknown-windows-msvc.swiftmodule:1:1: warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+1 | _Builtin_stddef.wchar_t
+
+  | |- warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+  | |- note: the type was expected to be found in module '_Builtin_stddef' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Toolchains\6.4.1+Asserts\usr\lib\swift\clang\include\module.modulemap'
+
+  | |- note: the type was actually found in module 'SwiftShims' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\shims\module.modulemap'
+
+  | `- note: declarations in the clang module '_Builtin_stddef' may be hidden by clang preprocessor macros
+
+<unknown>:0: note: attempting to recover from the previous modularization issue
+
+
+C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\windows\WinSDK.swiftmodule\x86_64-unknown-windows-msvc.swiftmodule:1:1: warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+1 | _Builtin_stddef.wchar_t
+
+  | |- warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+  | |- note: the type was expected to be found in module '_Builtin_stddef' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Toolchains\6.4.1+Asserts\usr\lib\swift\clang\include\module.modulemap'
+
+  | |- note: the type was actually found in module 'SwiftShims' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\shims\module.modulemap'
+
+  | `- note: declarations in the clang module '_Builtin_stddef' may be hidden by clang preprocessor macros
+
+<unknown>:0: note: attempting to recover from the previous modularization issue
+
+
+C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\windows\WinSDK.swiftmodule\x86_64-unknown-windows-msvc.swiftmodule:1:1: warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+1 | _Builtin_stddef.wchar_t
+
+  | |- warning: reference to type 'wchar_t' broken by a context change; 'wchar_t' was expected to be in '_Builtin_stddef', but now a candidate is found only in 'SwiftShims'
+
+  | |- note: the type was expected to be found in module '_Builtin_stddef' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Toolchains\6.4.1+Asserts\usr\lib\swift\clang\include\module.modulemap'
+
+  | |- note: the type was actually found in module 'SwiftShims' at 'C:\Users\nurli\AppData\Local\Programs\Swift\Platforms\6.4.1\Windows.platform\Developer\SDKs\Windows.sdk\usr\lib\swift\shims\module.modulemap'
+
+  | `- note: declarations in the clang module '_Builtin_stddef' may be hidden by clang preprocessor macros
+
+<unknown>:0: note: attempting to recover from the previous modularization issue
+
+
+[48 / 58] GrinFlintCore
+[51 / 58] GrinFlintCoreTests-product
+[55 / 61] GrinFlintCoreTests-test-runner
+[59 / 61] GrinFlintCoreTests-test-runner
+[60 / 62] GrinFlintCoreTests-test-runner
+[62 / 62] GrinFlintCoreTests-test-runner
+Build complete! (23.51 secs)
+warning: unable to create symbolic link at C:\DHW\.tmp\audit-swift-20261030\debug: encountered an I/O error (code: 512) while reading C:\DHW\.tmp\audit-swift-20261030\debug
+Test Suite 'All tests' started at 2026-10-30 06:07:34.464
+
+Test Suite 'Debug-windows-x86_64.xctest' started at 2026-10-30 06:07:34.465
+
+Test Suite 'BalanceStateTests' started at 2026-10-30 06:07:34.465
+
+Test Case 'BalanceStateTests.testFailureAfterSuccessKeepsValuesAndMarksStale' started at 2026-10-30 06:07:34.465
+
+Test Case 'BalanceStateTests.testFailureAfterSuccessKeepsValuesAndMarksStale' passed (0.001 seconds)
+
+Test Case 'BalanceStateTests.testFailureBeforeFirstSuccessStaysUnknown' started at 2026-10-30 06:07:34.467
+
+Test Case 'BalanceStateTests.testFailureBeforeFirstSuccessStaysUnknown' passed (0.0 seconds)
+
+Test Case 'BalanceStateTests.testInitialStateIsUnknownNotZeroTruth' started at 2026-10-30 06:07:34.467
+
+Test Case 'BalanceStateTests.testInitialStateIsUnknownNotZeroTruth' passed (0.22 seconds)
+
+Test Case 'BalanceStateTests.testLocalUpdateDoesNotInventFreshness' started at 2026-10-30 06:07:34.687
+
+Test Case 'BalanceStateTests.testLocalUpdateDoesNotInventFreshness' passed (0.0 seconds)
+
+Test Case 'BalanceStateTests.testNodeUpdateMakesBalanceFresh' started at 2026-10-30 06:07:34.687
+
+Test Case 'BalanceStateTests.testNodeUpdateMakesBalanceFresh' passed (0.0 seconds)
+
+Test Case 'BalanceStateTests.testRecoveryAfterFailureMakesFreshAgain' started at 2026-10-30 06:07:34.687
+
+Test Case 'BalanceStateTests.testRecoveryAfterFailureMakesFreshAgain' passed (0.0 seconds)
+
+Test Suite 'BalanceStateTests' passed at 2026-10-30 06:07:34.687
+
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.222 (0.222) seconds
+
+Test Suite 'GrinFormatTests' started at 2026-10-30 06:07:34.687
+
+Test Case 'GrinFormatTests.testAmountForInputHasNoSuffixOrGrouping' started at 2026-10-30 06:07:34.687
+
+Test Case 'GrinFormatTests.testAmountForInputHasNoSuffixOrGrouping' passed (0.0 seconds)
+
+Test Case 'GrinFormatTests.testFormatsWithSuffixAndNineDigits' started at 2026-10-30 06:07:34.688
+
+Test Case 'GrinFormatTests.testFormatsWithSuffixAndNineDigits' passed (0.0 seconds)
+
+Test Case 'GrinFormatTests.testParseAcceptsCommaAndDot' started at 2026-10-30 06:07:34.688
+
+Test Case 'GrinFormatTests.testParseAcceptsCommaAndDot' passed (0.0 seconds)
+
+Test Case 'GrinFormatTests.testParseRejectsZeroAndGarbage' started at 2026-10-30 06:07:34.688
+
+Test Case 'GrinFormatTests.testParseRejectsZeroAndGarbage' passed (0.0 seconds)
+
+Test Suite 'GrinFormatTests' passed at 2026-10-30 06:07:34.688
+
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+
+Test Suite 'PendingOperationsStoreTests' started at 2026-10-30 06:07:34.688
+
+Test Case 'PendingOperationsStoreTests.testCodableRoundTripKeepsAllFields' started at 2026-10-30 06:07:34.688
+
+Test Case 'PendingOperationsStoreTests.testCodableRoundTripKeepsAllFields' passed (0.001 seconds)
+
+Test Case 'PendingOperationsStoreTests.testCompletedReceiveIsNotAwaitingSend' started at 2026-10-30 06:07:34.689
+
+Test Case 'PendingOperationsStoreTests.testCompletedReceiveIsNotAwaitingSend' passed (0.003 seconds)
+
+Test Case 'PendingOperationsStoreTests.testCorruptedFileYieldsEmptyJournal' started at 2026-10-30 06:07:34.692
+
+Test Case 'PendingOperationsStoreTests.testCorruptedFileYieldsEmptyJournal' passed (0.006 seconds)
+
+Test Case 'PendingOperationsStoreTests.testFinalizedSendStillBlocksNewSend' started at 2026-10-30 06:07:34.698
+
+Test Case 'PendingOperationsStoreTests.testFinalizedSendStillBlocksNewSend' passed (0.002 seconds)
+
+Test Case 'PendingOperationsStoreTests.testLegacyReceiveStageDecodesAsPrepared' started at 2026-10-30 06:07:34.700
+
+Test Case 'PendingOperationsStoreTests.testLegacyReceiveStageDecodesAsPrepared' passed (0.001 seconds)
+
+Test Case 'PendingOperationsStoreTests.testLegacySendStageDecodesAsPrepared' started at 2026-10-30 06:07:34.700
+
+Test Case 'PendingOperationsStoreTests.testLegacySendStageDecodesAsPrepared' passed (0.0 seconds)
+
+Test Case 'PendingOperationsStoreTests.testLookupByTransactionID' started at 2026-10-30 06:07:34.701
+
+Test Case 'PendingOperationsStoreTests.testLookupByTransactionID' passed (0.002 seconds)
+
+Test Case 'PendingOperationsStoreTests.testOperationSurvivesStoreRecreation' started at 2026-10-30 06:07:34.703
+
+Test Case 'PendingOperationsStoreTests.testOperationSurvivesStoreRecreation' passed (0.12 seconds)
+
+Test Case 'PendingOperationsStoreTests.testPostedSendDoesNotBlockNewSend' started at 2026-10-30 06:07:34.824
+
+Test Case 'PendingOperationsStoreTests.testPostedSendDoesNotBlockNewSend' passed (0.003 seconds)
+
+Test Case 'PendingOperationsStoreTests.testRemoveDropsOperation' started at 2026-10-30 06:07:34.826
+
+Test Case 'PendingOperationsStoreTests.testRemoveDropsOperation' passed (0.115 seconds)
+
+Test Case 'PendingOperationsStoreTests.testStageTitlesAndDetailsAreUserFacing' started at 2026-10-30 06:07:34.941
+
+Test Case 'PendingOperationsStoreTests.testStageTitlesAndDetailsAreUserFacing' passed (0.0 seconds)
+
+Test Case 'PendingOperationsStoreTests.testTerminalStagesAreNotActive' started at 2026-10-30 06:07:34.942
+
+Test Case 'PendingOperationsStoreTests.testTerminalStagesAreNotActive' passed (0.003 seconds)
+
+Test Case 'PendingOperationsStoreTests.testUnfinishedSendPrefersLatestUnfinishedSend' started at 2026-10-30 06:07:34.945
+
+Test Case 'PendingOperationsStoreTests.testUnfinishedSendPrefersLatestUnfinishedSend' passed (0.005 seconds)
+
+Test Suite 'PendingOperationsStoreTests' passed at 2026-10-30 06:07:34.950
+
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.262 (0.262) seconds
+
+Test Suite 'Debug-windows-x86_64.xctest' passed at 2026-10-30 06:07:34.950
+
+	 Executed 23 tests, with 0 failures (0 unexpected) in 0.484 (0.484) seconds
+
+Test Suite 'All tests' passed at 2026-10-30 06:07:34.950
+
+	 Executed 23 tests, with 0 failures (0 unexpected) in 0.484 (0.484) seconds
+
+◊ Test run started.
+
+→ Testing Library Version: 6.4.1 (804dc4530ef3666)
+
+→ Target Platform: x86_64-unknown-windows-msvc
+
+√ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+

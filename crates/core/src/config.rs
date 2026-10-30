@@ -94,7 +94,9 @@ impl Settings {
             self.network = "testnet".to_string();
         }
         let url = self.node_url.trim().to_string();
-        self.node_url = if url.is_empty() {
+        self.node_url = if url.is_empty() || !crate::node::node_url_allowed(&url) {
+            // A hand-edited settings.json must not smuggle a plain-HTTP remote
+            // node past the update path; fall back to the managed loopback node.
             crate::node::default_node_url(&self.network)
         } else {
             url
@@ -537,11 +539,21 @@ impl AppPaths {
                 if backup.exists() && crate::win_acl::restrict(&backup).is_err() {
                     acl_ok = false;
                 }
-                let warning = (!acl_ok).then(|| {
+                let mut warning = (!acl_ok).then(|| {
                     "не удалось ограничить ACL settings.json/backup; проверьте права вручную"
                         .to_string()
                 });
-                Ok((settings.sanitized(), warning))
+                let node_url_before = settings.node_url.clone();
+                let sanitized = settings.sanitized();
+                if sanitized.node_url != node_url_before {
+                    warning = Some(match warning {
+                        Some(existing) => format!(
+                            "{existing}; settings.json: node_url отклонён (нужен https или loopback http), используется локальная нода"
+                        ),
+                        None => "settings.json: node_url отклонён (нужен https или loopback http), используется локальная нода".to_string(),
+                    });
+                }
+                Ok((sanitized, warning))
             }
             Err(primary) => {
                 let backup = path.with_extension("json.bak");
@@ -961,5 +973,28 @@ mod tests {
             "both wallet.seed and wallet.seed.v2 mark a profile"
         );
         let _ = std::fs::remove_dir_all(paths.root());
+    }
+    #[test]
+    fn disallowed_node_url_is_replaced_on_load() {
+        let external = Settings {
+            node_url: "http://node.example.com:13413".into(),
+            ..Settings::default()
+        };
+        assert_eq!(
+            external.sanitized().node_url,
+            crate::node::default_node_url("testnet")
+        );
+
+        let tls = Settings {
+            node_url: "https://node.example.com:13413".into(),
+            ..Settings::default()
+        };
+        assert_eq!(tls.sanitized().node_url, "https://node.example.com:13413");
+
+        let local = Settings {
+            node_url: "http://127.0.0.1:13413".into(),
+            ..Settings::default()
+        };
+        assert_eq!(local.sanitized().node_url, "http://127.0.0.1:13413");
     }
 }

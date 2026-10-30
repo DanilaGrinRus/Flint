@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-30",
+  "desktop_head": "7c8c8b7",
+  "ios_head": "ace59d2",
+  "desktop_library_tests": {
+    "passed": 281,
+    "ignored": 1
+  },
+  "ios_swift_core_tests": {
+    "passed": 23
+  },
+  "ios_ffi_host_tests": {
+    "passed": 18
+  },
+  "desktop_full_suite": "NOT COMPLETED: LNK1104",
+  "device_tests": "NOT VERIFIED",
+  "live_funded_tests": "NOT RUN",
+  "rustsec_db": "99670cf 2026-10-27 offline",
+  "rustsec_desktop_records": 2,
+  "rustsec_ios_records": 6,
+  "security_invariants_reproduced": [
+    "external endpoint inherits synthetic local credential",
+    "remote HTTP URL accepted from persisted settings",
+    "non-loopback ws URL passes loopback-only validation"
+  ],
+  "product_code_changed_by_audit": false
+}
