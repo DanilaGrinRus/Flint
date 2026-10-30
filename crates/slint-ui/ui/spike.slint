@@ -48,10 +48,11 @@ component ActionButton inherits Rectangle {
     in property <string> kind: "secondary";
     in property <bool> enabled: true;
     in property <length> button-height: 42px;
+    in property <length> min-button-width: 96px;
     callback clicked();
 
     height: root.button-height;
-    min-width: 96px;
+    min-width: root.min-button-width;
     horizontal-stretch: 0;
     accessible-role: button;
     accessible-label: root.label;
@@ -61,9 +62,11 @@ component ActionButton inherits Rectangle {
     background: !root.enabled ? Theme.surface-2
         : root.kind == "primary" ? (touch.has-hover ? Theme.accent-dim : Theme.accent)
         : root.kind == "secondary" ? (touch.has-hover ? Theme.surface-hover : Theme.surface-2)
+        : root.kind == "danger" ? (touch.has-hover ? Theme.danger-soft : transparent)
         : (touch.has-hover ? Theme.surface-2 : transparent);
     border-width: root.kind == "primary" ? 0px : 1px;
     border-color: root.kind == "ghost" ? transparent
+        : root.kind == "danger" ? Theme.danger
         : (touch.has-hover ? Theme.border-strong : Theme.border);
     opacity: root.enabled ? 1.0 : 0.35;
 
@@ -81,7 +84,8 @@ component ActionButton inherits Rectangle {
                 y: (parent.height - self.height) / 2;
                 source: root.icon;
                 colorize: root.kind == "primary" ? Theme.bg
-                    : root.kind == "secondary" ? Theme.accent : Theme.muted-2;
+                    : root.kind == "secondary" ? Theme.accent
+                    : root.kind == "danger" ? Theme.danger : Theme.muted-2;
                 image-fit: contain;
             }
         }
@@ -89,6 +93,7 @@ component ActionButton inherits Rectangle {
             text: root.label;
             color: root.kind == "primary" ? Theme.bg
                 : root.kind == "secondary" ? Theme.text
+                : root.kind == "danger" ? Theme.danger
                 : (touch.has-hover ? Theme.text : Theme.muted-2);
             font-size: 13px;
             font-weight: root.kind == "primary" ? 600 : 500;
@@ -580,8 +585,11 @@ callback settings-nostr-save-clicked(string);
                             }
                         }
                         Rectangle { height: 1px; background: Theme.border; }
-                        Button {
-                            text: @tr("Новый профиль");
+                        ActionButton {
+                            label: @tr("Новый профиль");
+                            kind: "ghost";
+                            button-height: 42px;
+                            min-button-width: 96px;
                             clicked => {
                                 root.show-profile-menu = false;
                                 root.profile-new-clicked();
@@ -847,9 +855,14 @@ callback settings-nostr-save-clicked(string);
                             if root.node-details: VerticalLayout {
                                 spacing: 8px;
                                 Text { text: root.node-text; color: Theme.muted; font-size: 12px; wrap: word-wrap; }
-                                Button {
-                                    text: @tr("Копировать диагностику");
-                                    clicked => { root.diagnostics-export-clicked(); }
+                                ActionButton {
+                                    label: @tr("Копировать диагностику");
+                                    kind: "secondary";
+                                    button-height: 34px;
+                                    min-button-width: 96px;
+                                    clicked => {
+                                        root.diagnostics-export-clicked();
+                                    }
                                 }
                                 Text { text: root.scan-state; color: Theme.muted; font-size: 12px; }
                                 Text { text: root.scan-note; color: Theme.warning; font-size: 12px; wrap: word-wrap; }
@@ -863,13 +876,23 @@ callback settings-nostr-save-clicked(string);
                                     enabled: !root.scanning;
                                     clicked => { root.scan-clicked(); }
                                 }
-                                if root.scanning && (root.scan-pausable || root.scan-paused): Button {
-                                    text: root.scan-paused ? "Продолжить" : "Пауза";
-                                    clicked => { root.scan-pause-clicked(); }
+                                if root.scanning && (root.scan-pausable || root.scan-paused): ActionButton {
+                                    label: root.scan-paused ? "Продолжить" : "Пауза";
+                                    kind: "secondary";
+                                    button-height: 42px;
+                                    min-button-width: 96px;
+                                    clicked => {
+                                        root.scan-pause-clicked();
+                                    }
                                 }
-                                if root.scanning: Button {
-                                    text: @tr("Отменить скан");
-                                    clicked => { root.scan-cancel-clicked(); }
+                                if root.scanning: ActionButton {
+                                    label: @tr("Отменить скан");
+                                    kind: "ghost";
+                                    button-height: 32px;
+                                    min-button-width: 0px;
+                                    clicked => {
+                                        root.scan-cancel-clicked();
+                                    }
                                 }
                             }
                         }
@@ -1355,8 +1378,11 @@ callback settings-nostr-save-clicked(string);
                     Text { text: root.create-error; color: Theme.danger; font-size: 13px; }
                     HorizontalLayout {
                         spacing: 8px;
-                        Button {
-                            text: @tr("Отмена");
+                        ActionButton {
+                            label: @tr("Отмена");
+                            kind: "ghost";
+                            button-height: 42px;
+                            min-button-width: 96px;
                             clicked => {
                                 root.show-create = false;
                                 root.create-password = "";
@@ -1364,10 +1390,15 @@ callback settings-nostr-save-clicked(string);
                             }
                         }
                         Rectangle { horizontal-stretch: 1; }
-                        Button {
-                            text: @tr("Создать");
+                        ActionButton {
+                            label: @tr("Создать");
+                            kind: "primary";
+                            button-height: 42px;
+                            min-button-width: 96px;
                             enabled: !root.create-busy;
-                            clicked => { root.create-clicked(root.create-password, root.create-password2); }
+                            clicked => {
+                                root.create-clicked(root.create-password, root.create-password2);
+                            }
                         }
                     }
                 }
@@ -1378,8 +1409,11 @@ callback settings-nostr-save-clicked(string);
                     Text { text: root.create-address; color: Theme.accent; font-size: 12px; font-family: "Cascadia Mono"; }
                     Text { text: root.create-error; color: Theme.danger; font-size: 13px; }
                     Rectangle { vertical-stretch: 1; }
-                    Button {
-                        text: @tr("Я сохранил seed");
+                    ActionButton {
+                        label: @tr("Я сохранил seed");
+                        kind: "primary";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         clicked => {
                             root.create-mnemonic = "";
                             root.create-password = "";
@@ -1467,12 +1501,20 @@ callback settings-nostr-save-clicked(string);
                 Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     spacing: 8px;
-                    Button {
-                        text: @tr("Справка по восстановлению");
-                        clicked => { root.show-restore-help = true; }
+                    ActionButton {
+                        label: @tr("Справка по восстановлению");
+                        kind: "secondary";
+                        button-height: 42px;
+                        min-button-width: 96px;
+                        clicked => {
+                            root.show-restore-help = true;
+                        }
                     }
-                    Button {
-                        text: @tr("Отмена");
+                    ActionButton {
+                        label: @tr("Отмена");
+                        kind: "ghost";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         clicked => {
                             root.show-restore = false;
                             root.restore-mnemonic = "";
@@ -1481,10 +1523,15 @@ callback settings-nostr-save-clicked(string);
                         }
                     }
                     Rectangle { horizontal-stretch: 1; }
-                    Button {
-                        text: @tr("Восстановить");
+                    ActionButton {
+                        label: @tr("Восстановить");
+                        kind: "primary";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         enabled: !root.restore-busy;
-                        clicked => { root.restore-clicked(root.restore-mnemonic, root.restore-password, root.restore-password2); }
+                        clicked => {
+                            root.restore-clicked(root.restore-mnemonic, root.restore-password, root.restore-password2);
+                        }
                     }
                 }
             }
@@ -1541,9 +1588,14 @@ callback settings-nostr-save-clicked(string);
                         }
                     }
                 }
-                Button {
-                    text: @tr("Закрыть справку");
-                    clicked => { root.show-restore-help = false; }
+                ActionButton {
+                    label: @tr("Закрыть справку");
+                    kind: "ghost";
+                    button-height: 42px;
+                    min-button-width: 96px;
+                    clicked => {
+                        root.show-restore-help = false;
+                    }
                 }
             }
         }
@@ -1626,9 +1678,14 @@ callback settings-nostr-save-clicked(string);
                         spacing: 4px;
                         HorizontalLayout {
                             Text { text: @tr("Подготовлено к отправке"); color: Theme.warning; font-size: 13px; font-weight: 600; horizontal-stretch: 1; }
-                            Button {
-                                text: @tr("Изменить");
-                                clicked => { root.invalidate-prepared(); }
+                            ActionButton {
+                                label: @tr("Изменить");
+                                kind: "ghost";
+                                button-height: 42px;
+                                min-button-width: 96px;
+                                clicked => {
+                                    root.invalidate-prepared();
+                                }
                             }
                         }
                         Text { text: @tr("Кому: ") + root.send-prepared-to; color: Theme.muted-2; font-size: 12px; wrap: word-wrap; }
@@ -1641,7 +1698,15 @@ callback settings-nostr-save-clicked(string);
                     read-only: true;
                     accessible-label: @tr("Slatepack для получателя");
                 }
-                Button { text: @tr("Копировать slatepack"); clicked => { root.copy-send-clicked(root.send-slatepack); } }
+                ActionButton {
+                    label: @tr("Копировать slatepack");
+                    kind: "secondary";
+                    button-height: 42px;
+                    min-button-width: 96px;
+                    clicked => {
+                        root.copy-send-clicked(root.send-slatepack);
+                    }
+                }
                 Text { text: @tr("Ответ получателя"); color: Theme.muted-2; font-size: 13px; }
                 LineEdit {
                     text <=> root.send-response;
@@ -1657,23 +1722,36 @@ callback settings-nostr-save-clicked(string);
                 Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     spacing: 8px;
-                    Button {
-                        text: @tr("Подготовить");
+                    ActionButton {
+                        label: @tr("Подготовить");
+                        kind: "primary";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         enabled: !root.send-busy && !root.send-prepared;
-                        clicked => { root.send-prepare-clicked(root.send-to, root.send-amount); }
+                        clicked => {
+                            root.send-prepare-clicked(root.send-to, root.send-amount);
+                        }
                     }
                     Rectangle { horizontal-stretch: 1; }
-                    Button {
-                        text: @tr("Закрыть");
+                    ActionButton {
+                        label: @tr("Закрыть");
+                        kind: "ghost";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         clicked => {
                             root.invalidate-prepared();
                             root.show-send = false;
                         }
                     }
-                    Button {
-                        text: @tr("Завершить");
+                    ActionButton {
+                        label: @tr("Завершить");
+                        kind: "primary";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         enabled: !root.send-busy && root.send-prepared && root.send-response != "";
-                        clicked => { root.send-finalize-clicked(root.send-slate-id, root.send-response); }
+                        clicked => {
+                            root.send-finalize-clicked(root.send-slate-id, root.send-response);
+                        }
                     }
                 }
             }
@@ -1707,7 +1785,15 @@ callback settings-nostr-save-clicked(string);
                     font-family: "Cascadia Mono";
                     wrap: word-wrap;
                 }
-                Button { text: @tr("Новый адрес"); clicked => { root.rotate-address-clicked(); } }
+                ActionButton {
+                    label: @tr("Новый адрес");
+                    kind: "secondary";
+                    button-height: 42px;
+                    min-button-width: 96px;
+                    clicked => {
+                        root.rotate-address-clicked();
+                    }
+                }
                 Text { text: @tr("Синхронизация ноды"); color: Theme.muted; font-size: 12px; }
                 Text {
                     text: root.node-text;
@@ -1756,10 +1842,15 @@ callback settings-nostr-save-clicked(string);
                                 }
                             }
                         }
-                        Button {
-                            text: @tr("Принять");
+                        ActionButton {
+                            label: @tr("Принять");
+                            kind: "primary";
+                            button-height: 42px;
+                            min-button-width: 96px;
                             enabled: !root.receive-busy;
-                                clicked => { root.receive-prepare-clicked(root.receive-incoming); }
+                            clicked => {
+                                root.receive-prepare-clicked(root.receive-incoming);
+                            }
                         }
                         Text { text: root.receive-slate-id; color: Theme.muted; font-size: 12px; font-family: "Cascadia Mono"; }
                         Text { text: @tr("Ответ отправителю"); color: Theme.muted-2; font-size: 13px; }
@@ -1768,7 +1859,15 @@ callback settings-nostr-save-clicked(string);
                             read-only: true;
                             accessible-label: @tr("Ответ отправителю");
                         }
-                        Button { text: @tr("Копировать ответ"); clicked => { root.copy-receive-clicked(root.receive-slatepack); } }
+                        ActionButton {
+                            label: @tr("Копировать ответ");
+                            kind: "secondary";
+                            button-height: 42px;
+                            min-button-width: 96px;
+                            clicked => {
+                                root.copy-receive-clicked(root.receive-slatepack);
+                            }
+                        }
                         Text { text: root.receive-note; color: Theme.accent; font-size: 13px; wrap: word-wrap; }
                         Text { text: root.receive-error; color: Theme.danger; font-size: 13px; wrap: word-wrap; }
                     }
@@ -1776,11 +1875,24 @@ callback settings-nostr-save-clicked(string);
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
-                    Button { text: @tr("Закрыть"); clicked => { root.show-receive = false; } }
-                    Button {
-                        text: @tr("Завершить приём");
+                    ActionButton {
+                        label: @tr("Закрыть");
+                        kind: "ghost";
+                        button-height: 42px;
+                        min-button-width: 96px;
+                        clicked => {
+                            root.show-receive = false;
+                        }
+                    }
+                    ActionButton {
+                        label: @tr("Завершить приём");
+                        kind: "primary";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         enabled: !root.receive-busy && root.receive-slate-id != "";
-                        clicked => { root.receive-finalize-clicked(root.receive-slate-id); }
+                        clicked => {
+                            root.receive-finalize-clicked(root.receive-slate-id);
+                        }
                     }
                 }
             }
@@ -1863,13 +1975,23 @@ callback settings-nostr-save-clicked(string);
                                 HorizontalLayout {
                                     vertical-stretch: 0;
                                     spacing: 8px;
-                                    Button {
-                                        text: "testnet";
-                                        clicked => { root.settings-network = "testnet"; }
+                                    ActionButton {
+                                        label: "testnet";
+                                        kind: "secondary";
+                                        button-height: 42px;
+                                        min-button-width: 96px;
+                                        clicked => {
+                                            root.settings-network = "testnet";
+                                        }
                                     }
-                                    Button {
-                                        text: "mainnet";
-                                        clicked => { root.settings-network = "mainnet"; }
+                                    ActionButton {
+                                        label: "mainnet";
+                                        kind: "secondary";
+                                        button-height: 42px;
+                                        min-button-width: 96px;
+                                        clicked => {
+                                            root.settings-network = "mainnet";
+                                        }
                                     }
                                     Rectangle { horizontal-stretch: 1; }
                                     Text { text: root.settings-network; color: Theme.accent; font-size: 14px; vertical-alignment: center; }
@@ -1904,6 +2026,7 @@ callback settings-nostr-save-clicked(string);
                                     spacing: 8px;
                                     LineEdit {
                                         text <=> root.settings-profile;
+                                        horizontal-stretch: 1;
                                         accessible-label: @tr("Имя кошелька");
                                         accepted => {
                                             root.settings-save-clicked(
@@ -1915,10 +2038,16 @@ callback settings-nostr-save-clicked(string);
                                             );
                                         }
                                     }
-                                    Button {
-                                        text: @tr("Создать профиль");
+                                    ActionButton {
+                                        label: @tr("Создать профиль");
+                                        min-button-width: 0px;
+                                        width: 170px;
+                                        kind: "primary";
+                                        button-height: 42px;
                                         enabled: !root.profile-create-busy;
-                                        clicked => { root.profile-create-clicked(root.settings-profile); }
+                                        clicked => {
+                                            root.profile-create-clicked(root.settings-profile);
+                                        }
                                     }
                                 }
                                 Text {
@@ -1944,16 +2073,24 @@ callback settings-nostr-save-clicked(string);
                                 vertical-stretch: 0;
                                 alignment: start;
                                 spacing: 6px;
-                                Button {
-                                    vertical-stretch: 0;
-                                    text: @tr("Показать seed");
+                                ActionButton {
+                                    label: @tr("Показать seed");
+                                    kind: "ghost";
+                                    button-height: 42px;
+                                    min-button-width: 96px;
                                     enabled: !root.seed-reveal-busy;
-                                    clicked => { root.seed-reveal-open-clicked(); }
+                                    clicked => {
+                                        root.seed-reveal-open-clicked();
+                                    }
                                 }
-                                Button {
-                                    vertical-stretch: 0;
-                                    text: @tr("Безопасность");
-                                    clicked => { root.security-open-clicked(); }
+                                ActionButton {
+                                    label: @tr("Безопасность");
+                                    kind: "secondary";
+                                    button-height: 42px;
+                                    min-button-width: 96px;
+                                    clicked => {
+                                        root.security-open-clicked();
+                                    }
                                 }
                                 Text {
                                     text: @tr("Смена пароля, резервная копия seed и удаление кошелька.");
@@ -2011,21 +2148,29 @@ callback settings-nostr-save-clicked(string);
                                         font-size: 13px;
                                         vertical-alignment: center;
                                     }
-                                    Button {
-                                        text: root.tor-running ? "Остановить Tor" : "Запустить Tor";
+                                    ActionButton {
+                                        label: root.tor-running ? "Остановить Tor" : "Запустить Tor";
+                                        kind: "secondary";
+                                        button-height: 42px;
+                                        min-button-width: 96px;
                                         enabled: root.tor-available && !root.tor-busy;
                                         clicked => {
                                             if root.tor-running {
-                                                root.tor-stop-clicked();
+                                            root.tor-stop-clicked();
                                             } else {
-                                                root.tor-start-clicked();
+                                            root.tor-start-clicked();
                                             }
                                         }
                                     }
-                                    Button {
-                                        text: @tr("Обновить Tor");
+                                    ActionButton {
+                                        label: @tr("Обновить Tor");
+                                        kind: "ghost";
+                                        button-height: 34px;
+                                        min-button-width: 0px;
                                         enabled: root.tor-available && !root.tor-busy;
-                                        clicked => { root.tor-refresh-clicked(); }
+                                        clicked => {
+                                            root.tor-refresh-clicked();
+                                        }
                                     }
                                 }
                                 Text {
@@ -2047,15 +2192,25 @@ callback settings-nostr-save-clicked(string);
                                 HorizontalLayout {
                                     vertical-stretch: 0;
                                     spacing: 8px;
-                                    Button {
-                                        text: @tr("Сохранить мосты");
+                                    ActionButton {
+                                        label: @tr("Сохранить мосты");
+                                        kind: "secondary";
+                                        button-height: 34px;
+                                        min-button-width: 0px;
                                         enabled: !root.tor-busy;
-                                        clicked => { root.tor-bridges-save-clicked(root.tor-bridges-text); }
+                                        clicked => {
+                                            root.tor-bridges-save-clicked(root.tor-bridges-text);
+                                        }
                                     }
-                                    Button {
-                                        text: @tr("Показать лог");
+                                    ActionButton {
+                                        label: @tr("Показать лог");
+                                        kind: "ghost";
+                                        button-height: 42px;
+                                        min-button-width: 96px;
                                         enabled: root.tor-available && !root.tor-busy;
-                                        clicked => { root.tor-log-clicked(); }
+                                        clicked => {
+                                            root.tor-log-clicked();
+                                        }
                                     }
                                 }
                                 Text { text: root.tor-bridge-status; color: Theme.warning; font-size: 12px; wrap: word-wrap; }
@@ -2106,20 +2261,35 @@ callback settings-nostr-save-clicked(string);
                                 HorizontalLayout {
                                     vertical-stretch: 0;
                                     spacing: 8px;
-                                    Button {
-                                        text: root.settings-data-dir-busy ? "Выбор…" : "Обзор…";
+                                    ActionButton {
+                                        label: root.settings-data-dir-busy ? "Выбор…" : "Обзор…";
+                                        kind: "secondary";
+                                        button-height: 42px;
+                                        min-button-width: 96px;
                                         enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
-                                        clicked => { root.settings-data-dir-browse-clicked(); }
+                                        clicked => {
+                                            root.settings-data-dir-browse-clicked();
+                                        }
                                     }
-                                    Button {
-                                        text: @tr("Стандартный");
+                                    ActionButton {
+                                        label: @tr("Стандартный");
+                                        kind: "secondary";
+                                        button-height: 34px;
+                                        min-button-width: 0px;
                                         enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
-                                        clicked => { root.settings-data-dir = root.settings-default-data-dir; }
+                                        clicked => {
+                                            root.settings-data-dir = root.settings-default-data-dir;
+                                        }
                                     }
-                                    Button {
-                                        text: @tr("Применить при перезапуске");
+                                    ActionButton {
+                                        label: @tr("Применить при перезапуске");
+                                        kind: "secondary";
+                                        button-height: 34px;
+                                        min-button-width: 0px;
                                         enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
-                                        clicked => { root.settings-data-dir-save-clicked(root.settings-data-dir); }
+                                        clicked => {
+                                            root.settings-data-dir-save-clicked(root.settings-data-dir);
+                                        }
                                     }
                                 }
                                 Text {
@@ -2156,16 +2326,27 @@ callback settings-nostr-save-clicked(string);
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
-                    Button { text: @tr("Закрыть"); clicked => { root.show-settings = false; } }
-                    Button {
-                        text: @tr("Сохранить");
+                    ActionButton {
+                        label: @tr("Закрыть");
+                        kind: "ghost";
+                        button-height: 42px;
+                        min-button-width: 96px;
+                        clicked => {
+                            root.show-settings = false;
+                        }
+                    }
+                    ActionButton {
+                        label: @tr("Сохранить");
+                        kind: "primary";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         clicked => {
                             root.settings-save-clicked(
-                                root.settings-network,
-                                root.settings-profile,
-                                root.settings-node-url,
-                                root.settings-relay,
-                                root.settings-min-conf,
+                            root.settings-network,
+                            root.settings-profile,
+                            root.settings-node-url,
+                            root.settings-relay,
+                            root.settings-min-conf,
                             );
                         }
                     }
@@ -2215,9 +2396,14 @@ callback settings-nostr-save-clicked(string);
                             VerticalLayout {
                                 spacing: 6px;
                                 Text { text: row.stamps; color: Theme.muted; font-size: 12px; }
-                                Button {
-                                    text: @tr("Взять");
-                                    clicked => { root.swap-take-clicked(row.id); }
+                                ActionButton {
+                                    label: @tr("Взять");
+                                    kind: "primary";
+                                    button-height: 42px;
+                                    min-button-width: 96px;
+                                    clicked => {
+                                        root.swap-take-clicked(row.id);
+                                    }
                                 }
                             }
                         }
@@ -2226,13 +2412,26 @@ callback settings-nostr-save-clicked(string);
                 Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     spacing: 8px;
-                    Button {
-                        text: @tr("Симулировать");
+                    ActionButton {
+                        label: @tr("Симулировать");
+                        kind: "secondary";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         enabled: root.last-swap-id != "" && !root.swap-busy;
-                        clicked => { root.swap-simulate-clicked(root.last-swap-id); }
+                        clicked => {
+                            root.swap-simulate-clicked(root.last-swap-id);
+                        }
                     }
                     Rectangle { horizontal-stretch: 1; }
-                    Button { text: @tr("Закрыть"); clicked => { root.show-swaps = false; } }
+                    ActionButton {
+                        label: @tr("Закрыть");
+                        kind: "ghost";
+                        button-height: 42px;
+                        min-button-width: 96px;
+                        clicked => {
+                            root.show-swaps = false;
+                        }
+                    }
                 }
             }
         }
@@ -2281,10 +2480,15 @@ callback settings-nostr-save-clicked(string);
                         }
                     }
                 }
-                Button {
-                    text: @tr("Сменить пароль");
+                ActionButton {
+                    label: @tr("Сменить пароль");
+                    kind: "primary";
+                    button-height: 34px;
+                    min-button-width: 0px;
                     enabled: !root.sec-busy;
-                    clicked => { root.change-password-clicked(root.sec-old, root.sec-new, root.sec-new2); }
+                    clicked => {
+                        root.change-password-clicked(root.sec-old, root.sec-new, root.sec-new2);
+                    }
                 }
                 Rectangle { height: 1px; background: Theme.border; }
                 Text { text: root.sec-seed-status; color: Theme.muted; font-size: 12px; wrap: word-wrap; }
@@ -2302,38 +2506,61 @@ callback settings-nostr-save-clicked(string);
                 }
                 HorizontalLayout {
                     spacing: 8px;
-                    Button {
-                        text: root.sec-remove-backups ? "Удалить backup: да" : "Удалить backup: нет";
-                        clicked => { root.sec-remove-backups = !root.sec-remove-backups; }
+                    ActionButton {
+                        label: root.sec-remove-backups ? "Удалить backup: да" : "Удалить backup: нет";
+                        kind: "secondary";
+                        button-height: 42px;
+                        min-button-width: 96px;
+                        clicked => {
+                            root.sec-remove-backups = !root.sec-remove-backups;
+                        }
                     }
-                    Button {
-                        text: @tr("Защитить seed (Argon2id)");
+                    ActionButton {
+                        label: @tr("Защитить seed (Argon2id)");
+                        kind: "secondary";
+                        button-height: 34px;
+                        min-button-width: 0px;
                         enabled: !root.sec-busy;
                         clicked => {
                             root.seed-migrate-clicked(
-                                root.sec-seed-password,
-                                root.sec-seed-confirm,
-                                root.sec-remove-backups,
+                            root.sec-seed-password,
+                            root.sec-seed-confirm,
+                            root.sec-remove-backups,
                             );
                         }
                     }
                 }
                 HorizontalLayout {
                     spacing: 8px;
-                    Button {
-                        text: @tr("Отключить Argon2id");
+                    ActionButton {
+                        label: @tr("Отключить Argon2id");
+                        kind: "secondary";
+                        button-height: 34px;
+                        min-button-width: 0px;
                         enabled: !root.sec-busy;
-                        clicked => { root.seed-disable-clicked(root.sec-old); }
+                        clicked => {
+                            root.seed-disable-clicked(root.sec-old);
+                        }
                     }
-                    Button {
-                        text: @tr("Починить конверт");
+                    ActionButton {
+                        label: @tr("Починить конверт");
+                        kind: "secondary";
+                        button-height: 34px;
+                        min-button-width: 0px;
                         enabled: !root.sec-busy;
-                        clicked => { root.seed-repair-clicked(root.sec-old); }
+                        clicked => {
+                            root.seed-repair-clicked(root.sec-old);
+                        }
                     }
-                    Button {
-                        text: @tr("Показать seed");
+                    ActionButton {
+                        label: @tr("Показать seed");
+                        kind: "ghost";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         enabled: !root.sec-busy;
-                        clicked => { root.seed-reveal-open-clicked(); }
+                        clicked => {
+                            root.seed-reveal-open-clicked();
+                        }
                     }
                 }
                 Rectangle { height: 1px; background: Theme.border; }
@@ -2348,10 +2575,15 @@ callback settings-nostr-save-clicked(string);
                         }
                     }
                 }
-                Button {
-                    text: @tr("Удалить кошелёк");
+                ActionButton {
+                    label: @tr("Удалить кошелёк");
+                    kind: "danger";
+                    button-height: 42px;
+                    min-button-width: 96px;
                     enabled: !root.sec-busy;
-                    clicked => { root.delete-wallet-clicked(root.sec-delete); }
+                    clicked => {
+                        root.delete-wallet-clicked(root.sec-delete);
+                    }
                 }
                 Text { text: root.sec-note; color: Theme.accent; font-size: 13px; }
                 Text { text: root.sec-error; color: Theme.danger; font-size: 13px; }
@@ -2359,8 +2591,11 @@ callback settings-nostr-save-clicked(string);
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
-                    Button {
-                        text: @tr("Закрыть");
+                    ActionButton {
+                        label: @tr("Закрыть");
+                                        kind: "ghost";
+                                        button-height: 34px;
+                        min-button-width: 96px;
                         clicked => {
                             root.show-security = false;
                             root.sec-old = "";
@@ -2416,13 +2651,21 @@ callback settings-nostr-save-clicked(string);
                 }
                 HorizontalLayout {
                     spacing: 8px;
-                    Button {
-                        text: @tr("Показать");
+                    ActionButton {
+                        label: @tr("Показать");
+                        kind: "ghost";
+                        button-height: 42px;
+                        min-button-width: 96px;
                         enabled: !root.seed-reveal-busy;
-                        clicked => { root.seed-reveal-clicked(root.seed-reveal-password); }
+                        clicked => {
+                            root.seed-reveal-clicked(root.seed-reveal-password);
+                        }
                     }
-                    Button {
-                        text: @tr("Закрыть");
+                    ActionButton {
+                        label: @tr("Закрыть");
+                                        kind: "ghost";
+                                        button-height: 34px;
+                        min-button-width: 96px;
                         clicked => {
                             root.show-seed = false;
                             root.seed-reveal-password = "";
@@ -3076,10 +3319,15 @@ callback settings-nostr-save-clicked(string);
                         Text { text: @tr("Очередь не загружена"); color: Theme.danger; font-size: 13px; font-weight: 600; }
                         Text { text: root.pending-error; color: Theme.danger; font-size: 12px; wrap: word-wrap; }
                         Text { text: @tr("Не считайте очередь пустой: состояние операций неизвестно."); color: Theme.warning; font-size: 12px; wrap: word-wrap; }
-                        Button {
-                            text: @tr("Повторить загрузку");
+                        ActionButton {
+                            label: @tr("Повторить загрузку");
+                            kind: "secondary";
+                            button-height: 34px;
+                            min-button-width: 0px;
                             enabled: !root.pending-loading;
-                            clicked => { root.pending-reload-clicked(); }
+                            clicked => {
+                                root.pending-reload-clicked();
+                            }
                         }
                     }
                 }
@@ -3120,25 +3368,50 @@ callback settings-nostr-save-clicked(string);
                                 Text { text: row.next-action; color: Theme.muted-2; font-size: 11px; vertical-alignment: center; }
                             }
                             Text { text: row.state; color: Theme.warning; font-size: 12px; vertical-alignment: center; }
-                            if row.can-export: Button {
-                                text: @tr("Экспорт ответа");
-                                clicked => { root.export-pending-clicked(row.id); }
+                            if row.can-export: ActionButton {
+                                label: @tr("Экспорт ответа");
+                                kind: "ghost";
+                                button-height: 30px;
+                                min-button-width: 0px;
+                                clicked => {
+                                    root.export-pending-clicked(row.id);
+                                }
                             }
-                            if row.can-export-request: Button {
-                                text: @tr("Экспорт запроса");
-                                clicked => { root.export-pending-request-clicked(row.id); }
+                            if row.can-export-request: ActionButton {
+                                label: @tr("Экспорт запроса");
+                                kind: "ghost";
+                                button-height: 30px;
+                                min-button-width: 0px;
+                                clicked => {
+                                    root.export-pending-request-clicked(row.id);
+                                }
                             }
-                            if row.can-retry: Button {
-                                text: @tr("Повторить");
-                                clicked => { root.retry-pending-clicked(row.id); }
+                            if row.can-retry: ActionButton {
+                                label: @tr("Повторить");
+                                kind: "ghost";
+                                button-height: 30px;
+                                min-button-width: 0px;
+                                clicked => {
+                                    root.retry-pending-clicked(row.id);
+                                }
                             }
-                            if row.can-cancel: Button {
-                                text: @tr("Отменить");
-                                clicked => { root.cancel-pending-clicked(row.id); }
+                            if row.can-cancel: ActionButton {
+                                label: @tr("Отменить");
+                                kind: "ghost";
+                                button-height: 30px;
+                                min-button-width: 0px;
+                                clicked => {
+                                    root.cancel-pending-clicked(row.id);
+                                }
                             }
-                            if !row.can-retry && !row.can-cancel: Button {
-                                text: @tr("Обновить");
-                                clicked => { root.pending-reload-clicked(); }
+                            if !row.can-retry && !row.can-cancel: ActionButton {
+                                label: @tr("Обновить");
+                                kind: "ghost";
+                                button-height: 30px;
+                                min-button-width: 0px;
+                                clicked => {
+                                    root.pending-reload-clicked();
+                                }
                             }
                         }
                     }
@@ -3167,12 +3440,25 @@ callback settings-nostr-save-clicked(string);
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
-                    Button { text: @tr("Закрыть"); clicked => { root.show-history = false; } }
+                    ActionButton {
+                        label: @tr("Закрыть");
+                        kind: "ghost";
+                        button-height: 30px;
+                        min-button-width: 0px;
+                        clicked => {
+                            root.show-history = false;
+                        }
+                    }
                 }
             }
         }
     }
 }
+
+
+
+
+
 
 
 
