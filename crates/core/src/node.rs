@@ -1046,6 +1046,31 @@ pub const TIP_FRESHNESS_BLOCKS: u64 = 2;
 ///
 /// Without a native status the phase is `Unknown` on purpose: a quiet log plus a
 /// non-zero height is exactly what a stalled node looks like.
+/// Gate for a new outgoing spend when the node is not fully caught up.
+///
+/// `Headers`/`Blocks` may proceed only with an explicit user acknowledgement:
+/// the chain will reject a conflicting transaction, but the wallet can still
+/// lock change for a payment that never confirms. Unknown/Starting/NotRunning
+/// never proceed.
+pub fn send_sync_gate(
+    phase: NodePhase,
+    allow_unsynced: bool,
+) -> std::result::Result<Option<String>, String> {
+    if phase.ready() {
+        return Ok(None);
+    }
+    if allow_unsynced && matches!(phase, NodePhase::Headers | NodePhase::Blocks) {
+        return Ok(Some(
+            "нода догоняет цепь: транзакция может быть отвергнута сетью, а входы останутся заблокированы до отмены"
+                .to_string(),
+        ));
+    }
+    Err(format!(
+        "отправка заблокирована: {}. Дождитесь полной синхронизации ноды — иначе баланс и подтверждения недостоверны",
+        phase.label()
+    ))
+}
+
 pub fn classify_phase(running: bool, connected: bool, native: Option<&NativeStatus>) -> NodePhase {
     if !running {
         return NodePhase::NotRunning;
@@ -1319,5 +1344,45 @@ mod auth_tests {
             elapsed < Duration::from_secs(3),
             "status call was not bounded: {elapsed:?}"
         );
+    }
+    #[test]
+    fn loopback_node_url_is_strict() {
+        assert!(is_loopback_node_url("http://127.0.0.1:13413"));
+        assert!(is_loopback_node_url("http://localhost:13413"));
+        assert!(is_loopback_node_url("https://[::1]:13413"));
+        assert!(is_loopback_node_url("https://127.0.0.2"));
+        assert!(!is_loopback_node_url("https://node.example.com"));
+        assert!(!is_loopback_node_url("http://localhost.attacker.invalid"));
+        assert!(!is_loopback_node_url("http://127.0.0.1.attacker.invalid/"));
+        assert!(!is_loopback_node_url("not a url"));
+    }
+
+    #[test]
+    fn persisted_node_url_policy_rejects_open_transport() {
+        assert!(node_url_allowed("https://node.example.com"));
+        assert!(node_url_allowed("http://127.0.0.1:13413"));
+        assert!(node_url_allowed("http://localhost:13413"));
+        assert!(!node_url_allowed("http://node.example.com:13413"));
+        assert!(!node_url_allowed("http://localhost.attacker.invalid"));
+        assert!(!node_url_allowed("ftp://127.0.0.1"));
+        assert!(!node_url_allowed(""));
+    }
+
+    #[test]
+    fn unsynced_send_gate_requires_explicit_acknowledgement() {
+        for phase in [NodePhase::Headers, NodePhase::Blocks] {
+            assert!(send_sync_gate(phase, false).is_err());
+            assert!(send_sync_gate(phase, true).expect("acknowledged").is_some());
+        }
+        for phase in [
+            NodePhase::Starting,
+            NodePhase::Unknown,
+            NodePhase::NotRunning,
+        ] {
+            assert!(send_sync_gate(phase, true).is_err(), "{phase:?}");
+        }
+        assert!(send_sync_gate(NodePhase::Ready, false)
+            .expect("ready")
+            .is_none());
     }
 }

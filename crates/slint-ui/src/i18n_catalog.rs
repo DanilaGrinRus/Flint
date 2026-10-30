@@ -10,6 +10,9 @@ const CATALOG: &[(&str, &str)] = &[
     ("статус неизвестен", "status unknown"),
     ("нода не запущена", "node is not running"),
     ("нода не подключена", "node not connected"),
+    ("Нода догоняет цепь: транзакция может быть отвергнута сетью, а входы останутся заблокированы до отмены.", "The node is still syncing: the transaction may be rejected by the network and its inputs stay locked until cancelled."),
+    ("Разрешить отправку при несинхронизированной ноде", "Allow sending while the node is not synced"),
+    ("нода догоняет цепь: транзакция может быть отвергнута сетью, а входы останутся заблокированы до отмены", "the node is still syncing: the transaction may be rejected by the network and its inputs stay locked until cancelled"),
     ("скан идёт", "scan running"),
     ("скан завершён", "scan completed"),
     ("скан не завершён", "scan did not complete"),
@@ -298,3 +301,4 @@ const CATALOG: &[(&str, &str)] = &[
     ("требует ручного восстановления; не начинайте новую сделку", "needs manual recovery; do not start a new transaction"),
     ("ответ мог быть потерян; повторный приём запрещён, проверьте журнал", "the reply may be lost; do not receive again, check the journal"),
 ];
+

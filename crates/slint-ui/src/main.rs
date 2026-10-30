@@ -959,6 +959,11 @@ pub(crate) fn apply_snapshot(app: &AppWindow, snapshot: Snapshot, error: Option<
     app.set_balance_awaiting(awaiting.into());
     app.set_balance_locked(locked.into());
     app.set_balance_pending_visible(pending_visible);
+    let node_syncing = matches!(
+        snapshot.node.phase,
+        flint_core::node::NodePhase::Headers | flint_core::node::NodePhase::Blocks
+    );
+    app.set_node_syncing(node_syncing);
     let (balance_state, send_enabled) = if !snapshot.status.unlocked {
         (i18n::tr("войдите, чтобы увидеть баланс").to_string(), false)
     } else {
@@ -969,11 +974,13 @@ pub(crate) fn apply_snapshot(app: &AppWindow, snapshot: Snapshot, error: Option<
             ),
             Some(summary) if !summary.validated => (
                 i18n::tr("баланс не проверен нодой (кеш)").to_string(),
-                false,
+                // While catching up, the user may explicitly accept the warning
+                // in the send dialog; a scan is still mandatory.
+                node_syncing,
             ),
             Some(_) => (
                 i18n::tr("баланс проверен").to_string(),
-                snapshot.node.phase.ready(),
+                snapshot.node.phase.ready() || node_syncing,
             ),
             None => (i18n::tr("баланс недоступен").to_string(), false),
         }
@@ -1877,8 +1884,18 @@ fn main() -> Result<(), slint::PlatformError> {
                 app.set_send_slatepack("".into());
             }
             let generation = wallet.context_generation();
+            let allow_unsynced = weak
+                .upgrade()
+                .map(|app| app.get_send_allow_unsynced())
+                .unwrap_or(false);
             thread::spawn(move || {
-                let result = parse_nano(&amount).and_then(|nano| wallet.prepare_send(&to, nano));
+                let result = parse_nano(&amount).and_then(|nano| {
+                    if allow_unsynced {
+                        wallet.prepare_send_allow_unsynced(&to, nano)
+                    } else {
+                        wallet.prepare_send(&to, nano)
+                    }
+                });
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = weak.upgrade() {
                         if app.get_wallet_generation() as u64 != generation {
@@ -1897,10 +1914,14 @@ fn main() -> Result<(), slint::PlatformError> {
                                 app.set_send_prepared_fee(
                                     format!("{} нано", slate.fee_nano).into(),
                                 );
-                                app.set_send_note(
-                                    format!("Slatepack готов · комиссия {} нано", slate.fee_nano)
-                                        .into(),
-                                );
+                                let note = match slate.warning.as_deref() {
+                                    Some(warning) => i18n::tr(warning).to_string(),
+                                    None => format!(
+                                        "Slatepack готов · комиссия {} нано",
+                                        slate.fee_nano
+                                    ),
+                                };
+                                app.set_send_note(note.into());
                             }
                             Err(e) => app.set_send_error(i18n::tr(&e).into()),
                         }

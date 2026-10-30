@@ -412,11 +412,30 @@ impl WalletRuntime {
     }
 
     pub fn prepare_send(&self, destination: &str, amount_nano: u64) -> Result<SendSlate, String> {
+        self.prepare_send_with(destination, amount_nano, false)
+    }
+
+    /// Same as [`Self::prepare_send`], but a node in Headers/Blocks may proceed
+    /// after the UI showed the explicit "may be rejected" warning.
+    pub fn prepare_send_allow_unsynced(
+        &self,
+        destination: &str,
+        amount_nano: u64,
+    ) -> Result<SendSlate, String> {
+        self.prepare_send_with(destination, amount_nano, true)
+    }
+
+    fn prepare_send_with(
+        &self,
+        destination: &str,
+        amount_nano: u64,
+        allow_unsynced: bool,
+    ) -> Result<SendSlate, String> {
         if let Some(message) = self.scan_busy_error("отправка")? {
             return Err(message);
         }
         if self.is_rpc() {
-            self.ensure_node_ready()?;
+            let warning = self.node_sync_gate(allow_unsynced)?;
             let (slatepack, slate_id, fee_nano) = self
                 .rpc
                 .call(|backend| backend.send_prepare(destination, amount_nano))?;
@@ -427,9 +446,31 @@ impl WalletRuntime {
                 fee_nano,
                 destination: destination.to_string(),
                 encrypted: true,
+                warning,
             });
         }
-        self.with_wallet(|wallet| wallet.prepare_send(destination, amount_nano))
+        self.with_wallet(|wallet| {
+            if allow_unsynced {
+                wallet.prepare_send_allow_unsynced(destination, amount_nano)
+            } else {
+                wallet.prepare_send(destination, amount_nano)
+            }
+        })
+    }
+
+    /// RPC path: the node is not oracle-checked inside the child wallet, so the
+    /// runtime applies the same gate as the embedded backend.
+    fn node_sync_gate(&self, allow_unsynced: bool) -> Result<Option<String>, String> {
+        let (snapshot, node_dir) = {
+            let wallet = self
+                .wallet
+                .lock()
+                .map_err(|_| "кошелёк занят".to_string())?;
+            let network = wallet.settings().network.clone();
+            (wallet.node_snapshot(), wallet.paths().node_dir(&network))
+        };
+        let info = flint_core::WalletService::node_info_for(&snapshot, &node_dir);
+        flint_core::node::send_sync_gate(info.phase, allow_unsynced)
     }
 
     pub fn finalize_send(&self, slate_id: &str, response: &str) -> Result<String, String> {

@@ -138,6 +138,10 @@ pub struct SendSlate {
     /// `false` only when the user explicitly asked for `manual`: the slatepack is
     /// then unencrypted and the UI must say so.
     pub encrypted: bool,
+    /// Present when the node was still in Headers/Blocks and the user accepted
+    /// the explicit "may be rejected" warning.
+    #[serde(default)]
+    pub warning: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

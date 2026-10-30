@@ -25,7 +25,7 @@
 ## Команды
 
 ```
-cargo test -p flint-core --lib --offline       # 195
+cargo test -p flint-core --lib --offline       # 198
 cargo test -p flint-messenger --offline        # 83 + 1 ignored
 cargo test --workspace --offline               # 354 passed / 0 failed / 33 ignored
 ```

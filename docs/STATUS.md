@@ -10,7 +10,7 @@
 привязан к loopback, receive сверяет отпечаток S1, ошибки RPC-конфига
 возвращаются, Nostr URL проверяется разбором и имеет сетевые/размерные бюджеты,
 сохранённый открытый node_url заменяется локальным с предупреждением. Проверки:
-core 195, messenger 83 (+1 ignored), workspace 355 passed / 0 failed / 33 ignored;
+core 198, messenger 83 (+1 ignored), workspace 358 passed / 0 failed / 33 ignored;
 LNK1104 не воспроизвёлся. Подробности — evidence/security-fixes-20261030/README.md.
 iOS-находки остаются в mobile/GrinFlint.
 
@@ -103,6 +103,7 @@ BUILD-INFO не менялись; актуальные SHA-256 — в SHA256SUMS
 2026-10-30: NIP-42 в Nostr-клиенте: AUTH kind 22242 (`relay`/`challenge`, пустой content), ответ на challenge, ожидание OK, повтор ожидающего EVENT/REQ, лимит двух challenge, явная ошибка при `auth-required` без challenge. 79 тестов messenger (+2: форма AUTH-события и loopback-relay с обязательным AUTH). Live: damus присылает challenge, наш AUTH доходит, но damus отвечает своей ошибкой `relay needs serviceUrl…`; snort/primal/nos.lol не требуют AUTH для анонимных фильтров. Остаётся выбрать relay с рабочим AUTH для live-приёмки. Clippy новых предупреждений не дал.
 2026-10-30: автофинализация slatepack не зависит от транспорта. Inbox ставит armor-задачу для любого fetch (relay, direct onion, Nostr), а `auto_slatepack_targets` фильтрует по Flint-адресу из контактов; ответ уходит выбранным транспортом. Добавлен тест `slatepack_armor_survives_over_nostr` (armor возвращается байт-в-байт) и пояснение в runtime; 80 тестов messenger. Условия: чекбокс включён, кошелёк разблокирован, отправитель сохранён контактом (Nostr-ключ нужен только для доставки ответа), сообщение — slatepack armor.
 2026-10-30: конкурентный доступ усилен: `<data>/flint.lock` удерживается эксклюзивно (share=0) на весь процесс, поверх mutex — второй сеанс/алиас junction не открывает каталог; тест `data_root_lock_is_exclusive`. Embedded `open_legacy`/`open_envelope` больше не прописывают managed `.api_secret` внешней ноде. Подтверждение операции и откат бэкапа — следующий шаг: нужен маркер подтверждения в журнале и chain-сверка входов.
+2026-10-30: отправка при несинхронизированной ноде: фазы Headers/Blocks разрешают подготовку только после явного чекбокса и предупреждения «транзакция может быть отвергнута»; Starting/Unknown/NotRunning по-прежнему запрещены. Гейт общий для embedded и RPC, `SendSlate.warning` показывается в диалоге; тест `unsynced_send_gate_requires_explicit_acknowledgement`. Workspace 358 passed / 0 failed / 33 ignored.
 
 Повторный полный локальный CI на закоммиченном дереве (`64793c5`): PASS —
 324 passed, 0 failed, 32 ignored; i18n ok (216 static entries); Slint собран;

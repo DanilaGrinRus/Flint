@@ -1388,17 +1388,31 @@ impl WalletService {
     /* ------------------------------------------------------------ writes --- */
 
     pub fn prepare_send(&mut self, destination: &str, amount_nano: u64) -> Result<SendSlate> {
+        self.prepare_send_inner(destination, amount_nano, false)
+    }
+
+    /// Same as [`Self::prepare_send`], but a node in Headers/Blocks may proceed
+    /// when the caller has shown the explicit warning to the user.
+    pub fn prepare_send_allow_unsynced(
+        &mut self,
+        destination: &str,
+        amount_nano: u64,
+    ) -> Result<SendSlate> {
+        self.prepare_send_inner(destination, amount_nano, true)
+    }
+
+    fn prepare_send_inner(
+        &mut self,
+        destination: &str,
+        amount_nano: u64,
+        allow_unsynced: bool,
+    ) -> Result<SendSlate> {
         self.ensure_chain();
         // Spending against a chain that is still downloading produces unspendable
         // change and false balances. Refuse until the node reports ready.
         let node = self.node_info();
-        if !node.phase.ready() {
-            return Err(FlintError::Invalid(format!(
-                "отправка заблокирована: {}. Дождитесь полной синхронизации ноды — иначе \
-                 баланс и подтверждения недостоверны",
-                node.phase.label()
-            )));
-        }
+        let unsynced_warning =
+            crate::node::send_sync_gate(node.phase, allow_unsynced).map_err(FlintError::Invalid)?;
         if amount_nano == 0 {
             return Err(FlintError::Invalid("сумма должна быть больше нуля".into()));
         }
@@ -1503,6 +1517,7 @@ impl WalletService {
             fee_nano,
             destination,
             encrypted: !plaintext,
+            warning: unsynced_warning,
         })
     }
 
