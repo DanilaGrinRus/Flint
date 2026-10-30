@@ -691,3 +691,6 @@ msgstr "key copied"
 
 msgid "Nostr-ключ недоступен"
 msgstr "Nostr key is unavailable"
+
+msgid "Операции"
+msgstr "Transactions"

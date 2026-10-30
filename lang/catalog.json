@@ -1144,6 +1144,11 @@
       "ctx": "",
       "key": "Nostr-ключ недоступен",
       "en": "Nostr key is unavailable"
+    },
+    {
+      "ctx": "",
+      "key": "Операции",
+      "en": "Transactions"
     }
   ],
   "dynamic": [

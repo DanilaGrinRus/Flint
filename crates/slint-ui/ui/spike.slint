@@ -64,11 +64,11 @@ component ActionButton inherits Rectangle {
         : root.kind == "secondary" ? (touch.has-hover ? Theme.surface-hover : Theme.surface-2)
         : root.kind == "danger" ? (touch.has-hover ? Theme.danger-soft : transparent)
         : (touch.has-hover ? Theme.surface-2 : transparent);
-    border-width: root.kind == "primary" ? 0px : 1px;
-    border-color: root.kind == "ghost" ? transparent
+    border-width: !root.enabled ? 1px : (root.kind == "primary" ? 0px : 1px);
+    border-color: !root.enabled ? Theme.border
+        : root.kind == "ghost" ? transparent
         : root.kind == "danger" ? Theme.danger
         : (touch.has-hover ? Theme.border-strong : Theme.border);
-    opacity: root.enabled ? 1.0 : 0.35;
 
     HorizontalLayout {
         x: 16px;
@@ -83,7 +83,8 @@ component ActionButton inherits Rectangle {
                 height: 16px;
                 y: (parent.height - self.height) / 2;
                 source: root.icon;
-                colorize: root.kind == "primary" ? Theme.bg
+                colorize: !root.enabled ? Theme.disabled
+                    : root.kind == "primary" ? Theme.bg
                     : root.kind == "secondary" ? Theme.accent
                     : root.kind == "danger" ? Theme.danger : Theme.muted-2;
                 image-fit: contain;
@@ -91,7 +92,8 @@ component ActionButton inherits Rectangle {
         }
         Text {
             text: root.label;
-            color: root.kind == "primary" ? Theme.bg
+            color: !root.enabled ? Theme.disabled
+                : root.kind == "primary" ? Theme.bg
                 : root.kind == "secondary" ? Theme.text
                 : root.kind == "danger" ? Theme.danger
                 : (touch.has-hover ? Theme.text : Theme.muted-2);
@@ -1852,7 +1854,14 @@ callback settings-nostr-save-clicked(string);
                                 root.receive-prepare-clicked(root.receive-incoming);
                             }
                         }
-                        Text { text: root.receive-slate-id; color: Theme.muted; font-size: 12px; font-family: "Cascadia Mono"; }
+                        Text {
+                            text: root.receive-slate-id;
+                            color: Theme.muted;
+                            font-size: 12px;
+                            font-family: "Cascadia Mono";
+                            horizontal-stretch: 1;
+                            overflow: elide;
+                        }
                         Text { text: @tr("Ответ отправителю"); color: Theme.muted-2; font-size: 13px; }
                         LineEdit {
                             text: root.receive-slatepack;
@@ -3289,162 +3298,210 @@ callback settings-nostr-save-clicked(string);
         height: parent.height;
         background: Theme.bg;
         Rectangle {
-            x: (parent.width - 720px) / 2;
-            y: (parent.height - 620px) / 2;
-            width: 720px;
-            height: 660px;
+            x: (parent.width - 760px) / 2;
+            y: (parent.height - Math.min(700px, parent.height - 24px)) / 2;
+            width: Math.min(760px, parent.width - 24px);
+            height: Math.min(700px, parent.height - 24px);
             background: Theme.surface;
             border-radius: Theme.radius-card;
             border-width: 1px;
             border-color: Theme.border;
             VerticalLayout {
                 padding: 24px;
-                spacing: 10px;
-                Text { text: @tr("История"); color: Theme.text; font-size: 20px; font-weight: 700; }
-                Text { text: root.history-note; color: Theme.muted; font-size: 13px; }
-                Text { text: @tr("Очередь"); color: Theme.muted; font-size: 12px; letter-spacing: 2px; }
-                if root.pending-loading: Text {
-                    text: @tr("Загружаю очередь…");
-                    color: Theme.muted;
-                    font-size: 13px;
+                spacing: 14px;
+                VerticalLayout {
+                    spacing: 2px;
+                    Text { text: @tr("История"); color: Theme.text; font-size: 24px; font-weight: 700; }
+                    Text { text: root.history-note; color: Theme.muted; font-size: 13px; }
                 }
-                if root.pending-error != "": Rectangle {
-                    background: Theme.surface-2;
-                    border-radius: Theme.radius-control;
-                    border-width: 1px;
-                    border-color: Theme.danger;
+                ScrollView {
+                    horizontal-stretch: 1;
+                    vertical-stretch: 1;
                     VerticalLayout {
-                        padding: 10px;
-                        spacing: 4px;
-                        Text { text: @tr("Очередь не загружена"); color: Theme.danger; font-size: 13px; font-weight: 600; }
-                        Text { text: root.pending-error; color: Theme.danger; font-size: 12px; wrap: word-wrap; }
-                        Text { text: @tr("Не считайте очередь пустой: состояние операций неизвестно."); color: Theme.warning; font-size: 12px; wrap: word-wrap; }
-                        ActionButton {
-                            label: @tr("Повторить загрузку");
-                            kind: "secondary";
-                            button-height: 34px;
-                            min-button-width: 0px;
-                            enabled: !root.pending-loading;
-                            clicked => {
-                                root.pending-reload-clicked();
-                            }
+                        horizontal-stretch: 1;
+                        alignment: start;
+                        spacing: 12px;
+                        Text { text: @tr("Очередь"); color: Theme.muted; font-size: 11px; letter-spacing: 2px; }
+                        if root.pending-loading: Text {
+                            text: @tr("Загружаю очередь…");
+                            color: Theme.muted;
+                            font-size: 13px;
                         }
-                    }
-                }
-                if root.pending-unreadable.length > 0: Rectangle {
-                    background: Theme.surface-2;
-                    border-radius: Theme.radius-control;
-                    border-width: 1px;
-                    border-color: Theme.warning;
-                    VerticalLayout {
-                        padding: 10px;
-                        spacing: 4px;
-                        Text { text: @tr("Нечитаемые записи: ") + root.pending-unreadable.length; color: Theme.warning; font-size: 13px; font-weight: 600; }
-                        for name in root.pending-unreadable: Text {
-                            text: "• " + name;
-                            color: Theme.warning;
-                            font-size: 12px;
-                            font-family: "Cascadia Mono";
-                            wrap: word-wrap;
-                        }
-                        Text { text: @tr("Диагностика: ") + root.pending-diagnostics; color: Theme.muted; font-size: 11px; wrap: word-wrap; }
-                        Text { text: @tr("Записи не удалены. Повтор/отмена для них недоступны."); color: Theme.warning; font-size: 12px; wrap: word-wrap; }
-                    }
-                }
-                if root.pending.length > 0: VerticalLayout {
-                    spacing: 6px;
-                    Text { text: @tr("Незавершённые переводы"); color: Theme.warning; font-size: 13px; }
-                    for row in root.pending: Rectangle {
-                        height: 68px;
-                        border-radius: Theme.radius-control;
-                        background: Theme.surface-2;
-                        HorizontalLayout {
-                            padding: 10px;
-                            spacing: 8px;
+                        if root.pending-error != "": Rectangle {
+                            background: Theme.surface-2;
+                            border-radius: Theme.radius-control;
+                            border-width: 1px;
+                            border-color: Theme.danger;
                             VerticalLayout {
-                                spacing: 2px;
-                                horizontal-stretch: 1;
-                                Text { text: row.amount; color: Theme.text; font-size: 13px; vertical-alignment: center; }
-                                Text { text: row.next-action; color: Theme.muted-2; font-size: 11px; vertical-alignment: center; }
-                            }
-                            Text { text: row.state; color: Theme.warning; font-size: 12px; vertical-alignment: center; }
-                            if row.can-export: ActionButton {
-                                label: @tr("Экспорт ответа");
-                                kind: "ghost";
-                                button-height: 30px;
-                                min-button-width: 0px;
-                                clicked => {
-                                    root.export-pending-clicked(row.id);
+                                padding: 12px;
+                                spacing: 6px;
+                                Text { text: @tr("Очередь не загружена"); color: Theme.danger; font-size: 13px; font-weight: 600; }
+                                Text { text: root.pending-error; color: Theme.danger; font-size: 12px; wrap: word-wrap; }
+                                Text { text: @tr("Не считайте очередь пустой: состояние операций неизвестно."); color: Theme.warning; font-size: 12px; wrap: word-wrap; }
+                                ActionButton {
+                                    label: @tr("Повторить загрузку");
+                                    kind: "secondary";
+                                    button-height: 34px;
+                                    min-button-width: 0px;
+                                    enabled: !root.pending-loading;
+                                    clicked => {
+                                        root.pending-reload-clicked();
+                                    }
                                 }
                             }
-                            if row.can-export-request: ActionButton {
-                                label: @tr("Экспорт запроса");
-                                kind: "ghost";
-                                button-height: 30px;
-                                min-button-width: 0px;
-                                clicked => {
-                                    root.export-pending-request-clicked(row.id);
+                        }
+                        if root.pending-unreadable.length > 0: Rectangle {
+                            background: Theme.surface-2;
+                            border-radius: Theme.radius-control;
+                            border-width: 1px;
+                            border-color: Theme.warning;
+                            VerticalLayout {
+                                padding: 12px;
+                                spacing: 6px;
+                                Text { text: @tr("Нечитаемые записи: ") + root.pending-unreadable.length; color: Theme.warning; font-size: 13px; font-weight: 600; }
+                                for name in root.pending-unreadable: Text {
+                                    text: "• " + name;
+                                    color: Theme.warning;
+                                    font-size: 12px;
+                                    font-family: "Cascadia Mono";
+                                    wrap: word-wrap;
+                                }
+                                Text { text: @tr("Диагностика: ") + root.pending-diagnostics; color: Theme.muted; font-size: 11px; wrap: word-wrap; }
+                                Text { text: @tr("Записи не удалены. Повтор/отмена для них недоступны."); color: Theme.warning; font-size: 12px; wrap: word-wrap; }
+                            }
+                        }
+                        if root.pending.length > 0: VerticalLayout {
+                            spacing: 8px;
+                            for row in root.pending: Rectangle {
+                                border-radius: Theme.radius-control;
+                                background: Theme.surface-2;
+                                border-width: 1px;
+                                border-color: Theme.border;
+                                VerticalLayout {
+                                    padding: 12px;
+                                    spacing: 8px;
+                                    HorizontalLayout {
+                                        spacing: 8px;
+                                        Text { text: row.amount; color: Theme.text; font-size: 14px; font-weight: 600; vertical-alignment: center; }
+                                        Rectangle { horizontal-stretch: 1; }
+                                        Text { text: row.state; color: Theme.warning; font-size: 12px; vertical-alignment: center; }
+                                    }
+                                    Text { text: row.next-action; color: Theme.muted-2; font-size: 11px; wrap: word-wrap; }
+                                    HorizontalLayout {
+                                        spacing: 6px;
+                                        if row.can-export: ActionButton {
+                                            label: @tr("Экспорт ответа");
+                                            kind: "ghost";
+                                            button-height: 30px;
+                                            min-button-width: 0px;
+                                            clicked => {
+                                                root.export-pending-clicked(row.id);
+                                            }
+                                        }
+                                        if row.can-export-request: ActionButton {
+                                            label: @tr("Экспорт запроса");
+                                            kind: "ghost";
+                                            button-height: 30px;
+                                            min-button-width: 0px;
+                                            clicked => {
+                                                root.export-pending-request-clicked(row.id);
+                                            }
+                                        }
+                                        Rectangle { horizontal-stretch: 1; }
+                                        if row.can-retry: ActionButton {
+                                            label: @tr("Повторить");
+                                            kind: "secondary";
+                                            button-height: 30px;
+                                            min-button-width: 0px;
+                                            clicked => {
+                                                root.retry-pending-clicked(row.id);
+                                            }
+                                        }
+                                        if row.can-cancel: ActionButton {
+                                            label: @tr("Отменить");
+                                            kind: "ghost";
+                                            button-height: 30px;
+                                            min-button-width: 0px;
+                                            clicked => {
+                                                root.cancel-pending-clicked(row.id);
+                                            }
+                                        }
+                                        if !row.can-retry && !row.can-cancel: ActionButton {
+                                            label: @tr("Обновить");
+                                            kind: "ghost";
+                                            button-height: 30px;
+                                            min-button-width: 0px;
+                                            clicked => {
+                                                root.pending-reload-clicked();
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            if row.can-retry: ActionButton {
-                                label: @tr("Повторить");
-                                kind: "ghost";
-                                button-height: 30px;
-                                min-button-width: 0px;
-                                clicked => {
-                                    root.retry-pending-clicked(row.id);
+                        }
+                        if !root.pending-loading && root.pending-error == "" && root.pending-unreadable.length == 0 && root.pending.length == 0: VerticalLayout {
+                            alignment: center;
+                            spacing: 8px;
+                            HorizontalLayout {
+                                alignment: center;
+                                Image {
+                                    source: @image-url("assets/icons/history.png");
+                                    colorize: Theme.muted;
+                                    width: 30px;
+                                    height: 30px;
+                                    image-fit: contain;
                                 }
                             }
-                            if row.can-cancel: ActionButton {
-                                label: @tr("Отменить");
-                                kind: "ghost";
-                                button-height: 30px;
-                                min-button-width: 0px;
-                                clicked => {
-                                    root.cancel-pending-clicked(row.id);
+                            Text { text: @tr("Незавершённых операций нет"); color: Theme.muted-2; font-size: 14px; horizontal-alignment: center; }
+                        }
+                        Text { text: @tr("Операции"); color: Theme.muted; font-size: 11px; letter-spacing: 2px; }
+                        if root.history.length == 0: VerticalLayout {
+                            alignment: center;
+                            spacing: 8px;
+                            HorizontalLayout {
+                                alignment: center;
+                                Image {
+                                    source: @image-url("assets/icons/envelope.png");
+                                    colorize: Theme.muted;
+                                    width: 40px;
+                                    height: 40px;
+                                    image-fit: contain;
                                 }
                             }
-                            if !row.can-retry && !row.can-cancel: ActionButton {
-                                label: @tr("Обновить");
-                                kind: "ghost";
-                                button-height: 30px;
-                                min-button-width: 0px;
-                                clicked => {
-                                    root.pending-reload-clicked();
+                            Text { text: @tr("Здесь появятся ваши операции"); color: Theme.text; font-size: 16px; horizontal-alignment: center; }
+                            Text {
+                                text: @tr("Получите первый перевод, чтобы увидеть историю.");
+                                color: Theme.muted;
+                                font-size: 12px;
+                                horizontal-alignment: center;
+                                wrap: word-wrap;
+                            }
+                        }
+                        if root.history.length > 0: VerticalLayout {
+                            spacing: 6px;
+                            for row in root.history: Rectangle {
+                                height: 54px;
+                                border-radius: Theme.radius-control;
+                                background: Theme.surface-2;
+                                HorizontalLayout {
+                                    padding: 12px;
+                                    spacing: 10px;
+                                    Text { text: row.title; color: Theme.text; font-size: 14px; horizontal-stretch: 1; vertical-alignment: center; }
+                                    Text { text: row.amount; color: Theme.accent; font-size: 14px; font-family: "Cascadia Mono"; vertical-alignment: center; }
+                                    Text { text: row.when; color: Theme.muted; font-size: 12px; vertical-alignment: center; }
                                 }
                             }
                         }
                     }
                 }
-                if !root.pending-loading && root.pending-error == "" && root.pending-unreadable.length == 0 && root.pending.length == 0: Text {
-                    text: @tr("Незавершённых операций нет");
-                    color: Theme.muted;
-                    font-size: 13px;
-                }
-                ListView {
-                    accessible-label: @tr("История операций");
-                    for row in root.history: Rectangle {
-                        height: 54px;
-                        border-radius: Theme.radius-control;
-                        background: Theme.surface-2;
-                        HorizontalLayout {
-                            padding: 12px;
-                            spacing: 10px;
-                            Text { text: row.title; color: Theme.text; font-size: 14px; horizontal-stretch: 1; vertical-alignment: center; }
-                            Text { text: row.amount; color: Theme.accent; font-size: 14px; font-family: "Cascadia Mono"; vertical-alignment: center; }
-                            Text { text: row.when; color: Theme.muted; font-size: 12px; vertical-alignment: center; }
-                        }
-                    }
-                }
-                Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
                     ActionButton {
                         label: @tr("Закрыть");
-                        kind: "ghost";
-                        button-height: 30px;
-                        min-button-width: 0px;
+                        kind: "secondary";
+                        button-height: 40px;
+                        width: 120px;
                         clicked => {
                             root.show-history = false;
                         }
@@ -3454,6 +3511,9 @@ callback settings-nostr-save-clicked(string);
         }
     }
 }
+
+
+
 
 
 
