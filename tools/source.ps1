@@ -28,7 +28,7 @@ function Copy-FlintSourceTree([string]$Source, [string]$Destination) {
 }
 
 $items = @('Cargo.toml','Cargo.lock','COPYING','THIRD_PARTY_NOTICES.md','README.md','AGENTS.md',
-    'crates','tools','docs','evidence','lang','.github','.cargo','third_party')
+    'crates','tools','docs','lang','.github','.cargo','third_party')
 foreach ($item in $items) {
     $source = Join-Path $root $item
     if (Test-Path -LiteralPath $source) { Copy-FlintSourceTree -Source $source -Destination (Join-Path $stage $item) }
@@ -70,3 +70,4 @@ Write-Host "source: $zip"
     $stage = Assert-FlintContainedPath -Root $root -Path $stage
     Remove-Item -LiteralPath $stage -Recurse -Force
 }
+
