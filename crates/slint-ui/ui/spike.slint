@@ -1722,13 +1722,15 @@ callback settings-nostr-save-clicked(string);
                 Text { text: root.send-note; color: Theme.accent; font-size: 13px; }
                 Text { text: root.send-error; color: Theme.danger; font-size: 13px; }
                 Rectangle { vertical-stretch: 1; }
+                Rectangle { height: 1px; background: Theme.border; }
                 HorizontalLayout {
                     spacing: 8px;
                     ActionButton {
                         label: @tr("Подготовить");
                         kind: "primary";
                         button-height: 42px;
-                        min-button-width: 96px;
+                        width: 170px;
+                        min-button-width: 0px;
                         enabled: !root.send-busy && !root.send-prepared;
                         clicked => {
                             root.send-prepare-clicked(root.send-to, root.send-amount);
@@ -1749,7 +1751,8 @@ callback settings-nostr-save-clicked(string);
                         label: @tr("Завершить");
                         kind: "primary";
                         button-height: 42px;
-                        min-button-width: 96px;
+                        width: 150px;
+                        min-button-width: 0px;
                         enabled: !root.send-busy && root.send-prepared && root.send-response != "";
                         clicked => {
                             root.send-finalize-clicked(root.send-slate-id, root.send-response);

@@ -85,6 +85,7 @@ BUILD-INFO не менялись; актуальные SHA-256 — в SHA256SUMS
 
 2026-10-30: приёмка зависимостей текущего дерева — RustSec PASS (db 99670cfc0bc5, lock 449647BDF4CE; 2 accepted, 0 unaccepted, 17 warnings), SBOM 1161 компонент (1155 cargo + 6 native) сгенерирован и проверен; evidence/deps-20261030. Новые зависимости Nostr непринятых advisories не добавили.
 2026-10-30: поставка `dist/0.1.69-ui-20261030` (build id `ui-20261030`): release build, 342 tests, RustSec PASS, SBOM 1161 проверен, selftest ok=true, signed=false; corresponding source 13.1 МБ без `evidence/`; prerelease `v0.1.69-ui-20261030` (6 ассетов) и ссылки/хэши на сайте обновлены. Доказательства: `dist/0.1.69-ui-20261030/SHA256SUMS`, `BUILD-INFO.json`, `selftest.json`.
+2026-10-30: live testnet прогон send → receive → confirm → cancel — PASS (122.33 s): кошельки восстановлены из одноразовых seed в `docs/testnet-funded.txt` (A `tgrin1flemga…` 1396.014 GRIN, B `tgrin16g2mhw…` 0.027 → 0.227 GRIN), нода Ready height 3315128–3315130, 8 пиров; отмена вернула spendable без потерь. Причина, почему в свежем тестовом профиле отправка недоступна: `send_enabled` требует `node.phase == Ready` (не только баланс), а новый кошелёк ещё и не просканирован. Диалог «Отправить» проверен в окне 1000×800 и 1300×900; исправлена обрезанная кнопка «Подготовить» (170 px) и добавлен разделитель подвала; evidence/live-send-20261030. Временные кошельки и примеры удалены.
 
 Повторный полный локальный CI на закоммиченном дереве (`64793c5`): PASS —
 324 passed, 0 failed, 32 ignored; i18n ok (216 static entries); Slint собран;
