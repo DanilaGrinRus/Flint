@@ -97,6 +97,7 @@ fn main() {
                         "SLATE_ID={} FEE={} AMOUNT={}",
                         slate.slate_id, slate.fee_nano, slate.amount_nano
                     );
+                    println!("CONFIRMATION={}", slate.confirmation);
                     println!("{}", slate.slatepack);
                     // Crash-test hook: journal exists, slate never delivered.
                     if std::env::var("FLINT_CRASH_AFTER_SEND").is_ok() {
@@ -139,7 +140,12 @@ fn main() {
         "finalize" => {
             let slate_id = args.get(1).cloned().expect("нужен slate id");
             let slatepack = read_text(args.get(2).expect("нужен файл с ответом"));
-            match wallet.finalize_send(&slate_id, &slatepack) {
+            let confirmation = args
+                .get(3)
+                .cloned()
+                .or_else(|| std::env::var("FLINT_SEND_CONFIRMATION").ok())
+                .unwrap_or_default();
+            match wallet.finalize_send(&slate_id, &slatepack, &confirmation) {
                 Ok(tx) => println!("posted tx={tx}"),
                 Err(e) => {
                     eprintln!("finalize failed: {e}");

@@ -530,6 +530,10 @@ pub struct RpcSendRecord {
     pub slate_id: String,
     pub destination: String,
     pub amount: u64,
+    /// What the user confirmed for the S1; legacy records without it cannot
+    /// create a new signature.
+    #[serde(default)]
+    pub confirmation: Option<crate::model::SendConfirmation>,
     /// `locked` | `finalizing` | `finalized_not_posted` | `posted`
     pub stage: String,
     /// Exact S1 armor persisted before delivery so the pending center can
@@ -922,7 +926,7 @@ impl RpcBackend {
         &mut self,
         destination: &str,
         amount: u64,
-    ) -> Result<(String, String, String)> {
+    ) -> Result<(String, String, String, String)> {
         use grin_wallet_libwallet::InitTxArgs;
 
         if self.journal_dir.is_none() {
@@ -960,10 +964,24 @@ impl RpcBackend {
 
         // Record the stage before locking, so a crash after the lock still leaves
         // a trace saying "built, not answered yet".
+        let confirmation = crate::model::SendConfirmation {
+            network: self
+                .node
+                .as_ref()
+                .map(|node| node.network.clone())
+                .unwrap_or_default(),
+            address_index: self.address_index,
+            destination: destination.to_string(),
+            amount_nano: amount,
+            fee_nano: fee.parse().unwrap_or(0),
+            slate_digest: crate::model::digest_slate(&slate).map_err(FlintError::Json)?,
+        };
+        let confirmation_token = confirmation.token().map_err(FlintError::Json)?;
         let record = RpcSendRecord {
             slate_id: slate_id.clone(),
             destination: destination.to_string(),
             amount,
+            confirmation: Some(confirmation),
             stage: "locked".to_string(),
             request: Some(slatepack.clone()),
             attempts: 0,
@@ -984,11 +1002,16 @@ impl RpcBackend {
             // Crash-test hook: journal and locked inputs exist; the caller exits.
             return Err(FlintError::Invalid("CRASH_AFTER_PREPARE".into()));
         }
-        Ok((slatepack, slate_id, fee))
+        Ok((slatepack, slate_id, fee, confirmation_token))
     }
 
     /// Apply the payer's response, finalize and broadcast.
-    pub fn send_finalize(&mut self, slate_id: &str, response: &str) -> Result<()> {
+    pub fn send_finalize(
+        &mut self,
+        slate_id: &str,
+        response: &str,
+        confirmation: &str,
+    ) -> Result<()> {
         let token = self.token()?.clone();
         let indices = self.decrypt_indices();
         let slate = self.rpc.call(
@@ -1045,6 +1068,51 @@ impl RpcBackend {
                     r.stage
                 )));
             }
+        }
+
+        let record_ref = record.as_ref().ok_or_else(|| {
+            FlintError::Invalid(
+                "журнал RPC не содержит запись сделки — финализация запрещена".into(),
+            )
+        })?;
+        let expected = record_ref.confirmation.as_ref().ok_or_else(|| {
+            FlintError::Invalid(
+                "подготовка без маркера подтверждения: повторите отправку, подпись запрещена"
+                    .into(),
+            )
+        })?;
+        let given = crate::model::SendConfirmation::from_token(confirmation).map_err(|_| {
+            FlintError::Invalid("маркер подтверждения повреждён: повторите отправку".into())
+        })?;
+        if &given != expected {
+            return Err(FlintError::Invalid(
+                "подтверждение относится к другой операции".into(),
+            ));
+        }
+        let network = self
+            .node
+            .as_ref()
+            .map(|node| node.network.clone())
+            .unwrap_or_default();
+        if given.network != network {
+            return Err(FlintError::Invalid(
+                "сеть изменилась после подтверждения: требуется новая подготовка".into(),
+            ));
+        }
+        if given.address_index != self.address_index {
+            return Err(FlintError::Invalid(
+                "адресный индекс изменился после подтверждения: требуется новая подготовка".into(),
+            ));
+        }
+        if slate_amount_nano(&slate)? != record_ref.amount.to_string() {
+            return Err(FlintError::Invalid(
+                "сумма в ответе не совпадает с подтверждённой".into(),
+            ));
+        }
+        if slate_fee_nano(&slate) != expected.fee_nano.to_string() {
+            return Err(FlintError::Invalid(
+                "комиссия в ответе не совпадает с подтверждённой".into(),
+            ));
         }
 
         // Durable intent BEFORE the call: a crash between upstream signing and
@@ -1316,6 +1384,7 @@ impl RpcBackend {
             slate_id: slate_id.clone(),
             destination: destination.to_string(),
             amount,
+            confirmation: None,
             stage: "locking".to_string(),
             request: None,
             attempts: 0,
@@ -1521,6 +1590,7 @@ impl RpcBackend {
             slate_id: slate_id.clone(),
             destination: "self".to_string(),
             amount,
+            confirmation: None,
             stage: "locking".to_string(),
             request: None,
             attempts: 0,
@@ -2213,6 +2283,7 @@ mod tests {
             slate_id: "00000000-0000-0000-0000-000000000000".into(),
             destination: "tgrin1dest".into(),
             amount: 7,
+            confirmation: None,
             stage: "finalizing".into(),
             request: None,
             attempts: 0,
@@ -2291,6 +2362,7 @@ mod tests {
             slate_id: id.to_string(),
             destination: "tgrin1dest".into(),
             amount: 7,
+            confirmation: None,
             stage: "locked".into(),
             request: None,
             attempts: 0,

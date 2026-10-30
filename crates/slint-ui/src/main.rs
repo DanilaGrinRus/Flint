@@ -842,6 +842,7 @@ pub(crate) fn reset_wallet_context(app: &AppWindow, pending_gate: &SharedPending
     app.set_send_slate_id("".into());
     app.set_send_response("".into());
     app.set_send_prepared(false);
+    app.set_send_confirmation("".into());
     app.set_send_prepared_to("".into());
     app.set_send_prepared_amount("".into());
     app.set_send_prepared_fee("".into());
@@ -1906,6 +1907,7 @@ fn main() -> Result<(), slint::PlatformError> {
                             Ok(slate) => {
                                 app.set_send_slate_id(slate.slate_id.into());
                                 app.set_send_slatepack(slate.slatepack.into());
+                                app.set_send_confirmation(slate.confirmation.into());
                                 app.set_send_prepared(true);
                                 app.set_send_prepared_to(slate.destination.into());
                                 app.set_send_prepared_amount(
@@ -1944,8 +1946,13 @@ fn main() -> Result<(), slint::PlatformError> {
                 app.set_send_error("".into());
             }
             let generation = wallet.context_generation();
+            let confirmation = weak
+                .upgrade()
+                .map(|app| app.get_send_confirmation())
+                .unwrap_or_default();
+            let confirmation = confirmation.to_string();
             thread::spawn(move || {
-                let result = wallet.finalize_send(&slate_id, &response);
+                let result = wallet.finalize_send(&slate_id, &response, &confirmation);
                 let snapshot = snapshot(&wallet);
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = weak.upgrade() {
@@ -1956,6 +1963,7 @@ fn main() -> Result<(), slint::PlatformError> {
                         match result {
                             Ok(tx) => {
                                 app.set_send_prepared(false);
+                                app.set_send_confirmation("".into());
                                 app.set_send_slate_id("".into());
                                 app.set_send_slatepack("".into());
                                 app.set_send_prepared_to("".into());

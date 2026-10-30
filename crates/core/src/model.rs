@@ -128,6 +128,76 @@ pub struct TxItem {
     pub tx_type: String,
 }
 
+/// Confirmation shown when a send is prepared. The UI passes the serialized
+/// token back at finalize; any mismatch (context, amount, fee, destination or
+/// S1 digest) refuses a new signature. Legacy journals without it are
+/// fail-closed.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SendConfirmation {
+    pub network: String,
+    pub address_index: u32,
+    pub destination: String,
+    pub amount_nano: u64,
+    pub fee_nano: u64,
+    /// SHA-256 of the canonical JSON of the prepared S1 (inputs included).
+    pub slate_digest: String,
+}
+
+impl SendConfirmation {
+    pub fn token(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
+    }
+
+    pub fn from_token(token: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(token)
+    }
+}
+
+/// Canonical JSON (sorted object keys) so a digest is stable across serializers.
+pub fn canonical_json(value: &serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Object(map) => {
+            let mut keys: Vec<&String> = map.keys().collect();
+            keys.sort();
+            let mut out = serde_json::Map::new();
+            for key in keys {
+                out.insert(key.clone(), canonical_json(&map[key]));
+            }
+            serde_json::Value::Object(out)
+        }
+        serde_json::Value::Array(items) => {
+            serde_json::Value::Array(items.iter().map(canonical_json).collect())
+        }
+        other => other.clone(),
+    }
+}
+
+fn hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push(DIGITS[(byte >> 4) as usize] as char);
+        out.push(DIGITS[(byte & 0x0f) as usize] as char);
+    }
+    out
+}
+
+/// Digest of a JSON value (used for the prepared S1).
+pub fn digest_json(value: &serde_json::Value) -> String {
+    use sha2::{Digest, Sha256};
+    let canonical = canonical_json(value);
+    let bytes = serde_json::to_vec(&canonical).unwrap_or_default();
+    let mut hasher = Sha256::new();
+    hasher.update(&bytes);
+    hex(&hasher.finalize())
+}
+
+/// Digest of any serializable S1 payload (embedded `Slate` or RPC JSON value).
+pub fn digest_slate<T: Serialize>(value: &T) -> Result<String, serde_json::Error> {
+    let value = serde_json::to_value(value)?;
+    Ok(digest_json(&value))
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SendSlate {
     pub slate_id: String,
@@ -142,6 +212,8 @@ pub struct SendSlate {
     /// the explicit "may be rejected" warning.
     #[serde(default)]
     pub warning: Option<String>,
+    /// Serialized [`SendConfirmation`] token the UI must send back to finalize.
+    pub confirmation: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

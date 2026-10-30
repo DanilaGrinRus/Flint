@@ -372,7 +372,7 @@ fn setup(backend: BackendKind) {
         .prepare_receive(&slate.slatepack)
         .expect("receive restore funding");
     source_runtime
-        .finalize_send(&slate.slate_id, &response.slatepack)
+        .finalize_send(&slate.slate_id, &response.slatepack, &slate.confirmation)
         .expect("finalize and post restore funding");
     let funded = await_funding(&original_runtime);
     assert_eq!(funded.balance.total, AMOUNT.to_string());

@@ -119,7 +119,7 @@ fn live_testnet_send_receive_confirm_cancel() {
     let response = b
         .prepare_receive(&slate.slatepack)
         .expect("prepare receive");
-    a.finalize_send(&slate.slate_id, &response.slatepack)
+    a.finalize_send(&slate.slate_id, &response.slatepack, &slate.confirmation)
         .expect("finalize and post");
 
     // 2. Wait until the receiver's spendable balance grows by the amount.

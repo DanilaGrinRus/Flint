@@ -330,6 +330,7 @@ export component AppWindow inherits Window {
     in-out property <string> send-slatepack: "";
     in-out property <string> send-slate-id: "";
     in-out property <bool> send-prepared: false;
+    in-out property <string> send-confirmation: "";
     in-out property <string> send-prepared-to: "";
     in-out property <string> send-prepared-amount: "";
     in-out property <string> send-prepared-fee: "";
@@ -3533,6 +3534,7 @@ callback settings-nostr-save-clicked(string);
         }
     }
 }
+
 
 
 

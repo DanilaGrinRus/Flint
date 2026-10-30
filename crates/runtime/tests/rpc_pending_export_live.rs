@@ -84,7 +84,8 @@ fn rpc_pending_export_live() {
     // Re-armoring S2 uses fresh encryption randomness; the slate id is the
     // identity proof, not byte equality of the encrypted armor.
 
-    a.finalize_send(&s1.slate_id, &response).expect("finalize");
+    a.finalize_send(&s1.slate_id, &response, &s1.confirmation)
+        .expect("finalize");
     b.finalize_receive(&s2.slate_id).expect("finalize receive");
 
     let deadline = Instant::now() + Duration::from_secs(180);

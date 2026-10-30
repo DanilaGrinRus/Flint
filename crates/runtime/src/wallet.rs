@@ -436,7 +436,7 @@ impl WalletRuntime {
         }
         if self.is_rpc() {
             let warning = self.node_sync_gate(allow_unsynced)?;
-            let (slatepack, slate_id, fee_nano) = self
+            let (slatepack, slate_id, fee_nano, confirmation) = self
                 .rpc
                 .call(|backend| backend.send_prepare(destination, amount_nano))?;
             return Ok(SendSlate {
@@ -447,6 +447,7 @@ impl WalletRuntime {
                 destination: destination.to_string(),
                 encrypted: true,
                 warning,
+                confirmation,
             });
         }
         self.with_wallet(|wallet| {
@@ -473,17 +474,22 @@ impl WalletRuntime {
         flint_core::node::send_sync_gate(info.phase, allow_unsynced)
     }
 
-    pub fn finalize_send(&self, slate_id: &str, response: &str) -> Result<String, String> {
+    pub fn finalize_send(
+        &self,
+        slate_id: &str,
+        response: &str,
+        confirmation: &str,
+    ) -> Result<String, String> {
         if let Some(message) = self.scan_busy_error("финализация отправки")? {
             return Err(message);
         }
         if self.is_rpc() {
             self.ensure_node_ready()?;
             self.rpc
-                .call(|backend| backend.send_finalize(slate_id, response))?;
+                .call(|backend| backend.send_finalize(slate_id, response, confirmation))?;
             return Ok(slate_id.to_string());
         }
-        self.with_wallet(|wallet| wallet.finalize_send(slate_id, response))
+        self.with_wallet(|wallet| wallet.finalize_send(slate_id, response, confirmation))
     }
 
     pub fn prepare_receive(&self, slatepack: &str) -> Result<ReceiveSlate, String> {

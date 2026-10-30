@@ -1464,6 +1464,15 @@ impl WalletService {
 
         let slate_id = slate.id.to_string();
         let fee_nano = slate.fee_fields.fee().to_string();
+        let confirmation = crate::model::SendConfirmation {
+            network: self.settings.network.clone(),
+            address_index: self.address_index,
+            destination: destination.clone(),
+            amount_nano,
+            fee_nano: fee_nano.parse().unwrap_or(0),
+            slate_digest: crate::model::digest_slate(&slate).map_err(FlintError::Json)?,
+        };
+        let confirmation_token = confirmation.token().map_err(FlintError::Json)?;
         let pending = PendingSlate {
             kind: "send".into(),
             destination: Some(destination.clone()),
@@ -1472,6 +1481,7 @@ impl WalletService {
             slate: VersionedSlate::into_version(slate.clone(), SlateVersion::V4)
                 .map_err(FlintError::wallet)?,
             request: None,
+            confirmation: Some(confirmation),
             state: Some(TxState::Prepared),
             attempts: 0,
             last_error: None,
@@ -1518,6 +1528,7 @@ impl WalletService {
             destination,
             encrypted: !plaintext,
             warning: unsynced_warning,
+            confirmation: confirmation_token,
         })
     }
 
@@ -1562,7 +1573,12 @@ impl WalletService {
     /// If a previous attempt already signed the transaction but failed to publish
     /// it, this resumes at the broadcast step instead of signing again: the record
     /// holds `FinalizedNotPosted`, and re-finalizing a signed slate is not safe.
-    pub fn finalize_send(&mut self, slate_id: &str, response_slatepack: &str) -> Result<String> {
+    pub fn finalize_send(
+        &mut self,
+        slate_id: &str,
+        response_slatepack: &str,
+        confirmation: &str,
+    ) -> Result<String> {
         self.ensure_chain();
         let mut pending = match self.load_pending(slate_id) {
             Ok(pending) => pending,
@@ -1626,6 +1642,23 @@ impl WalletService {
         if response.id.to_string() != slate_id {
             return Err(FlintError::Invalid(
                 "ответный slate относится к другой транзакции".into(),
+            ));
+        }
+
+        let confirmed = check_send_confirmation(
+            &pending,
+            confirmation,
+            &self.settings.network,
+            self.address_index,
+        )?;
+        if response.amount != confirmed.amount_nano {
+            return Err(FlintError::Invalid(
+                "сумма в ответе не совпадает с подтверждённой".into(),
+            ));
+        }
+        if response.fee_fields.fee() != confirmed.fee_nano {
+            return Err(FlintError::Invalid(
+                "комиссия в ответе не совпадает с подтверждённой".into(),
             ));
         }
 
@@ -1905,6 +1938,7 @@ impl WalletService {
             slate: VersionedSlate::into_version(slate.clone(), SlateVersion::V4)
                 .map_err(FlintError::wallet)?,
             request: Some(request.clone()),
+            confirmation: None,
             state: Some(TxState::ReceiveIntent),
             attempts: 0,
             last_error: None,
@@ -1948,6 +1982,7 @@ impl WalletService {
             slate: VersionedSlate::into_version(response.clone(), SlateVersion::V4)
                 .map_err(FlintError::wallet)?,
             request: Some(request.clone()),
+            confirmation: None,
             state: Some(TxState::ResponseReceived),
             attempts: 0,
             last_error: None,
@@ -2371,6 +2406,10 @@ struct PendingSlate {
     /// repeated request carries the same transaction; this fingerprint can.
     #[serde(default)]
     request: Option<serde_json::Value>,
+    /// What the user confirmed when S1 was prepared; a legacy record without it
+    /// cannot be finalized (fail-closed).
+    #[serde(default)]
+    confirmation: Option<crate::model::SendConfirmation>,
     /// `None` in records written before the journal existed; `resolved_state`
     /// reconstructs the only plausible value from `kind`.
     #[serde(default)]
@@ -2381,6 +2420,53 @@ struct PendingSlate {
     attempts: u32,
     #[serde(default)]
     last_error: Option<String>,
+}
+
+/// A new signature is allowed only for the exact operation the user confirmed.
+/// Legacy records without a marker have no confirmed display to compare against.
+fn check_send_confirmation(
+    pending: &PendingSlate,
+    token: &str,
+    network: &str,
+    address_index: u32,
+) -> Result<crate::model::SendConfirmation> {
+    let expected = pending.confirmation.as_ref().ok_or_else(|| {
+        FlintError::Invalid(
+            "подготовка без маркера подтверждения: повторите отправку, подпись запрещена".into(),
+        )
+    })?;
+    let given = crate::model::SendConfirmation::from_token(token).map_err(|_| {
+        FlintError::Invalid("маркер подтверждения повреждён: повторите отправку".into())
+    })?;
+    if &given != expected {
+        return Err(FlintError::Invalid(
+            "подтверждение относится к другой операции".into(),
+        ));
+    }
+    if given.network != network {
+        return Err(FlintError::Invalid(
+            "сеть изменилась после подтверждения: требуется новая подготовка".into(),
+        ));
+    }
+    if given.address_index != address_index {
+        return Err(FlintError::Invalid(
+            "адресный индекс изменился после подтверждения: требуется новая подготовка".into(),
+        ));
+    }
+    let digest = crate::model::digest_slate(&pending.slate).map_err(FlintError::Json)?;
+    if digest != given.slate_digest {
+        return Err(FlintError::Invalid(
+            "параметры операции изменились после подтверждения: подпись запрещена".into(),
+        ));
+    }
+    if pending.amount != given.amount_nano
+        || pending.destination.as_deref() != Some(given.destination.as_str())
+    {
+        return Err(FlintError::Invalid(
+            "адрес или сумма в журнале не совпадают с подтверждёнными".into(),
+        ));
+    }
+    Ok(given)
 }
 
 /// A repeated receive must carry the same S1 that produced the stored response.
@@ -2671,6 +2757,7 @@ mod tests {
             slate: VersionedSlate::into_version(Slate::blank(2, false), SlateVersion::V4)
                 .expect("blank slate is versionable"),
             request: None,
+            confirmation: None,
             state: Some(TxState::Locked),
             attempts: 0,
             last_error: None,
@@ -2746,7 +2833,7 @@ mod tests {
         // A finalizing record is ambiguous: fail closed before parsing the
         // response or calling finalize_tx again.
         let err = service
-            .finalize_send(&id, "BEGINSLATEPACK. payload ENDSLATEPACK.")
+            .finalize_send(&id, "BEGINSLATEPACK. payload ENDSLATEPACK.", "")
             .expect_err("ambiguous finalize must fail closed");
         assert!(matches!(err, FlintError::Invalid(_)), "got {err:?}");
         assert_eq!(
@@ -2846,6 +2933,70 @@ mod tests {
         let _ = std::fs::remove_dir_all(&root);
     }
 
+    fn pending_send_with_confirmation() -> (PendingSlate, crate::model::SendConfirmation) {
+        let slate = Slate::blank(2, false);
+        let versioned = VersionedSlate::into_version(slate, SlateVersion::V4).expect("versioned");
+        let confirmation = crate::model::SendConfirmation {
+            network: "testnet".into(),
+            address_index: 0,
+            destination: "tgrin1confirmed".into(),
+            amount_nano: 7,
+            fee_nano: 1,
+            slate_digest: crate::model::digest_slate(&versioned).expect("digest"),
+        };
+        let pending = PendingSlate {
+            kind: "send".into(),
+            destination: Some("tgrin1confirmed".into()),
+            created_at: 1,
+            amount: 7,
+            slate: versioned,
+            request: None,
+            confirmation: Some(confirmation.clone()),
+            state: Some(TxState::Locked),
+            attempts: 0,
+            last_error: None,
+        };
+        (pending, confirmation)
+    }
+
+    #[test]
+    fn send_confirmation_binds_context_amount_and_s1() {
+        let (pending, confirmation) = pending_send_with_confirmation();
+        let token = confirmation.token().expect("token");
+        assert!(check_send_confirmation(&pending, &token, "testnet", 0).is_ok());
+
+        let mut changed = confirmation.clone();
+        changed.amount_nano = 8;
+        assert!(
+            check_send_confirmation(&pending, &changed.token().expect("token"), "testnet", 0)
+                .is_err(),
+            "another amount must not sign"
+        );
+        assert!(
+            check_send_confirmation(&pending, &token, "mainnet", 0).is_err(),
+            "network change must not sign"
+        );
+        assert!(
+            check_send_confirmation(&pending, &token, "testnet", 1).is_err(),
+            "address index change must not sign"
+        );
+
+        let (mut legacy, _) = pending_send_with_confirmation();
+        legacy.confirmation = None;
+        assert!(
+            check_send_confirmation(&legacy, &token, "testnet", 0).is_err(),
+            "a legacy journal without a marker must fail closed"
+        );
+
+        let mut tampered = confirmation.clone();
+        tampered.slate_digest = "00".repeat(32);
+        assert!(
+            check_send_confirmation(&pending, &tampered.token().expect("token"), "testnet", 0)
+                .is_err(),
+            "a digest mismatch must not sign"
+        );
+    }
+
     #[test]
     fn repeated_receive_must_match_the_original_request() {
         let original = serde_json::json!({"id": "same", "amount": 1});
@@ -2888,7 +3039,7 @@ mod tests {
             .save_pending(&id, &pending_in("send", TxState::FailedRecoverable))
             .expect("save");
         let err = service
-            .finalize_send(&id, "BEGINSLATEPACK. payload ENDSLATEPACK.")
+            .finalize_send(&id, "BEGINSLATEPACK. payload ENDSLATEPACK.", "")
             .expect_err("ambiguous record must not be signed");
         assert!(matches!(err, FlintError::Invalid(_)), "got {err:?}");
         assert_eq!(
@@ -3484,7 +3635,7 @@ mod tests {
         // The resume path reaches the wallet and stops at the lock, instead of
         // trying to finalize a slate that was already signed.
         let err = service
-            .finalize_send(&id, "BEGINSLATEPACK. payload ENDSLATEPACK.")
+            .finalize_send(&id, "BEGINSLATEPACK. payload ENDSLATEPACK.", "")
             .expect_err("wallet is locked");
         assert!(matches!(err, FlintError::Locked), "got {err:?}");
     }

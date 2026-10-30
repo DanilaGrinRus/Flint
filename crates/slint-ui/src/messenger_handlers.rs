@@ -246,32 +246,18 @@ pub fn install(
                                     }
                                 }
                                 Err(receive_error) => {
-                                    let mut finalized = false;
-                                    if let Ok(list) = wallet.pending() {
-                                        for item in list.items {
-                                            if item.kind != "send" {
-                                                continue;
-                                            }
-                                            if wallet.finalize_send(&item.slate_id, &text).is_ok() {
-                                                let _ =
-                                                    wallet.messenger_inbox_mark(&id, "done", None);
-                                                auto_notes.push(
-                                                    "ответ на отправку автофинализирован"
-                                                        .to_string(),
-                                                );
-                                                finalized = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    if !finalized {
-                                        let _ = wallet.messenger_inbox_mark(
-                                            &id,
-                                            "failed",
-                                            Some(&receive_error),
-                                        );
-                                        auto_errors.push(receive_error);
-                                    }
+                                    // A response to an outgoing send is not an
+                                    // incoming slate: signing it needs the user's
+                                    // confirmation token and an explicit finalize.
+                                    let message = format!(
+                                        "{receive_error}; автофинализация отправки требует подтверждения пользователя"
+                                    );
+                                    let _ = wallet.messenger_inbox_mark(
+                                        &id,
+                                        "needs_review",
+                                        Some(&message),
+                                    );
+                                    auto_errors.push(message);
                                 }
                             }
                         }

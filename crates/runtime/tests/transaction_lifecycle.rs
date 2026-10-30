@@ -235,7 +235,7 @@ fn exercise(backend: BackendKind, full_cycle: bool) {
         .prepare_receive(&slate.slatepack)
         .expect("prepare receive");
     sender
-        .finalize_send(&slate.slate_id, &response.slatepack)
+        .finalize_send(&slate.slate_id, &response.slatepack, &slate.confirmation)
         .expect("finalize and post");
     let receiver_confirmed =
         await_confirmation(&receiver, receiver_before + amount as u128, timeout);

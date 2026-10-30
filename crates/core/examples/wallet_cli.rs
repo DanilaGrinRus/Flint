@@ -151,8 +151,9 @@ fn main() {
             let dest = args[3].clone();
             let amount: u64 = args[4].parse().expect("amount");
             match backend.send_prepare(&dest, amount) {
-                Ok((slatepack, slate_id, fee)) => {
+                Ok((slatepack, slate_id, fee, confirmation)) => {
                     println!("SLATE_ID={slate_id} FEE={fee}");
+                    println!("CONFIRMATION={confirmation}");
                     println!("{slatepack}");
                     // Crash-test hook: the journal and the locked inputs exist,
                     // the caller "dies" before the slate is delivered.
@@ -176,7 +177,12 @@ fn main() {
         "finalize" => {
             let slate_id = args[3].clone();
             let slatepack = read_text(&args[4]);
-            match backend.send_finalize(&slate_id, &slatepack) {
+            let confirmation = args
+                .get(5)
+                .cloned()
+                .or_else(|| std::env::var("FLINT_SEND_CONFIRMATION").ok())
+                .unwrap_or_default();
+            match backend.send_finalize(&slate_id, &slatepack, &confirmation) {
                 Ok(()) => println!("posted"),
                 Err(e) => {
                     eprintln!("finalize failed: {e}");
