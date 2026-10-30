@@ -2796,6 +2796,30 @@ mod tests {
     }
 
     #[test]
+    fn receive_request_fingerprint_survives_restart() {
+        let root = fresh_root("receive-restart");
+        let id = Uuid::new_v4().to_string();
+        let original = serde_json::json!({"id": id, "amount": 1});
+        let changed = serde_json::json!({"id": id, "amount": 2});
+
+        let service = WalletService::open_at(AppPaths::at(&root));
+        let mut record = pending_in("receive", TxState::ResponseReceived);
+        record.request = Some(original.clone());
+        service.save_pending(&id, &record).expect("save");
+        drop(service);
+
+        let reopened = WalletService::open_at(AppPaths::at(&root));
+        let loaded = reopened.load_pending(&id).expect("record survives restart");
+        assert_eq!(loaded.request, Some(original.clone()));
+        assert!(check_receive_repeat(&loaded, &original).is_ok());
+        assert!(
+            check_receive_repeat(&loaded, &changed).is_err(),
+            "a changed S1 must stay rejected after restart"
+        );
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
     fn repeated_receive_must_match_the_original_request() {
         let original = serde_json::json!({"id": "same", "amount": 1});
         let changed = serde_json::json!({"id": "same", "amount": 2});

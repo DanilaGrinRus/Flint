@@ -2421,4 +2421,50 @@ mod tests {
         );
         let _ = std::fs::remove_dir_all(&dir);
     }
+    #[test]
+    fn repeated_receive_must_match_the_journaled_slate() {
+        let mut record = RpcReceiveRecord {
+            slate_id: "id".into(),
+            amount: 1,
+            response: json!({"old": true}),
+            request: None,
+            sender: None,
+            state: "received".into(),
+            created_at: 0,
+        };
+        let first = json!({"id": "id", "amount": 1});
+        let changed = json!({"id": "id", "amount": 2});
+        assert!(
+            check_receive_request(&record, &first).is_err(),
+            "a record without a fingerprint must refuse replay"
+        );
+        record.request = Some(first.clone());
+        assert!(check_receive_request(&record, &first).is_ok());
+        assert!(
+            check_receive_request(&record, &changed).is_err(),
+            "same slate id with other contents is not a repeat"
+        );
+    }
+
+    #[test]
+    fn receive_request_fingerprint_survives_journal_restart() {
+        let record = RpcReceiveRecord {
+            slate_id: "id".into(),
+            amount: 1,
+            response: json!({"old": true}),
+            request: Some(json!({"id": "id", "amount": 1})),
+            sender: None,
+            state: "received".into(),
+            created_at: 0,
+        };
+        let raw = serde_json::to_string(&record).expect("serialize");
+        let restored: RpcReceiveRecord = serde_json::from_str(&raw).expect("deserialize");
+        assert_eq!(restored.request, record.request);
+
+        let legacy: RpcReceiveRecord =
+            serde_json::from_str(r#"{"slate_id":"id","amount":1,"response":null,"created_at":0}"#)
+                .expect("legacy record");
+        assert!(legacy.request.is_none());
+        assert!(legacy.state == "received");
+    }
 }

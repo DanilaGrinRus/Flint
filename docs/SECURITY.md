@@ -147,8 +147,8 @@ refund не теряется от произвольного сообщения.
   сообщений/8 MiB. DNS-резолв ОС не прерывается: вызов возвращается по бюджету,
   но зависший resolver может оставить helper-поток.
 
-Проверки: `cargo test -p flint-core --lib` 192, `cargo test -p flint-messenger`
-82 (+1 ignored), `cargo test --workspace` 350 passed / 0 failed / 33 ignored.
+Проверки: `cargo test -p flint-core --lib` 195, `cargo test -p flint-messenger`
+83 (+1 ignored), `cargo test --workspace` 354 passed / 0 failed / 33 ignored.
 
 ## Инцидент и выпуск
 

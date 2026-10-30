@@ -28,6 +28,19 @@ use crate::error::{Error, Result};
 
 /// Budget for DNS, TCP and the WebSocket/TLS handshake together.
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Production uses ten seconds; tests use a short budget so a stalled relay can
+/// be exercised without slowing the suite.
+fn connect_budget() -> Duration {
+    #[cfg(test)]
+    {
+        Duration::from_millis(300)
+    }
+    #[cfg(not(test))]
+    {
+        CONNECT_TIMEOUT
+    }
+}
 /// Read/write budget for one relay operation after the handshake.
 const IO_TIMEOUT: Duration = Duration::from_secs(15);
 /// How long a publish waits for the matching `OK`.
@@ -151,7 +164,7 @@ impl WsRelay {
         let port = parsed
             .port_or_known_default()
             .ok_or_else(|| store("relay URL has no port"))?;
-        let deadline = Instant::now() + CONNECT_TIMEOUT;
+        let deadline = Instant::now() + connect_budget();
         let addrs = Self::resolve_with_budget(&host, port, deadline)?;
         let mut last_error = None;
         let mut socket = None;
@@ -164,8 +177,8 @@ impl WsRelay {
                 Ok(stream) => {
                     let _ = stream.set_nodelay(true);
                     // Bound TLS and WebSocket handshake I/O by the same budget.
-                    let _ = stream.set_read_timeout(Some(CONNECT_TIMEOUT));
-                    let _ = stream.set_write_timeout(Some(CONNECT_TIMEOUT));
+                    let _ = stream.set_read_timeout(Some(connect_budget()));
+                    let _ = stream.set_write_timeout(Some(connect_budget()));
                     let mut config = WebSocketConfig::default();
                     config.max_message_size = Some(MAX_MESSAGE_BYTES);
                     config.max_frame_size = Some(MAX_FRAME_BYTES);
@@ -722,6 +735,36 @@ mod tests {
         assert!(
             seen.iter().any(|line| line == "REQ authed=true"),
             "the request must be retried after authentication: {seen:?}"
+        );
+    }
+
+    /// A server that completes TCP but never answers the WebSocket handshake
+    /// must fail within the connect budget, not pin the worker.
+    #[test]
+    fn handshake_is_bounded_by_the_connect_budget() {
+        use std::net::TcpListener;
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let address = listener.local_addr().expect("addr");
+        std::thread::spawn(move || {
+            if let Ok((stream, _)) = listener.accept() {
+                std::thread::sleep(Duration::from_secs(3));
+                drop(stream);
+            }
+        });
+
+        let relay = WsRelay::new(&format!("ws://{address}"), test_keys()).expect("relay");
+        let filter = RelayFilter {
+            kinds: vec![1],
+            recipient: None,
+            since: super::super::unix_now_secs().saturating_sub(60),
+            limit: 2,
+        };
+        let started = Instant::now();
+        assert!(relay.query(&filter).is_err());
+        assert!(
+            started.elapsed() < Duration::from_secs(2),
+            "handshake must respect the connect budget, took {:?}",
+            started.elapsed()
         );
     }
 
