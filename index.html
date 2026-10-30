@@ -166,13 +166,14 @@
           берёт на себя relay с TTL, квотами и подписанным ACK.</p>
         <p class="mono small">direct onion · relay до TTL · мосты через lyrebird</p>
       </article>
-      <article class="card is-soon">
-        <h3>Nostr — план, не функция</h3>
-        <p>Рассматривается как отдельный транспорт офлайн-доставки: NIP-17/NIP-44 DM,
-          отдельные транспортные ключи и их ротация, возможные NIP-05 имена.
-          В текущей сборке Nostr нет — он появится только после реализации и
-          собственной приёмки.</p>
-        <p class="mono small">не реализовано · roadmap</p>
+      <article class="card">
+        <h3>Nostr — включается в настройках</h3>
+        <p>Отдельный транспорт офлайн-доставки: NIP-44 v2 и NIP-59 gift wrap,
+          свой secp256k1-ключ на профиль и ключ собеседника в контакте. По
+          умолчанию выключен: задайте <code>wss://</code>-relay в настройках.
+          NIP-42 (auth-required) пока нет — нужен relay, отдающий kind 1059
+          без AUTH.</p>
+        <p class="mono small">опционально · выключено по умолчанию</p>
       </article>
     </div>
     <p class="callout">
@@ -220,6 +221,7 @@
           <li>Slatepack: send → receive → finalize → post → подтверждение</li>
           <li>Отмена, повтор и продолжение незавершённых операций</li>
           <li>Messenger v1: контакты, история, relay и direct onion</li>
+          <li>Nostr-транспорт (опционально): NIP-44/NIP-59, ключ контакта</li>
           <li>ru/en, масштабирование, клавиатурные сценарии</li>
         </ul>
       </article>
@@ -232,12 +234,13 @@
           <li>Фоновой Windows-службы ноды</li>
           <li>Публичного relay как сервиса</li>
           <li>Forward secrecy в messenger (планируется v2)</li>
+          <li>NIP-42 AUTH и публичная проверка публикации в Nostr</li>
           <li>Физических проверок D-01…D-10 и аварий disk-full / power-loss</li>
         </ul>
       </article>
     </div>
     <div class="facts">
-      <div class="fact"><strong>324</strong><span>автотеста в CI, 0 падений; live-наборы запускаются отдельно</span></div>
+      <div class="fact"><strong>342</strong><span>автотеста в CI, 0 падений; live-наборы запускаются отдельно</span></div>
       <div class="fact"><strong>2</strong><span>принятых advisory зависимостей, 0 непринятых — список раскрыт</span></div>
       <div class="fact"><strong>0</strong><span>обещаний про mainnet, аудит или даты мобильных релизов</span></div>
     </div>
@@ -316,6 +319,7 @@
 
 </body>
 </html>
+
 
 
 

@@ -168,13 +168,14 @@
           and a signed ACK.</p>
         <p class="mono small">direct onion · relay until TTL · bridges via lyrebird</p>
       </article>
-      <article class="card is-soon">
-        <h3>Nostr — planned, not shipped</h3>
-        <p>Considered as a separate offline-delivery transport: NIP-17/NIP-44 DMs,
-          dedicated transport keys and rotation, possibly NIP-05 names. The
-          current build has no Nostr support — it appears only after
-          implementation and its own acceptance.</p>
-        <p class="mono small">not implemented · roadmap</p>
+      <article class="card">
+        <h3>Nostr — enabled in settings</h3>
+        <p>A separate offline-delivery transport: NIP-44 v2 and NIP-59 gift
+          wraps, a per-profile secp256k1 key and the peer key stored with the
+          contact. Off by default: set a <code>wss://</code> relay in settings.
+          NIP-42 (auth-required) is not implemented yet — use a relay that
+          serves kind 1059 without AUTH.</p>
+        <p class="mono small">optional · off by default</p>
       </article>
     </div>
     <p class="callout">
@@ -224,6 +225,7 @@
           <li>Slatepack: send → receive → finalize → post → confirmation</li>
           <li>Cancel, retry and continuation of unfinished operations</li>
           <li>Messenger v1: contacts, history, relay and direct onion</li>
+          <li>Nostr transport (optional): NIP-44/NIP-59, contact key</li>
           <li>ru/en, scaling, keyboard flows</li>
         </ul>
       </article>
@@ -236,12 +238,13 @@
           <li>A background Windows node service</li>
           <li>A public relay as a service</li>
           <li>Forward secrecy in messenger (planned for v2)</li>
+          <li>NIP-42 AUTH and a public Nostr publish check</li>
           <li>Physical checks D-01…D-10 and disk-full / power-loss failures</li>
         </ul>
       </article>
     </div>
     <div class="facts">
-      <div class="fact"><strong>324</strong><span>automated tests in CI, 0 failures; live suites run separately</span></div>
+      <div class="fact"><strong>342</strong><span>automated tests in CI, 0 failures; live suites run separately</span></div>
       <div class="fact"><strong>2</strong><span>accepted dependency advisories, 0 unaccepted — the list is public</span></div>
       <div class="fact"><strong>0</strong><span>promises about mainnet, audit or mobile release dates</span></div>
     </div>
@@ -320,4 +323,5 @@
 
 </body>
 </html>
+
 
