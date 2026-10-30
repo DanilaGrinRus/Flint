@@ -525,6 +525,7 @@ mod tests {
         assert!(WsRelay::new("ws://localhost.attacker.invalid", keys()).is_err());
         assert!(WsRelay::new("ws://127.0.0.1.attacker.invalid", keys()).is_err());
         assert!(WsRelay::new("ws://localhostattacker.invalid", keys()).is_err());
+        assert!(WsRelay::new("ws://127.0.0.1@attacker.invalid", keys()).is_err());
         assert!(WsRelay::validate_url("ws://localhost.attacker.invalid").is_err());
         assert!(WsRelay::validate_url("ws://localhost:7777").is_ok());
         assert!(WsRelay::validate_url("wss://localhost.attacker.invalid").is_ok());
@@ -722,6 +723,78 @@ mod tests {
             seen.iter().any(|line| line == "REQ authed=true"),
             "the request must be retried after authentication: {seen:?}"
         );
+    }
+
+    /// A relay that ignores `REQ` and floods NOTICEs must hit the query budget
+    /// instead of growing memory until the deadline.
+    #[test]
+    fn query_stops_a_message_flood() {
+        use std::net::TcpListener;
+        use tungstenite::accept;
+
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let address = listener.local_addr().expect("addr");
+        std::thread::spawn(move || {
+            let Ok((stream, _)) = listener.accept() else {
+                return;
+            };
+            let Ok(mut socket) = accept(stream) else {
+                return;
+            };
+            for _ in 0..5000 {
+                if socket
+                    .send(tungstenite::Message::Text(
+                        r#"["NOTICE","flood"]"#.to_string().into(),
+                    ))
+                    .is_err()
+                {
+                    break;
+                }
+            }
+        });
+
+        let relay = WsRelay::new(&format!("ws://{address}"), test_keys()).expect("relay");
+        let filter = RelayFilter {
+            kinds: vec![1],
+            recipient: None,
+            since: super::super::unix_now_secs().saturating_sub(60),
+            limit: 2,
+        };
+        let error = relay.query(&filter).expect_err("flood must fail the query");
+        assert!(
+            error.to_string().contains("budget exceeded"),
+            "unexpected error: {error}"
+        );
+    }
+
+    /// A message above the configured WebSocket cap is a protocol violation.
+    #[test]
+    fn query_rejects_an_oversized_message() {
+        use std::net::TcpListener;
+        use tungstenite::accept;
+
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let address = listener.local_addr().expect("addr");
+        std::thread::spawn(move || {
+            let Ok((stream, _)) = listener.accept() else {
+                return;
+            };
+            let Ok(mut socket) = accept(stream) else {
+                return;
+            };
+            let _ = socket.send(tungstenite::Message::Text(
+                "x".repeat(2 * 1024 * 1024).into(),
+            ));
+        });
+
+        let relay = WsRelay::new(&format!("ws://{address}"), test_keys()).expect("relay");
+        let filter = RelayFilter {
+            kinds: vec![1],
+            recipient: None,
+            since: super::super::unix_now_secs().saturating_sub(60),
+            limit: 2,
+        };
+        assert!(relay.query(&filter).is_err());
     }
 
     /// Read-only network probe: REQ → EOSE on a live relay. Not run by default.

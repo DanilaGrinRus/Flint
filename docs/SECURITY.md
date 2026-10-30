@@ -148,7 +148,7 @@ refund не теряется от произвольного сообщения.
   но зависший resolver может оставить helper-поток.
 
 Проверки: `cargo test -p flint-core --lib` 192, `cargo test -p flint-messenger`
-80 (+1 ignored), `cargo test --workspace` 348 passed / 0 failed / 33 ignored.
+82 (+1 ignored), `cargo test --workspace` 350 passed / 0 failed / 33 ignored.
 
 ## Инцидент и выпуск
 

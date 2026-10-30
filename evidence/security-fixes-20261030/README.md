@@ -10,7 +10,7 @@
 | D-A2 | повтор receive по UUID не сверял новый S1 | embedded `PendingSlate` и RPC `RpcReceiveRecord` хранят canonical JSON исходного S1; повтор с другим содержимым отклоняется, запись без отпечатка (legacy) повтор не разрешает | `repeated_receive_must_match_the_original_request`, `repeated_receive_must_match_the_journaled_slate` |
 | D-A3 | ошибки записи TOML скрывались, запуск шёл со старой конфигурацией | `set_toml_string`/`patch_node_secret`/`patch_wallet_paths` возвращают `Result`; старт `grin-wallet` завершается ошибкой вместо stale config | `config_write_errors_are_not_swallowed` |
 | D-A4 | `ws://localhost.attacker.invalid` проходил проверку префикса | URL разбирается через `url::Url`; `ws://` разрешён только для literal loopback host; проверка используется и в настройках | `url_policy` (включая `ws://localhost.attacker.invalid`, `ws://127.0.0.1.attacker.invalid`) |
-| D-A5 | бюджет начинался после handshake; дефолтные лимиты кадров | общий 10-секундный бюджет на DNS-резолв, TCP connect, TLS и WebSocket handshake; `WebSocketConfig` 1 MiB message / 256 KiB frame; query-лимиты 4096 сообщений / 8 MiB с ошибкой вместо тихого усечения | `url_policy`, loopback-тесты транспорта; flood-тест не добавлен — границы проверяются кодом |
+| D-A5 | бюджет начинался после handshake; дефолтные лимиты кадров | общий 10-секундный бюджет на DNS-резолв, TCP connect, TLS и WebSocket handshake; `WebSocketConfig` 1 MiB message / 256 KiB frame; query-лимиты 4096 сообщений / 8 MiB с ошибкой вместо тихого усечения | `query_stops_a_message_flood`, `query_rejects_an_oversized_message`, `url_policy` |
 
 ## Остаточный риск
 
@@ -26,6 +26,6 @@
 
 ```
 cargo test -p flint-core --lib --offline       # 192
-cargo test -p flint-messenger --offline        # 80 + 1 ignored
-cargo test --workspace --offline               # 348 passed / 0 failed / 33 ignored
+cargo test -p flint-messenger --offline        # 82 + 1 ignored
+cargo test --workspace --offline               # 350 passed / 0 failed / 33 ignored
 ```

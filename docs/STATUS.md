@@ -10,7 +10,7 @@
 привязан к loopback, receive сверяет отпечаток S1, ошибки RPC-конфига
 возвращаются, Nostr URL проверяется разбором и имеет сетевые/размерные бюджеты,
 сохранённый открытый node_url заменяется локальным с предупреждением. Проверки:
-core 192, messenger 80 (+1 ignored), workspace 348 passed / 0 failed / 33 ignored;
+core 192, messenger 82 (+1 ignored), workspace 350 passed / 0 failed / 33 ignored;
 LNK1104 не воспроизвёлся. Подробности — evidence/security-fixes-20261030/README.md.
 iOS-находки остаются в mobile/GrinFlint.
 
