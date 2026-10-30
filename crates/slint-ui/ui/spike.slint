@@ -59,12 +59,12 @@ component ActionButton inherits Rectangle {
     accessible-enabled: root.enabled;
     accessible-action-default => { root.clicked(); }
     border-radius: Theme.radius-control;
-    background: !root.enabled ? Theme.surface-2
+    background: !root.enabled ? transparent
         : root.kind == "primary" ? (touch.has-hover ? Theme.accent-dim : Theme.accent)
         : root.kind == "secondary" ? (touch.has-hover ? Theme.surface-hover : Theme.surface-2)
         : root.kind == "danger" ? (touch.has-hover ? Theme.danger-soft : transparent)
         : (touch.has-hover ? Theme.surface-2 : transparent);
-    border-width: !root.enabled ? 1px : (root.kind == "primary" ? 0px : 1px);
+    border-width: root.kind == "primary" && root.enabled ? 0px : 1px;
     border-color: !root.enabled ? Theme.border
         : root.kind == "ghost" ? transparent
         : root.kind == "danger" ? Theme.danger
@@ -92,7 +92,7 @@ component ActionButton inherits Rectangle {
         }
         Text {
             text: root.label;
-            color: !root.enabled ? Theme.disabled
+            color: !root.enabled ? Theme.muted
                 : root.kind == "primary" ? Theme.bg
                 : root.kind == "secondary" ? Theme.text
                 : root.kind == "danger" ? Theme.danger
@@ -1881,6 +1881,7 @@ callback settings-nostr-save-clicked(string);
                         Text { text: root.receive-error; color: Theme.danger; font-size: 13px; wrap: word-wrap; }
                     }
                 }
+                Rectangle { height: 1px; background: Theme.border; }
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
@@ -2596,6 +2597,7 @@ callback settings-nostr-save-clicked(string);
                 }
                 Text { text: root.sec-note; color: Theme.accent; font-size: 13px; }
                 Text { text: root.sec-error; color: Theme.danger; font-size: 13px; }
+                Rectangle { height: 1px; background: Theme.border; }
                 Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     spacing: 8px;
@@ -3494,12 +3496,13 @@ callback settings-nostr-save-clicked(string);
                         }
                     }
                 }
+                Rectangle { height: 1px; background: Theme.border; }
                 HorizontalLayout {
                     spacing: 8px;
                     Rectangle { horizontal-stretch: 1; }
                     ActionButton {
                         label: @tr("Закрыть");
-                        kind: "secondary";
+                        kind: "ghost";
                         button-height: 40px;
                         width: 120px;
                         clicked => {
@@ -3511,6 +3514,7 @@ callback settings-nostr-save-clicked(string);
         }
     }
 }
+
 
 
 
