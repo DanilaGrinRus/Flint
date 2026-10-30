@@ -278,8 +278,7 @@ export component AppWindow inherits Window {
     in-out property <string> messenger-contact-name: "";
     in-out property <string> messenger-contact-nostr: "";
     in-out property <string> messenger-nostr-key: "";
-    in-out property <string> messenger-transport: "";
-    in-out property <string> messenger-recovery-password: "";
+        in-out property <string> messenger-recovery-password: "";
     in-out property <bool> messenger-busy: false;
     in-out property <bool> show-send: false;
     in-out property <bool> show-receive: false;
@@ -333,6 +332,7 @@ export component AppWindow inherits Window {
     in-out property <string> settings-node-url: "";
     in-out property <string> settings-relay: "";
     in-out property <string> settings-nostr-relay: "";
+    in-out property <string> settings-section: "profile";
     in-out property <string> settings-min-conf: "10";
     in-out property <string> settings-active-data-dir: "";
     in-out property <string> settings-data-dir: "";
@@ -374,6 +374,7 @@ export component AppWindow inherits Window {
     callback messenger-send-clicked(string, string);
     callback messenger-inbox-clicked();
     callback messenger-contact-save-clicked(string, string, string);
+    callback messenger-copy-nostr-clicked();
     callback messenger-contact-delete-clicked(string);
     callback messenger-history-clicked(string);
     callback messenger-block-clicked(string, bool);
@@ -1767,244 +1768,351 @@ callback settings-nostr-save-clicked(string);
         height: parent.height;
         background: Theme.bg;
         Rectangle {
-            x: (parent.width - 560px) / 2;
-            y: (parent.height - Math.min(740px, parent.height - 16px)) / 2;
-            width: Math.min(560px, parent.width - 32px);
-            height: Math.min(740px, parent.height - 16px);
+            x: (parent.width - 760px) / 2;
+            y: (parent.height - Math.min(720px, parent.height - 16px)) / 2;
+            width: Math.min(760px, parent.width - 32px);
+            height: Math.min(720px, parent.height - 16px);
             background: Theme.surface;
             border-radius: Theme.radius-card;
             border-width: 1px;
             border-color: Theme.border;
-            ScrollView {
-                VerticalLayout {
+            VerticalLayout {
                 padding: 16px;
-                spacing: 6px;
+                spacing: 10px;
                 Text { text: @tr("Настройки"); color: Theme.text; font-size: 20px; font-weight: 700; }
-                Text { text: @tr("Сеть"); color: Theme.muted-2; font-size: 13px; }
                 HorizontalLayout {
-                    spacing: 8px;
-                    Button {
-                        text: "testnet";
-                        clicked => { root.settings-network = "testnet"; }
-                    }
-                    Button {
-                        text: "mainnet";
-                        clicked => { root.settings-network = "mainnet"; }
-                    }
-                    Rectangle { horizontal-stretch: 1; }
-                    Text { text: root.settings-network; color: Theme.accent; font-size: 14px; vertical-alignment: center; }
-                }
-                Text {
-                    text: @tr("mainnet — реальные средства; смена сети заблокирует кошелёк");
-                    color: Theme.danger;
-                    font-size: 12px;
-                    visible: root.settings-network == "mainnet";
-                }
-                Text { text: @tr("Язык интерфейса"); color: Theme.muted-2; font-size: 13px; }
-                ComboBox {
-                    model: ["Русский", "English"];
-                    current-value: root.ui-language == "en" ? "English" : "Русский";
-                    selected(value) => {
-                        root.ui-language = value == "English" ? "en" : "ru";
-                        root.ui-language-note = @tr("Переключаю язык…");
-                        root.language-save-requested(value);
-                    }
-                }
-                Text { text: root.ui-language-note; color: Theme.muted; font-size: 12px; }
-                Button {
-                    text: @tr("Безопасность");
-                    clicked => { root.security-open-clicked(); }
-                }
-                Text { text: @tr("Профили"); color: Theme.muted-2; font-size: 13px; }
-                Text {
-                    text: @tr("Активный профиль: ") + root.active-wallet;
-                    color: Theme.muted;
-                    font-size: 12px;
-                }
-                Text { text: @tr("Имя кошелька"); color: Theme.muted-2; font-size: 13px; }
-                HorizontalLayout {
-                    spacing: 8px;
-                    LineEdit {
-                        text <=> root.settings-profile;
-                        accessible-label: @tr("Имя кошелька");
-                        accepted => {
-                            root.settings-save-clicked(
-                                root.settings-network,
-                                root.settings-profile,
-                                root.settings-node-url,
-                                root.settings-relay,
-                                root.settings-min-conf,
-                            );
+                    spacing: 12px;
+                    VerticalLayout {
+                        width: 180px;
+                        spacing: 4px;
+                        ActionButton {
+                            label: @tr("Профиль и язык");
+                            kind: root.settings-section == "profile" ? "primary" : "ghost";
+                            width: 170px;
+                            clicked => { root.settings-section = "profile"; }
                         }
+                        ActionButton {
+                            label: @tr("Seed и пароль");
+                            kind: root.settings-section == "security" ? "primary" : "ghost";
+                            width: 170px;
+                            clicked => { root.settings-section = "security"; }
+                        }
+                        ActionButton {
+                            label: @tr("Relay");
+                            kind: root.settings-section == "relay" ? "primary" : "ghost";
+                            width: 170px;
+                            clicked => { root.settings-section = "relay"; }
+                        }
+                        ActionButton {
+                            label: @tr("Tor");
+                            kind: root.settings-section == "tor" ? "primary" : "ghost";
+                            width: 170px;
+                            clicked => { root.settings-section = "tor"; }
+                        }
+                        ActionButton {
+                            label: @tr("Нода и данные");
+                            kind: root.settings-section == "node" ? "primary" : "ghost";
+                            width: 170px;
+                            clicked => { root.settings-section = "node"; }
+                        }
+                        Rectangle { vertical-stretch: 1; }
                     }
-                    Button {
-                        text: @tr("Создать профиль");
-                        enabled: !root.profile-create-busy;
-                        clicked => { root.profile-create-clicked(root.settings-profile); }
-                    }
-                }
-                Text {
-                    text: @tr("Каждый профиль — отдельный кошелёк и seed. Новое имя переключает на новый профиль; переименования нет. После создания откроется создание seed.");
-                    color: Theme.muted;
-                    font-size: 12px;
-                    wrap: word-wrap;
-                }
-                if root.profile-create-error != "": Text {
-                    text: root.profile-create-error;
-                    color: Theme.danger;
-                    font-size: 12px;
-                    wrap: word-wrap;
-                }
-                if root.profile-create-note != "": Text {
-                    text: root.profile-create-note;
-                    color: Theme.accent;
-                    font-size: 12px;
-                    wrap: word-wrap;
-                }
-                Button {
-                    text: @tr("Показать seed");
-                    enabled: !root.seed-reveal-busy;
-                    clicked => { root.seed-reveal-open-clicked(); }
-                }
-                Text { text: @tr("Каталог данных ноды и кошельков"); color: Theme.muted-2; font-size: 13px; }
-                Text {
-                    text: @tr("Сейчас: ") + root.settings-active-data-dir;
-                    color: Theme.muted;
-                    font-family: "Cascadia Mono";
-                    font-size: 11px;
-                    wrap: word-wrap;
-                }
-                LineEdit {
-                    text <=> root.settings-data-dir;
-                    accessible-label: @tr("Каталог данных ноды и кошельков");
-                    enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
-                }
-                HorizontalLayout {
-                    spacing: 8px;
-                    Button {
-                        text: root.settings-data-dir-busy ? "Выбор…" : "Обзор…";
-                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
-                        clicked => { root.settings-data-dir-browse-clicked(); }
-                    }
-                    Button {
-                        text: @tr("Стандартный");
-                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
-                        clicked => { root.settings-data-dir = root.settings-default-data-dir; }
-                    }
-                    Button {
-                        text: @tr("Применить при перезапуске");
-                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
-                        clicked => { root.settings-data-dir-save-clicked(root.settings-data-dir); }
-                    }
-                }
-                Text {
-                    text: @tr("Файлы не копируются автоматически. Чтобы открыть существующие кошельки и цепь, скопируйте их в новый корень при закрытом Flint; иначе после перезапуска будут созданы новые данные.");
-                    color: Theme.warning;
-                    font-size: 11px;
-                    wrap: word-wrap;
-                }
-                Text {
-                    text: @tr("Каталог задан параметром --data или FLINT_DATA_DIR; измените параметр запуска.");
-                    color: Theme.warning;
-                    font-size: 11px;
-                    wrap: word-wrap;
-                    visible: root.settings-data-dir-forced;
-                }
-                Text { text: "Node URL"; color: Theme.muted-2; font-size: 13px; }
-                LineEdit {
-                    text <=> root.settings-node-url;
-                    accessible-label: "Node URL";
-                }
-                Text { text: "Relay URL"; color: Theme.muted-2; font-size: 13px; }
-                LineEdit {
-                    text <=> root.settings-relay;
-                    accessible-label: "Relay URL";
-                }
-                Text { text: "Nostr relay (wss://)"; color: Theme.muted-2; font-size: 13px; }
-                HorizontalLayout {
-                    spacing: 8px;
-                    LineEdit {
+                    ScrollView {
                         horizontal-stretch: 1;
-                        text <=> root.settings-nostr-relay;
-                        placeholder-text: "wss://…";
-                        accessible-label: "Nostr relay";
-                    }
-                    ActionButton {
-                        label: @tr("Сохранить");
-                        kind: "secondary";
-                        width: 120px;
-                        clicked => { root.settings-nostr-save-clicked(root.settings-nostr-relay); }
-                    }
-                }
-                Text { text: @tr("Минимум подтверждений"); color: Theme.muted-2; font-size: 13px; }
-                LineEdit {
-                    text <=> root.settings-min-conf;
-                    accessible-label: @tr("Минимум подтверждений");
-                    accepted => {
-                        root.settings-save-clicked(
-                            root.settings-network,
-                            root.settings-profile,
-                            root.settings-node-url,
-                            root.settings-relay,
-                            root.settings-min-conf,
-                        );
-                    }
-                }
-                Text { text: @tr("Tor (приём и messenger-шлюз)"); color: Theme.muted-2; font-size: 13px; }
-                HorizontalLayout {
-                    spacing: 8px;
-                    Text {
-                        text: root.tor-running ? "включён" : "выключен";
-                        color: root.tor-running ? Theme.accent : Theme.muted;
-                        font-size: 13px;
-                        vertical-alignment: center;
-                    }
-                    Button {
-                        text: root.tor-running ? "Остановить Tor" : "Запустить Tor";
-                        enabled: root.tor-available && !root.tor-busy;
-                        clicked => {
-                            if root.tor-running {
-                                root.tor-stop-clicked();
-                            } else {
-                                root.tor-start-clicked();
+                        vertical-stretch: 1;
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 6px;
+                            if root.settings-section == "profile" : VerticalLayout {
+                                vertical-stretch: 0;
+                                alignment: start;
+                                spacing: 6px;
+                                Text { text: @tr("Сеть"); color: Theme.muted-2; font-size: 13px; }
+                                HorizontalLayout {
+                                    vertical-stretch: 0;
+                                    spacing: 8px;
+                                    Button {
+                                        text: "testnet";
+                                        clicked => { root.settings-network = "testnet"; }
+                                    }
+                                    Button {
+                                        text: "mainnet";
+                                        clicked => { root.settings-network = "mainnet"; }
+                                    }
+                                    Rectangle { horizontal-stretch: 1; }
+                                    Text { text: root.settings-network; color: Theme.accent; font-size: 14px; vertical-alignment: center; }
+                                }
+                                Text {
+                                    text: @tr("mainnet — реальные средства; смена сети заблокирует кошелёк");
+                                    color: Theme.danger;
+                                    font-size: 12px;
+                                    visible: root.settings-network == "mainnet";
+                                }
+                                Text { text: @tr("Язык интерфейса"); color: Theme.muted-2; font-size: 13px; }
+                                ComboBox {
+                                    vertical-stretch: 0;
+                                    model: ["Русский", "English"];
+                                    current-value: root.ui-language == "en" ? "English" : "Русский";
+                                    selected(value) => {
+                                        root.ui-language = value == "English" ? "en" : "ru";
+                                        root.ui-language-note = @tr("Переключаю язык…");
+                                        root.language-save-requested(value);
+                                    }
+                                }
+                                Text { text: root.ui-language-note; color: Theme.muted; font-size: 12px; }
+                                Text { text: @tr("Профили"); color: Theme.muted-2; font-size: 13px; }
+                                Text {
+                                    text: @tr("Активный профиль: ") + root.active-wallet;
+                                    color: Theme.muted;
+                                    font-size: 12px;
+                                }
+                                Text { text: @tr("Имя кошелька"); color: Theme.muted-2; font-size: 13px; }
+                                HorizontalLayout {
+                                    vertical-stretch: 0;
+                                    spacing: 8px;
+                                    LineEdit {
+                                        text <=> root.settings-profile;
+                                        accessible-label: @tr("Имя кошелька");
+                                        accepted => {
+                                            root.settings-save-clicked(
+                                                root.settings-network,
+                                                root.settings-profile,
+                                                root.settings-node-url,
+                                                root.settings-relay,
+                                                root.settings-min-conf,
+                                            );
+                                        }
+                                    }
+                                    Button {
+                                        text: @tr("Создать профиль");
+                                        enabled: !root.profile-create-busy;
+                                        clicked => { root.profile-create-clicked(root.settings-profile); }
+                                    }
+                                }
+                                Text {
+                                    text: @tr("Каждый профиль — отдельный кошелёк и seed. Новое имя переключает на новый профиль; переименования нет. После создания откроется создание seed.");
+                                    color: Theme.muted;
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                }
+                                if root.profile-create-error != "": Text {
+                                    text: root.profile-create-error;
+                                    color: Theme.danger;
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                }
+                                if root.profile-create-note != "": Text {
+                                    text: root.profile-create-note;
+                                    color: Theme.accent;
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                }
+                            }
+                            if root.settings-section == "security" : VerticalLayout {
+                                vertical-stretch: 0;
+                                alignment: start;
+                                spacing: 6px;
+                                Button {
+                                    vertical-stretch: 0;
+                                    text: @tr("Показать seed");
+                                    enabled: !root.seed-reveal-busy;
+                                    clicked => { root.seed-reveal-open-clicked(); }
+                                }
+                                Button {
+                                    vertical-stretch: 0;
+                                    text: @tr("Безопасность");
+                                    clicked => { root.security-open-clicked(); }
+                                }
+                                Text {
+                                    text: @tr("Смена пароля, резервная копия seed и удаление кошелька.");
+                                    color: Theme.muted;
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                }
+                            }
+                            if root.settings-section == "relay" : VerticalLayout {
+                                vertical-stretch: 0;
+                                alignment: start;
+                                spacing: 6px;
+                                Text { text: "Relay URL"; color: Theme.muted-2; font-size: 13px; }
+                                LineEdit {
+                                    vertical-stretch: 0;
+                                    text <=> root.settings-relay;
+                                    height: 34px;
+                                    accessible-label: "Relay URL";
+                                }
+                                Text { text: "Nostr relay (wss://)"; color: Theme.muted-2; font-size: 13px; }
+                                HorizontalLayout {
+                                    vertical-stretch: 0;
+                                    spacing: 8px;
+                                    LineEdit {
+                                        horizontal-stretch: 1;
+                                        text <=> root.settings-nostr-relay;
+                                        placeholder-text: "wss://…";
+                                        accessible-label: "Nostr relay";
+                                    }
+                                    ActionButton {
+                                        label: @tr("Сохранить");
+                                        kind: "secondary";
+                                        width: 120px;
+                                        clicked => { root.settings-nostr-save-clicked(root.settings-nostr-relay); }
+                                    }
+                                }
+                                Text {
+                                    text: @tr("Flint relay и Nostr — разные транспорты; пустой Nostr relay выключает его.");
+                                    color: Theme.muted;
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                }
+                            }
+                            if root.settings-section == "tor" : VerticalLayout {
+                                vertical-stretch: 0;
+                                alignment: start;
+                                spacing: 6px;
+                                Text { text: @tr("Tor (приём и messenger-шлюз)"); color: Theme.muted-2; font-size: 13px; }
+                                HorizontalLayout {
+                                    vertical-stretch: 0;
+                                    spacing: 8px;
+                                    Text {
+                                        text: root.tor-running ? "включён" : "выключен";
+                                        color: root.tor-running ? Theme.accent : Theme.muted;
+                                        font-size: 13px;
+                                        vertical-alignment: center;
+                                    }
+                                    Button {
+                                        text: root.tor-running ? "Остановить Tor" : "Запустить Tor";
+                                        enabled: root.tor-available && !root.tor-busy;
+                                        clicked => {
+                                            if root.tor-running {
+                                                root.tor-stop-clicked();
+                                            } else {
+                                                root.tor-start-clicked();
+                                            }
+                                        }
+                                    }
+                                    Button {
+                                        text: @tr("Обновить Tor");
+                                        enabled: root.tor-available && !root.tor-busy;
+                                        clicked => { root.tor-refresh-clicked(); }
+                                    }
+                                }
+                                Text {
+                                    text: root.tor-onion;
+                                    color: Theme.accent;
+                                    font-family: "Cascadia Mono";
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                    visible: root.tor-onion != "";
+                                }
+                                Text { text: root.tor-note; color: Theme.muted; font-size: 12px; wrap: word-wrap; }
+                                LineEdit {
+                                    vertical-stretch: 0;
+                                    text <=> root.tor-bridges-text;
+                                    height: 34px;
+                                    accessible-label: @tr("Мосты Tor");
+                                    placeholder-text: @tr("obfs4/webtunnel мосты, по одному на строку");
+                                }
+                                HorizontalLayout {
+                                    vertical-stretch: 0;
+                                    spacing: 8px;
+                                    Button {
+                                        text: @tr("Сохранить мосты");
+                                        enabled: !root.tor-busy;
+                                        clicked => { root.tor-bridges-save-clicked(root.tor-bridges-text); }
+                                    }
+                                    Button {
+                                        text: @tr("Показать лог");
+                                        enabled: root.tor-available && !root.tor-busy;
+                                        clicked => { root.tor-log-clicked(); }
+                                    }
+                                }
+                                Text { text: root.tor-bridge-status; color: Theme.warning; font-size: 12px; wrap: word-wrap; }
+                                Text { text: root.tor-log-text; color: Theme.muted; font-family: "Cascadia Mono"; font-size: 11px; wrap: word-wrap; }
+                            }
+                            if root.settings-section == "node" : VerticalLayout {
+                                vertical-stretch: 0;
+                                alignment: start;
+                                spacing: 6px;
+                                Text { text: "Node URL"; color: Theme.muted-2; font-size: 13px; }
+                                LineEdit {
+                                    vertical-stretch: 0;
+                                    text <=> root.settings-node-url;
+                                    height: 34px;
+                                    accessible-label: "Node URL";
+                                }
+                                Text { text: @tr("Минимум подтверждений"); color: Theme.muted-2; font-size: 13px; }
+                                LineEdit {
+                                    vertical-stretch: 0;
+                                    text <=> root.settings-min-conf;
+                                    height: 34px;
+                                    accessible-label: @tr("Минимум подтверждений");
+                                    accepted => {
+                                        root.settings-save-clicked(
+                                            root.settings-network,
+                                            root.settings-profile,
+                                            root.settings-node-url,
+                                            root.settings-relay,
+                                            root.settings-min-conf,
+                                        );
+                                    }
+                                }
+                                Text { text: @tr("Каталог данных ноды и кошельков"); color: Theme.muted-2; font-size: 13px; }
+                                Text {
+                                    text: @tr("Сейчас: ") + root.settings-active-data-dir;
+                                    color: Theme.muted;
+                                    font-family: "Cascadia Mono";
+                                    font-size: 11px;
+                                    wrap: word-wrap;
+                                }
+                                LineEdit {
+                                    vertical-stretch: 0;
+                                    text <=> root.settings-data-dir;
+                                    height: 34px;
+                                    accessible-label: @tr("Каталог данных ноды и кошельков");
+                                    enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                                }
+                                HorizontalLayout {
+                                    vertical-stretch: 0;
+                                    spacing: 8px;
+                                    Button {
+                                        text: root.settings-data-dir-busy ? "Выбор…" : "Обзор…";
+                                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                                        clicked => { root.settings-data-dir-browse-clicked(); }
+                                    }
+                                    Button {
+                                        text: @tr("Стандартный");
+                                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                                        clicked => { root.settings-data-dir = root.settings-default-data-dir; }
+                                    }
+                                    Button {
+                                        text: @tr("Применить при перезапуске");
+                                        enabled: !root.settings-data-dir-forced && !root.settings-data-dir-busy;
+                                        clicked => { root.settings-data-dir-save-clicked(root.settings-data-dir); }
+                                    }
+                                }
+                                Text {
+                                    text: @tr("Файлы не копируются автоматически. Чтобы открыть существующие кошельки и цепь, скопируйте их в новый корень при закрытом Flint; иначе после перезапуска будут созданы новые данные.");
+                                    color: Theme.warning;
+                                    font-size: 11px;
+                                    wrap: word-wrap;
+                                }
+                                Text {
+                                    text: @tr("Каталог задан параметром --data или FLINT_DATA_DIR; измените параметр запуска.");
+                                    color: Theme.warning;
+                                    font-size: 11px;
+                                    wrap: word-wrap;
+                                    visible: root.settings-data-dir-forced;
+                                }
+                                Text {
+                                    text: @tr("Полный rescan: после копирования data выполните «Сканировать».");
+                                    color: Theme.muted;
+                                    font-size: 11px;
+                                    wrap: word-wrap;
+                                }
                             }
                         }
                     }
-                    Button {
-                        text: @tr("Обновить Tor");
-                        enabled: root.tor-available && !root.tor-busy;
-                        clicked => { root.tor-refresh-clicked(); }
-                    }
                 }
-                Text {
-                    text: root.tor-onion;
-                    color: Theme.accent;
-                    font-family: "Cascadia Mono";
-                    font-size: 12px;
-                    wrap: word-wrap;
-                    visible: root.tor-onion != "";
-                }
-                Text { text: root.tor-note; color: Theme.muted; font-size: 12px; wrap: word-wrap; }
-                LineEdit {
-                    text <=> root.tor-bridges-text;
-                    accessible-label: @tr("Мосты Tor");
-                    placeholder-text: @tr("obfs4/webtunnel мосты, по одному на строку");
-                }
-                HorizontalLayout {
-                    spacing: 8px;
-                    Button {
-                        text: @tr("Сохранить мосты");
-                        enabled: !root.tor-busy;
-                        clicked => { root.tor-bridges-save-clicked(root.tor-bridges-text); }
-                    }
-                    Button {
-                        text: @tr("Показать лог");
-                        enabled: root.tor-available && !root.tor-busy;
-                        clicked => { root.tor-log-clicked(); }
-                    }
-                }
-                Text { text: root.tor-bridge-status; color: Theme.warning; font-size: 12px; wrap: word-wrap; }
-                Text { text: root.tor-log-text; color: Theme.muted; font-family: "Cascadia Mono"; font-size: 11px; wrap: word-wrap; }
                 Text { text: root.settings-note; color: Theme.accent; font-size: 13px; }
                 if root.settings-warning != "": Text {
                     text: root.settings-warning;
@@ -2013,16 +2121,8 @@ callback settings-nostr-save-clicked(string);
                     wrap: word-wrap;
                 }
                 Text { text: root.settings-error; color: Theme.danger; font-size: 13px; }
-                Text {
-                    text: @tr("Полный rescan: после копирования data выполните «Сканировать».");
-                    color: Theme.muted;
-                    font-size: 11px;
-                    wrap: word-wrap;
-                }
-                Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     spacing: 8px;
-                    Button { text: @tr("Безопасность"); clicked => { root.security-open-clicked(); } }
                     Rectangle { horizontal-stretch: 1; }
                     Button { text: @tr("Закрыть"); clicked => { root.show-settings = false; } }
                     Button {
@@ -2037,7 +2137,6 @@ callback settings-nostr-save-clicked(string);
                             );
                         }
                     }
-                }
                 }
             }
         }
@@ -2368,17 +2467,6 @@ callback settings-nostr-save-clicked(string);
                         }
                         Text { text: root.clipboard-note; color: Theme.accent; font-size: 10px; vertical-alignment: center; }
                     }
-                    if root.messenger-transport != "" : Text {
-                        text: @tr("Транспорт: ") + root.messenger-transport;
-                        color: Theme.muted-2;
-                        font-size: 11px;
-                    }
-                    if root.messenger-nostr-key != "" : Text {
-                        text: "Nostr: " + root.messenger-nostr-key;
-                        color: Theme.muted-2;
-                        font-family: "Cascadia Mono";
-                        font-size: 10px;
-                    }
                 }
                 Rectangle { horizontal-stretch: 1; }
                 VerticalLayout {
@@ -2444,6 +2532,26 @@ callback settings-nostr-save-clicked(string);
                                     root.messenger-error = "";
                                     root.show-add-contact = true;
                                 }
+                            }
+                        }
+                        HorizontalLayout {
+                            spacing: 6px;
+                            visible: root.messenger-nostr-key != "";
+                            Text {
+                                text: "Nostr: " + root.messenger-nostr-key;
+                                color: Theme.muted-2;
+                                font-family: "Cascadia Mono";
+                                font-size: 10px;
+                                overflow: elide;
+                                horizontal-stretch: 1;
+                                vertical-alignment: center;
+                            }
+                            ActionButton {
+                                label: @tr("Копировать");
+                                kind: "ghost";
+                                button-height: 24px;
+                                width: 92px;
+                                clicked => { root.messenger-copy-nostr-clicked(); }
                             }
                         }
 
@@ -3024,6 +3132,10 @@ callback settings-nostr-save-clicked(string);
         }
     }
 }
+
+
+
+
 
 
 

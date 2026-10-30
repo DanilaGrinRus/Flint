@@ -83,7 +83,6 @@ pub fn install(
                                 "direct" => "прямой onion",
                                 _ => "relay",
                             };
-                            app.set_messenger_transport(transport_label.into());
                             let key = status["history_key"].as_bool().unwrap_or(false);
                             let mut line = format!(
                                 "{} · {} · {}",
@@ -109,6 +108,25 @@ pub fn install(
             });
         });
     });
+
+    {
+        let weak = app.as_weak();
+        let wallet = wallet_source.clone();
+        app.on_messenger_copy_nostr_clicked(move || {
+            let result = wallet.messenger_nostr_identity().and_then(|value| {
+                let key = value["public_key"]
+                    .as_str()
+                    .ok_or_else(|| "Nostr-ключ недоступен".to_string())?;
+                copy_text(key)
+            });
+            if let Some(app) = weak.upgrade() {
+                match result {
+                    Ok(()) => app.set_clipboard_note(i18n::tr("ключ скопирован").into()),
+                    Err(e) => app.set_clipboard_note(e.into()),
+                }
+            }
+        });
+    }
 
     {
         let weak = app.as_weak();
@@ -594,3 +612,4 @@ pub fn install(
         });
     }
 }
+

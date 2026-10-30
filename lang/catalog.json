@@ -1099,6 +1099,51 @@
       "ctx": "",
       "key": "64 hex символа",
       "en": "64 hex characters"
+    },
+    {
+      "ctx": "",
+      "key": "Профиль и язык",
+      "en": "Profile and language"
+    },
+    {
+      "ctx": "",
+      "key": "Seed и пароль",
+      "en": "Seed and password"
+    },
+    {
+      "ctx": "",
+      "key": "Нода и данные",
+      "en": "Node and data"
+    },
+    {
+      "ctx": "",
+      "key": "Смена пароля, резервная копия seed и удаление кошелька.",
+      "en": "Change the password, back up the seed or delete the wallet."
+    },
+    {
+      "ctx": "",
+      "key": "Flint relay и Nostr — разные транспорты; пустой Nostr relay выключает его.",
+      "en": "Flint relay and Nostr are separate transports; an empty Nostr relay turns it off."
+    },
+    {
+      "ctx": "",
+      "key": "Relay",
+      "en": "Relay"
+    },
+    {
+      "ctx": "",
+      "key": "Tor",
+      "en": "Tor"
+    },
+    {
+      "ctx": "",
+      "key": "ключ скопирован",
+      "en": "key copied"
+    },
+    {
+      "ctx": "",
+      "key": "Nostr-ключ недоступен",
+      "en": "Nostr key is unavailable"
     }
   ],
   "dynamic": [

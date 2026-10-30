@@ -77,7 +77,7 @@ Git baseline уборки bb4b7f3; изменения уборки закомм�
 BUILD-INFO не менялись; актуальные SHA-256 — в SHA256SUMS поставки, прежний архив
 сохранён вне дерева (`C:\DHW-backups\delivery-20261029\`).
 
-2026-10-30: заложен Nostr-транспорт messenger (ADR NOSTR-1, контракт в [MESSENGER.md](contracts/MESSENGER.md)): NIP-44 v2 с официальными векторами, события NIP-01/BIP-340, NIP-59 seal/gift wrap, отдельный transport key на профиль, Transport-обёртка с MemoryRelay; 14 новых тестов, lint-messenger 73/73. Зависимости secp256k1/chacha20/hmac, vendor пересобран, offline-резолв проверен. WebSocket-клиент relay добавлен (`WsRelay`, rustls+ring, таймауты, OK/REQ/EOSE): live-проба чтения на `wss://nos.lol` PASS, публичный relay damus отвечает `auth-required` (NIP-42 в v1 нет). Проводка: настройка `nostr_relay_url` (отдельно от `relay_url`), поле `nostr` у контакта, `AppTransport::Nostr` и поле статуса `transport`. UI: поле Nostr relay в настройках, Nostr-ключ в диалоге контакта, свой публичный ключ и текущий транспорт в мессенджере. Loopback end-to-end drill (publish → OK → REQ → EVENT → EOSE → fetch → ack по реальному сокету) — PASS; 77 тестов messenger. Остаются: публикация на внешнем relay (NIP-42), визуальная проверка окна, приёмка зависимостей и поставка.
+2026-10-30: заложен Nostr-транспорт messenger (ADR NOSTR-1, контракт в [MESSENGER.md](contracts/MESSENGER.md)): NIP-44 v2 с официальными векторами, события NIP-01/BIP-340, NIP-59 seal/gift wrap, отдельный transport key на профиль, Transport-обёртка с MemoryRelay; 14 новых тестов, lint-messenger 73/73. Зависимости secp256k1/chacha20/hmac, vendor пересобран, offline-резолв проверен. WebSocket-клиент relay добавлен (`WsRelay`, rustls+ring, таймауты, OK/REQ/EOSE): live-проба чтения на `wss://nos.lol` PASS, публичный relay damus отвечает `auth-required` (NIP-42 в v1 нет). Проводка: настройка `nostr_relay_url` (отдельно от `relay_url`), поле `nostr` у контакта, `AppTransport::Nostr` и поле статуса `transport`. UI: настройки разбиты на разделы «Профиль и язык», «Seed и пароль», «Relay», «Tor», «Нода и данные»; поле Nostr relay, Nostr-ключ в диалоге контакта, свой ключ с кнопкой копирования в панели контактов. Loopback end-to-end drill (publish → OK → REQ → EVENT → EOSE → fetch → ack по реальному сокету) — PASS; 77 тестов messenger. Визуальная проверка в реальном окне (одноразовый testnet-профиль) — PASS, evidence/ui-nostr-20261030; копирование ключа проверено через буфер. Остаются: публикация на внешнем relay (NIP-42), приёмка зависимостей и поставка.
 
 Повторный полный локальный CI на закоммиченном дереве (`64793c5`): PASS —
 324 passed, 0 failed, 32 ignored; i18n ok (216 static entries); Slint собран;
@@ -122,6 +122,7 @@ commit/build, команда или CI run, PASS/FAIL/NOT VERIFIED, ссылка
 свидетельство и предел вывода. Большие логи, переписка и промежуточные планы
 не копируются сюда. Удаление исходного evidence требует либо сохранённого
 эквивалента, либо явной пометки, что доступна только историческая запись.
+
 
 
 

@@ -664,3 +664,30 @@ msgstr "Contact Nostr key"
 
 msgid "64 hex символа"
 msgstr "64 hex characters"
+
+msgid "Профиль и язык"
+msgstr "Profile and language"
+
+msgid "Seed и пароль"
+msgstr "Seed and password"
+
+msgid "Нода и данные"
+msgstr "Node and data"
+
+msgid "Смена пароля, резервная копия seed и удаление кошелька."
+msgstr "Change the password, back up the seed or delete the wallet."
+
+msgid "Flint relay и Nostr — разные транспорты; пустой Nostr relay выключает его."
+msgstr "Flint relay and Nostr are separate transports; an empty Nostr relay turns it off."
+
+msgid "Relay"
+msgstr "Relay"
+
+msgid "Tor"
+msgstr "Tor"
+
+msgid "ключ скопирован"
+msgstr "key copied"
+
+msgid "Nostr-ключ недоступен"
+msgstr "Nostr key is unavailable"
