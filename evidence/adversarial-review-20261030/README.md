@@ -39,7 +39,7 @@ NOT VERIFIED — проверки нет.
 
 ## Что не прогонялось
 
-- Матрица disk-full / power-loss для денежных операций: embedded crash-suite (upstream/journal, process kill) PASS, см. `evidence/crash-receive-20261030/`; реальное заполнение диска и power cut — вручную.
+- Матрица disk-full / power-loss: embedded crash-suite (upstream/journal, process kill) PASS и simulated disk-full PASS, см. `evidence/crash-receive-20261030/`; реальный power cut и физическое заполнение — вручную, NOT VERIFIED.
 - Полный набор гонок «операция → переключение профиля → поздний ответ» (generation-проверки есть, матрица не прогонялась).
 - Реальный второй пользователь Windows и сетевые пути (single-instance/junction проверены).
 - Живой backup→send→restore drill (проверка stale pending только тестами).

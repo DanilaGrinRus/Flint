@@ -1,0 +1,11 @@
+{
+  "kind": "simulated_disk_full_not_physical",
+  "backend": "embedded",
+  "slate_id": "a9b3461e-489d-44a3-9f45-67c072949902",
+  "error": "ERROR_DISK_FULL_112_after_upstream_before_response_journal",
+  "response_sha256": "E88CB8660DC9DEB8F0558453E5262CF3599F3FFC5B1760793DB8224C9B046155",
+  "receive_count_before": 7,
+  "receive_count_after": 8,
+  "kernel_excess": "09fb741eb100f6ae9a04a207a5cf198db45bd088bacb4fb0b488751bbb6553ba04",
+  "kernel_height": 3315315
+}

@@ -1,0 +1,6 @@
+Preflight: chain=test, sync_status=no_sync, tip=3315314, backend=embedded
+[embedded/simulated-disk-full] PASS: commit состоялся, journal вернул 112, recovery тот же S2, один TxReceived, kernel height=3315315
+Это fault injection, не реальное заполнение диска и не power-loss.
+== F-04 simulated disk-full passed: embedded ==
+Evidence: C:\DHW\.tmp\crash-receive\20261030-160038-embedded-d46c8aba
+Process kill/fault injection не заменяют физический disk-full/power-loss.
